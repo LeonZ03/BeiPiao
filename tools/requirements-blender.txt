@@ -1,0 +1,3 @@
+# Blender Lab official MCP. Install into an optional modeling-only environment.
+blender-mcp @ git+https://projects.blender.org/lab/blender_mcp.git@ff54e4d8f6b09502f2f466189cca0e52b4a91643#subdirectory=mcp
+Pillow>=11,<13

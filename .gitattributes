@@ -1,0 +1,23 @@
+* text=auto
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.cs text eol=crlf
+*.js text eol=lf
+*.mjs text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+Makefile text eol=lf
+*.blend binary
+*.bin binary
+*.gz binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.woff2 binary
+
+# Preserve upstream vendor formatting without reporting its whitespace.
+room-site/dist/vendor/* -whitespace

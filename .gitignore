@@ -1,0 +1,51 @@
+# Local environments, credentials and machine-specific settings
+.runtime/
+.venv/
+venv/
+node_modules/
+.env
+.env.*
+!.env.example
+.codex/
+.agents/
+.openai/
+.vscode/
+.idea/
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Logs, local URLs, process state and test output
+*.log
+local-access/runtime*.json
+!local-access/runtime-versions.json
+local-access/current-link*.txt
+local-access/*.pid
+local-access/public-check*.html
+local-access/public-check*.headers.txt
+local-access/verified-home*.html
+local-access/stop-room.ps1
+local-access/Stop-Room.cmd
+analysis/
+output/
+backups/
+Ref/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Large working copies and historical deployment archives
+*.blend[0-9]*
+/*.tar.gz
+tools/blender-mcp-env/
+tools/blender-mcp-official/
+tools/blender-lab-mcp-*.zip
+tools/blender-mcp-installed.txt
+generated-assets/full-room/build-report.json
+generated-assets/summer/raw-irradiance/
+
+# Keep dist: it is the self-contained, runnable website, not disposable output.

@@ -1,0 +1,12 @@
+{
+  "name": "beipiao-room-memory",
+  "private": true,
+  "type": "module",
+  "description": "Development-only checks; website playback has no npm dependencies.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node tests/assets.mjs && node --experimental-vm-modules tests/viewer-lifecycle.mjs",
+    "test:scene": "node --experimental-vm-modules tests/scene.mjs"
+  },
+  "devDependencies": { "@napi-rs/canvas": "0.1.100" }
+}
