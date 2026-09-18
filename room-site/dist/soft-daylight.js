@@ -1,4 +1,4 @@
-import {createSunlitDust} from './sunlit-dust.js?v=blender18';
+import {createSunlitDust} from './sunlit-dust.js?v=breeze27';
 // A small, on-demand HDR pipeline: contact shading, restrained highlight bloom,
 // and filmic output. The room is rendered once; bloom runs at quarter resolution.
 export function installSoftSunShadows(THREE){
@@ -21,7 +21,7 @@ export function installSoftSunShadows(THREE){
   `+chunk.slice(end);
 }
 
-export function createSoftDaylight({THREE,renderer,scene,camera,sun}){
+export function createSoftDaylight({THREE,renderer,scene,camera,sun,breeze}){
   if(!renderer.isWebGLRenderer)return {render:()=>renderer.render(scene,camera),resize:()=>{},setCurtain:()=>{}};
   renderer.info.autoReset=false;
   const target=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:4});
@@ -31,6 +31,40 @@ export function createSoftDaylight({THREE,renderer,scene,camera,sun}){
   const screen=new THREE.Scene(),screenCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   const vertex=`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`;
   const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.MeshBasicMaterial());screen.add(quad);
+  // Keep an HDR/depth image of the stationary room. While the camera is idle,
+  // redraw only the Blender foliage/cloth/flowers over it (layer 1). No CPU
+  // instance uploads, full-room shading or shadow-map updates for a breeze frame.
+  let base=null,baseReady=false,lastAmbient=-1,overlays=[];
+  const statistics={fullFrames:0,ambientFrames:0,cacheBuilds:0};
+  const restoreBase=new THREE.ShaderMaterial({depthTest:true,depthWrite:true,depthFunc:THREE.AlwaysDepth,toneMapped:false,
+    uniforms:{source:{value:null},depth:{value:null}},vertexShader:vertex,
+    fragmentShader:`varying vec2 vUv;uniform sampler2D source,depth;
+      void main(){gl_FragColor=texture2D(source,vUv);gl_FragDepth=texture2D(depth,vUv).r;}`});
+  function prepareBase(){
+    if(baseReady)return;
+    if(!base){base=new THREE.WebGLRenderTarget(target.width,target.height,{type:THREE.HalfFloatType,samples:4});base.depthTexture=new THREE.DepthTexture(target.width,target.height,THREE.UnsignedIntType);}
+    // Transparent glass must be composited AFTER moving foliage. Baking its
+    // depth into the static image would hide every leaf behind the window.
+    overlays=[];scene.traverse(o=>{if(o.isMesh&&(Array.isArray(o.material)?o.material:[o.material]).some(m=>m.transparent)&&!breeze.objects.includes(o))overlays.push(o);});
+    const moving=[...breeze.movingObjects,...overlays],masks=moving.map(o=>o.layers.mask),shadow=renderer.shadowMap.needsUpdate;
+    try{
+      scene.traverse(o=>{if(o.isLight)o.layers.enable(1);});
+      moving.forEach(o=>o.layers.disable(0));renderer.shadowMap.needsUpdate=false;
+      renderer.setRenderTarget(base);renderer.render(scene,camera);
+      baseReady=true;statistics.cacheBuilds++;
+    }finally{moving.forEach((o,i)=>o.layers.mask=masks[i]);overlays.forEach(o=>o.layers.enable(1));renderer.shadowMap.needsUpdate=shadow;}
+  }
+  function renderMovingObjects(){
+    prepareBase();
+    restoreBase.uniforms.source.value=base.texture;restoreBase.uniforms.depth.value=base.depthTexture;
+    quad.material=restoreBase;renderer.setRenderTarget(target);renderer.render(screen,screenCamera);
+    const mask=camera.layers.mask,background=scene.background,clear=renderer.autoClear,shadow=renderer.shadowMap.needsUpdate;
+    try{
+      renderer.autoClear=false;renderer.shadowMap.needsUpdate=false;scene.background=null;camera.layers.set(1);
+      renderer.render(scene,camera);
+    }finally{camera.layers.mask=mask;scene.background=background;renderer.autoClear=clear;renderer.shadowMap.needsUpdate=shadow;}
+    statistics.ambientFrames++;
+  }
   const blur=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,toneMapped:false,
     uniforms:{source:{value:null},stepUV:{value:new THREE.Vector2()},extract:{value:1}},vertexShader:vertex,
     fragmentShader:`varying vec2 vUv;uniform sampler2D source;uniform vec2 stepUV;uniform float extract;
@@ -84,10 +118,16 @@ export function createSoftDaylight({THREE,renderer,scene,camera,sun}){
     }`});
   const dust=createSunlitDust(THREE,renderer,camera,finish.uniforms);finish.uniforms.dust={value:dust.texture};
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-  function resize(){const size=renderer.getDrawingBufferSize(new THREE.Vector2());target.setSize(size.x,size.y);dust.resize(size.x,size.y);bloomA.setSize(Math.max(1,Math.ceil(size.x/4)),Math.max(1,Math.ceil(size.y/4)));bloomB.setSize(bloomA.width,bloomA.height);volume.setSize(bloomA.width,bloomA.height);finish.uniforms.resolution.value.copy(size);finish.uniforms.volumePixel.value.set(1.5/volume.width,1.5/volume.height);}
+  function resize(){const size=renderer.getDrawingBufferSize(new THREE.Vector2());target.setSize(size.x,size.y);base?.setSize(size.x,size.y);baseReady=false;dust.resize(size.x,size.y);bloomA.setSize(Math.max(1,Math.ceil(size.x/4)),Math.max(1,Math.ceil(size.y/4)));bloomB.setSize(bloomA.width,bloomA.height);volume.setSize(bloomA.width,bloomA.height);finish.uniforms.resolution.value.copy(size);finish.uniforms.volumePixel.value.set(1.5/volume.width,1.5/volume.height);}
   function composite(time,enabled){dust.draw(reducedMotion.matches?0:time,enabled);quad.material=finish;renderer.setRenderTarget(null);renderer.render(screen,screenCamera);}
-  function animate(time,enabled){if(!enabled||!dust.visible||reducedMotion.matches||time-dust.last<1/24)return;renderer.info.reset();composite(time,enabled);}
+  function animate(time,enabled,motionChanged=false){
+    if(reducedMotion.matches)return;
+    const moving=motionChanged&&breeze?.active;
+    if(!moving&&(!enabled||!dust.visible||time-lastAmbient<1/24))return;
+    renderer.info.reset();if(moving)renderMovingObjects();composite(time,enabled);lastAmbient=time;
+  }
   function render(time=0,dustEnabled=true){
+    baseReady=false;statistics.fullFrames++;
     renderer.info.reset();
     renderer.setRenderTarget(target);renderer.render(scene,camera);
     finish.uniforms.sunMap.value=sun.shadow.map.texture;finish.uniforms.sunPower.value=sun.intensity;
@@ -96,5 +136,5 @@ export function createSoftDaylight({THREE,renderer,scene,camera,sun}){
     blur.uniforms.source.value=bloomA.texture;blur.uniforms.extract.value=0;blur.uniforms.stepUV.value.set(0,1.65/bloomA.height);renderer.setRenderTarget(bloomB);renderer.render(screen,screenCamera);
     composite(time,dustEnabled);
   }
-  resize();return {render,resize,animate,setCurtain:openness=>finish.uniforms.closedCurtain.value=1-Math.max(0,Math.min(1,openness))};
+  resize();return {render,resize,animate,statistics,setCurtain:openness=>finish.uniforms.closedCurtain.value=1-Math.max(0,Math.min(1,openness))};
 }

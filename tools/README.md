@@ -41,7 +41,7 @@ exec(compile(script.read_text(encoding='utf-8'), str(script), 'exec'),
 
 ## 源工程与历史脚本
 
-当前主工程在 `generated-assets/full-room/永旺家园-完整场景.blend`。材质源图在同级 `textures/`，浏览器最终包在 `room-site/dist/assets/full-room/`。修改前备份，修改后同步保存 `.blend`、完整模型包、压缩包和 revision，并检查真实浏览器。
+当前主工程在 `generated-assets/full-room/永旺家园-完整场景.blend`。材质源图在同级 `textures/`，浏览器最终包在 `room-site/dist/assets/full-room/`。修改前确认当前版本已有 Git 提交；修改后同步保存 `.blend`、完整模型包、运行用的 `geometry.bin.gz` 和 revision，检查真实浏览器并提交。项目不再生成备份压缩包。
 
 `room-site/tools/build-*` 与 `refine-*` 保留了制作过程，**不是一条从头重跑的构建命令**。部分依赖特定父 revision、旧参考图或未入库的 `analysis/` 阶段数据；它们不能直接用于当前精修工程。不要删除版本断言后强跑。新房间应创建自己的生成脚本，不复用一长串历史补丁。
 

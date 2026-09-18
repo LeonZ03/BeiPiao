@@ -155,6 +155,9 @@ for(const [id,name,position,state]of fixtures){
  click();assert.equal(state(diagnostics.state),before,`${id} must switch back`);
  for(let i=0;i<30;i++)frame(now+=50);
 }
-el('overviewBtn').onclick();frame(now+=50);assert.equal(diagnostics.state.mode,'overview');
+const pauseTime=diagnostics.state.breeze.time;
+doc.hidden=true;frame(now+=50);frame(now+=5000);assert.equal(diagnostics.state.breeze.time,pauseTime,'Hidden browser tab pauses wind');doc.hidden=false;
+el('app').hidden=true;frame(now+=50);assert.equal(diagnostics.state.breeze.time,pauseTime,'Archive route pauses wind');el('app').hidden=false;
+el('overviewBtn').onclick();frame(now+=50);assert.equal(diagnostics.state.mode,'overview');assert.equal(diagnostics.state.breeze.enabled,false);
 el('walkBtn').onclick();frame(now+=50);assert.equal(diagnostics.state.mode,'walk');
 console.log(JSON.stringify({meshes,physicalMeshes,leaves,shadowLeaves,sunlitFloor,sunlitBed,minRailGap,minGrilleGap,merged:diagnostics.state.batchedMeshes,checks:'complete Blender assets, upper-right rods only, inward window clearances, geometry/contact/cloth/fly controls/sunlight, five clickable fixtures and overview passed'},null,2));

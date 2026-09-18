@@ -14,5 +14,9 @@ foreach ($folder in @('room-site/dist','local-access','tests')) {
 if ($LASTEXITCODE -ne 0) { throw 'Asset checks failed.' }
 & $node --experimental-vm-modules (Join-Path $PSScriptRoot 'viewer-lifecycle.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Viewer lifecycle checks failed.' }
+& $node (Join-Path $PSScriptRoot 'breeze.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Breeze checks failed.' }
+& $node (Join-Path $PSScriptRoot 'daylight-cache.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Daylight cache checks failed.' }
 & (Join-Path $PSScriptRoot 'test-start-room.ps1') -Port $Port
-Write-Host 'PASS syntax, assets, viewer lifecycle and Windows launcher.' -ForegroundColor Green
+Write-Host 'PASS syntax, assets, viewer lifecycle, breeze, daylight cache and Windows launcher.' -ForegroundColor Green

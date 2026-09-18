@@ -8,11 +8,16 @@ export function createSunlitDust(THREE,renderer,camera,uniforms){
     const p=new THREE.Vector3(-.62+rand(i*5)*1.55,1.10+rand(i*5+1)*1.09,-1.80).addScaledVector(direction,-(.12+rand(i*5+2)*2.75));
     if(p.y<.15||p.x< -1.30||p.x>1.30)continue;positions.push(...p.toArray());seeds.push(rand(i*5+3));
   }
-  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('seed',new THREE.Float32BufferAttribute(seeds,1));geometry.computeBoundingBox();geometry.boundingBox.expandByScalar(.03);
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('seed',new THREE.Float32BufferAttribute(seeds,1));geometry.computeBoundingBox();geometry.boundingBox.expandByScalar(.05);
   const u={...uniforms,time:{value:0}};
   const material=new THREE.ShaderMaterial({uniforms:u,transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,toneMapped:false,
     vertexShader:`attribute float seed;uniform float time;uniform vec2 resolution;uniform mat4 sunMatrix;varying vec4 vSun;varying vec3 vWorld;varying float vAlpha;
-    void main(){vec3 p=position;float a=time*.19+seed*53.;p+=vec3(sin(a)*.018,cos(a*.73)*.024,sin(a*.61)*.013);
+    void main(){vec3 p=position;float a=time*.19+seed*53.;
+      // The same slow weather as the foliage, delayed slightly indoors. Bounded
+      // drift retains the sparse sunlit population rather than filling the room.
+      float gust=.53+.21*sin((time-1.4)*.23)+.12*sin((time-1.4)*.071+1.2);
+      p+=vec3(.85,0.,.53)*sin(time*.34+seed*3.)*.032*gust;
+      p+=vec3(sin(a)*.009,cos(a*.73)*.024,sin(a*.61)*.007);
       vec4 view=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*view;
       gl_PointSize=clamp((.0011+seed*.0007)*resolution.y*projectionMatrix[1][1]/max(.1,-view.z),.65,2.6);
       vWorld=p;vSun=sunMatrix*vec4(p,1.);vAlpha=(.11+seed*.16)*smoothstep(.09,.25,-view.z);}`,
