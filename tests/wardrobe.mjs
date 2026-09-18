@@ -11,12 +11,11 @@ const pivots=[-.556,-1.328,-1.715].map((z,i)=>{
   const mesh=new THREE.Mesh(new THREE.BoxGeometry(.024,1.98,.377),new THREE.MeshStandardMaterial());
   mesh.position.set(0,1.065,i===0?-.19:.19);g.add(mesh);world.add(g);return g;
 });
-let curtainOpen=false,curtainAmount=0;
-const wardrobe=createWardrobe({THREE,world,camera,refs:{wardrobeDoors:pivots},getCurtainOpen:()=>curtainOpen,setCurtainOpen:x=>curtainOpen=x});
+const wardrobe=createWardrobe({THREE,world,camera,refs:{wardrobeDoors:pivots}});
 const navigation=createFlyNavigation(THREE,world);
 assert.equal(navigation.clearance,.002);assert.equal(navigation.dynamicSurfaces,3);
 assert.equal(batchStaticGeometry(THREE,world),0,'Moving leaves retain their pivot identity');
-function step(n=1){for(let i=0;i<n;i++){const target=wardrobe.curtainTarget;curtainAmount+=(target-curtainAmount)*.25;if(Math.abs(target-curtainAmount)<.0001)curtainAmount=target;if(wardrobe.update(.05,curtainAmount))navigation.updateDynamic();}}
+function step(n=1){for(let i=0;i<n;i++)if(wardrobe.update(.05))navigation.updateDynamic();}
 const path=[new THREE.Vector3(-.4,1,-.74),new THREE.Vector3(-1,1,-.74)];
 assert.equal(navigation.canTravel(...path),false,'Closed panel blocks actual door surface');
 wardrobe.toggle('wardrobeLeft');step(100);
@@ -26,13 +25,9 @@ assert.equal(navigation.canTravel(new THREE.Vector3(-.60,1,-.40),new THREE.Vecto
 wardrobe.toggle('wardrobeLeft');step(3);const reversing=wardrobe.state.doors[0].amount;
 wardrobe.toggle('wardrobeLeft');step();assert.ok(wardrobe.state.doors[0].amount>reversing,'Mid-motion reversal starts from the current pose');
 step(100);const settledRevision=wardrobe.revision;step(30);assert.equal(wardrobe.revision,settledRevision,'Settled doors do not invalidate the room cache');
-wardrobe.toggle('wardrobeRight');assert.equal(curtainOpen,true);step(5);
-assert.equal(wardrobe.state.doors[2].amount,0,'Right door waits until the cloth is gathered away');
+wardrobe.toggle('wardrobeRight');step();assert.ok(wardrobe.state.doors[2].amount>0,'Right door moves immediately without waiting for another fixture');
 step(100);assert.equal(wardrobe.state.doors[2].amount,1);
-wardrobe.requestCurtain(false);assert.equal(wardrobe.state.doors[2].open,false);assert.equal(wardrobe.curtainTarget,1,'Cloth stays open while neighbouring door closes');
-step(3);wardrobe.toggle('wardrobeRight');assert.equal(curtainOpen,true,'Latest opening request replaces pending curtain closure');
-step(100);assert.equal(wardrobe.state.doors[2].amount,1);
-wardrobe.requestCurtain(false);step(180);assert.equal(wardrobe.state.doors[2].amount,0);assert.equal(curtainAmount,0);
+wardrobe.toggle('wardrobeRight');step(100);assert.equal(wardrobe.state.doors[2].amount,0);
 
 // Hold the viewpoint on an intermediate door arc: no sweep-through or camera push.
 wardrobe.toggle('wardrobeLeft');step(100);
@@ -78,6 +73,14 @@ a.onBeforeRender(renderer,scene,camera);assert.equal(aCalls,1,'Unchanged reflect
 world.userData.geometryRevision++;a.onBeforeRender(renderer,scene,camera);assert.equal(aCalls,2,'Door geometry invalidates its reflection');
 world.userData.staticCacheCapture=true;world.userData.geometryRevision++;a.onBeforeRender(renderer,scene,camera);assert.equal(aCalls,2,'Do not capture reflection while ambient meshes are excluded');world.userData.staticCacheCapture=false;
 
+// Rapid consecutive camera poses must each get a current mirror image.
+const synced=new THREE.Object3D();let syncedFrames=0;synced.onBeforeRender=()=>syncedFrames++;world.add(synced);
+guardRoomReflection({THREE,world,reflection:synced,interval:100000,synchronizeView:true});
+synced.onBeforeRender(renderer,scene,camera);
+for(let i=0;i<3;i++){camera.position.x+=.01;camera.updateMatrixWorld();synced.onBeforeRender(renderer,scene,camera);}
+assert.equal(syncedFrames,4,'Motion must not reuse a stale mirror view due to time throttling');
+synced.onBeforeRender(renderer,scene,camera);assert.equal(syncedFrames,4,'Stationary mirror remains cached');
+
 const url=new URL('../room-site/dist/assets/full-room/',import.meta.url),manifest=JSON.parse(fs.readFileSync(new URL('scene.json',url)));
 if(manifest.refs.wardrobeDoors){
   const bytes=fs.readFileSync(new URL('geometry.bin',url)),buffer=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
@@ -111,4 +114,4 @@ if(manifest.refs.wardrobeDoors){
   for(let i=0;i<100;i++)if(controller.update(.05,1)&&pack.refs.wardrobeHingeMechanisms)assertHingeConnections(pack.world,pack.refs.wardrobeHingeMechanisms);
   console.log(`PASS ${manifest.revision} Blender refs, independent pivots, mirror ancestry, hollow cabinet collision and articulated hinge connections.`);
 }else assert.fail('Current room pack must export its three wardrobe doors.');
-console.log('PASS wardrobe: reversible independent motion, curtain interlock, dynamic collision, camera sweep safety, idle cache and reflection recursion.');
+console.log('PASS wardrobe: reversible independent motion, independent fixtures, dynamic collision, camera sweep safety, idle cache and reflection recursion.');

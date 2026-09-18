@@ -1,5 +1,5 @@
 import {Reflector} from './vendor/Reflector.js';
-import {guardRoomReflection} from './wardrobe.js?v=wardrobe29b';
+import {guardRoomReflection} from './wardrobe.js?v=wardrobe30';
 // Bright early-afternoon ambience; retain the approved sun direction and patches.
 export function createAfternoon({THREE,scene,renderer,world}){
   scene.background=new THREE.Color('#e5ebe5');

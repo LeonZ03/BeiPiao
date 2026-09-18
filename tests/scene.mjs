@@ -162,15 +162,33 @@ if(diagnostics.state.wardrobe.doors.length===3){
       renderedScene.updateMatrixWorld(true);
       const leaf=target.children.find(o=>o.userData.blenderNode===target.userData.leafNodeId)||target.children.find(o=>o.isMesh);
       const center=new THREE.Box3().setFromObject(leaf,true).getCenter(new THREE.Vector3());
+      if(id==='wardrobeRight')center.y=.25; // Below the cloth: exact panel picking.
       const facing=new THREE.Vector3(1,0,0).applyQuaternion(target.getWorldQuaternion(new THREE.Quaternion()));
       if(id!=='wardrobeLeft'&&diagnostics.state.wardrobe.doors.find(d=>d.id===id).amount>.5)facing.negate();
       renderedCamera.position.copy(center).addScaledVector(facing,.62);renderedCamera.lookAt(center);renderedCamera.updateMatrixWorld(true);
       const p=center.clone().project(renderedCamera),e={clientX:(p.x+1)*640,clientY:(1-p.y)*400,pointerId:1};
       el('world').handlers.get('pointerdown')(e);el('world').handlers.get('pointerup')(e);
     };
-    click();assert.equal(diagnostics.state.wardrobe.doors.find(d=>d.id===id).open,true,`${id} actual pointer click opens the authored door`);
+    const curtainBefore=diagnostics.state.curtainOpen;
+    click();assert.equal(diagnostics.state.curtainOpen,curtainBefore,'Clicking a door does not operate the curtain');assert.equal(diagnostics.state.wardrobe.doors.find(d=>d.id===id).open,true,`${id} actual pointer click opens the authored door`);
     renderedCamera.position.set(.7,1.4,.2);for(let i=0;i<100;i++)frame(now+=50);
     assert.equal(diagnostics.state.wardrobe.doors.find(d=>d.id===id).amount,1);
+    assert.equal(diagnostics.state.curtainOpen,curtainBefore,'Door animation never changes curtain state');
+    if(id==='wardrobeRight'){
+      let cloth;renderedScene.traverse(o=>{if(o.userData.interactive==='curtain')cloth=o;});
+      for(let repeat=0;repeat<2;repeat++){
+        renderedScene.updateMatrixWorld(true);
+        const center=new THREE.Box3().setFromObject(cloth,true).getCenter(new THREE.Vector3());
+        renderedCamera.position.set(.55,1.6,-.7);renderedCamera.lookAt(center);renderedCamera.updateMatrixWorld(true);
+        const p=center.clone().project(renderedCamera),e={clientX:(p.x+1)*640,clientY:(1-p.y)*400,pointerId:1};
+        const before=diagnostics.state.curtainOpen;
+        el('world').handlers.get('pointerdown')(e);el('world').handlers.get('pointerup')(e);
+        assert.notEqual(diagnostics.state.curtainOpen,before,'Actual curtain surface toggles only the curtain');
+        assert.equal(diagnostics.state.wardrobe.doors[2].open,true,'Curtain click leaves the right door open');
+        renderedCamera.position.set(.7,1.4,.2);for(let i=0;i<100;i++)frame(now+=50);
+        assert.equal(diagnostics.state.wardrobe.doors[2].amount,1,'Curtain animation does not close the cabinet');
+      }
+    }
     click();assert.equal(diagnostics.state.wardrobe.doors.find(d=>d.id===id).open,false,`${id} remains clickable when open`);
     renderedCamera.position.set(.7,1.4,.2);for(let i=0;i<100;i++)frame(now+=50);
     assert.equal(diagnostics.state.wardrobe.doors.find(d=>d.id===id).amount,0);

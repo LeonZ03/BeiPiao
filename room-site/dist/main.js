@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {Reflector} from './vendor/Reflector.js';
-import {createAfternoon} from './afternoon.js?v=wardrobe29b';
+import {createAfternoon} from './afternoon.js?v=wardrobe30';
 import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=wardrobe29b';
 import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=wardrobe29b';
 import {createInteractions} from './interactions.js?v=wardrobe29b';
@@ -9,7 +9,7 @@ import {loadBlenderRoom} from './blender-room.js?v=wardrobe29b';
 import {reportRoomLoading,finishRoomLoading,nextPaint} from './room-loading.js?v=viewer26';
 import {createCurtainController} from './curtain.js?v=curtain23d';
 import {createRoomBreeze} from './room-breeze.js?v=breeze28';
-import {createWardrobe} from './wardrobe.js?v=wardrobe29b';
+import {createWardrobe} from './wardrobe.js?v=wardrobe30';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('world');
@@ -47,7 +47,7 @@ const indirectMaterials=materials.filter(m=>m.userData.bakedIndirect);
 const updateIndirect=amount=>indirectMaterials.forEach(m=>m.lightMapIntensity=.17+.29*amount);
 const {windowLight,sun,setCurtainLight}=createAfternoon({THREE,scene,renderer,world});
 const updateCurtain=createCurtainController(curtainPanels,curtainRings);
-const wardrobe=createWardrobe({THREE,world,camera,renderer,Reflector,refs:roomAsset.refs,getCurtainOpen:()=>curtainOpen,setCurtainOpen:open=>curtainOpen=open,toast});
+const wardrobe=createWardrobe({THREE,world,camera,renderer,Reflector,refs:roomAsset.refs,toast});
 const breeze=createRoomBreeze({THREE,world,camera});
 const daylight=createSoftDaylight({THREE,renderer,scene,camera,sun,breeze});
 const lamp=new THREE.PointLight('#ffdca5',0,6,2);lamp.position.set(0,2.35,.05);scene.add(lamp);
@@ -93,7 +93,7 @@ for(const b of document.querySelectorAll('[data-move]')){const code={forward:'Ke
 
 function resetView(){if(mode==='overview')setMode('overview');else{goTo('entry');camera.position.set(.83,1.48,1.66);yaw=.20;pitch=-.20;camera.rotation.set(pitch,yaw,0,'YXZ');}}
 $('walkBtn').onclick=()=>setMode('walk');$('overviewBtn').onclick=()=>setMode('overview');$('resetBtn').onclick=()=>{resetView();canvas.focus({preventScroll:true});};
-function toggleCurtain(){wardrobe.requestCurtain(!curtainOpen);toast(curtainOpen?'正在拉开窗帘':wardrobe.state.waitingForDoor?'正在合上柜门，再合上窗帘':'正在合上窗帘');}
+function toggleCurtain(){curtainOpen=!curtainOpen;toast(curtainOpen?'正在拉开窗帘':'正在合上窗帘');}
 function toggleLight(){lightOn=!lightOn;lamp.intensity=lightOn?7:0;diffuser.material.emissiveIntensity=lightOn?1.5:.1;const rocker=world.getObjectByName('light-switch-rocker');if(rocker)rocker.rotation.z=lightOn?.13:0;toast(lightOn?'房间灯已打开':'房间灯已关闭');}
 
 let immersive=false;
@@ -120,11 +120,11 @@ function tick(now){
     move((-Math.sin(yaw)*forward+Math.cos(yaw)*side)*speed,(-Math.cos(yaw)*forward-Math.sin(yaw)*side)*speed);
     camera.rotation.set(pitch,yaw,0,'YXZ');
   }else orbit.update();
-  const target=wardrobe.curtainTarget;
+  const target=curtainOpen?1:0;
   curtainAmount+=(target-curtainAmount)*Math.min(dt*5,1);
   if(Math.abs(target-curtainAmount)<.0001)curtainAmount=target;
   updateCurtain(curtainAmount);setCurtainLight(curtainAmount);daylight.setCurtain(curtainAmount);updateIndirect(curtainAmount);
-  const doorChanged=wardrobe.update(dt,curtainAmount);
+  const doorChanged=wardrobe.update(dt);
   if(doorChanged){navigation.updateDynamic();renderer.shadowMap.needsUpdate=true;}
   interactions.update(now/1000);
   const motionChanged=breeze.update(dt,curtainAmount,mode==='walk');
