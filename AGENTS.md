@@ -15,7 +15,7 @@
 
 - 所有 Blender 建模、材质编辑、场景检查、渲染和导出，必须使用 **Blender Lab 官方 MCP**。官方来源是 <https://projects.blender.org/lab/blender_mcp>。不得把同名第三方社区插件称为官方版。
 - Codex 全局 MCP 名称为 `blender`。工具已暴露时直接调用；未暴露时，通过仓库内 `tools/call-blender-mcp.py` 以标准 MCP 协议调用同一个官方服务器。
-- 完成仓库初始化后，用当前 Python 运行以下便携命令查询实际工具和参数，不要依赖仓库外虚拟环境或记忆猜测：
+- 完成 `tools/README.md` 中的可选建模环境安装并激活该环境后，用该环境的 Python 查询实际工具和参数；网页的 `make init` 不安装 Blender 开发依赖。不要依赖仓库外虚拟环境或记忆猜测：
 
   ```powershell
   python tools/call-blender-mcp.py --list
@@ -150,7 +150,7 @@
 - 关闭启动器的 PowerShell 窗口，应同时结束它创建的本地服务和 Cloudflare 进程；不要把浏览器纳入该进程组。
 - 本地和公网健康检查都必须验证真实房间首页，而不是只看端口或 Cloudflare 注册成功。公开链接可能因 DNS、代理或网络环境不可达；应保留本地服务并给出可诊断日志，不能把候选 URL 冒充已验证地址。
 - 改启动器后运行 `tests/test-start-room.ps1` 或 `make check`。默认测试不应创建公网隧道；只有得到相应授权并显式传入隧道测试参数时才连接 Cloudflare。
-- 初始化脚本应准备 Node.js 22+ 与 cloudflared 的便携运行时，重复执行仍安全，并验证文件完整性。启动器优先使用项目便携运行时，也可接受 PATH 和标准 Windows 安装位置作为回退。
+- 初始化脚本应准备 Node.js 22+ 与 cloudflared 的便携运行时，重复执行仍安全，并验证文件完整性。启动器优先接受 PATH 和标准 Windows 安装位置中合适的工具；缺少时使用或下载项目便携运行时。测试可通过 `BEIPIAO_PREFER_PORTABLE=1` 强制验证便携路径。
 - 可选命令入口为 `make init`、`make start`、`make local` 和 `make check`；Windows 用户不安装 make 也必须能通过 PowerShell 初始化和双击启动。
 - 不得在脚本中依赖开发者电脑的盘符、用户名、固定软件安装目录或遗留 D 盘参数文件。发现旧脚本含绝对路径时，先改为仓库相对路径再执行，不能通过创建同名目录或复制本机环境掩盖问题。
 
