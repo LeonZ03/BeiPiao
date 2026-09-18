@@ -1,4 +1,5 @@
 import {Reflector} from './vendor/Reflector.js';
+import {guardRoomReflection} from './wardrobe.js?v=wardrobe29b';
 // Bright early-afternoon ambience; retain the approved sun direction and patches.
 export function createAfternoon({THREE,scene,renderer,world}){
   scene.background=new THREE.Color('#e5ebe5');
@@ -59,13 +60,7 @@ export function createAfternoon({THREE,scene,renderer,world}){
     };
     const reflection=new Reflector(new THREE.PlaneGeometry(2.8,4.98),{textureWidth:512,textureHeight:512,multisample:0,clipBias:.002,color:0xffffff,shader});
     reflection.name='polished-ceramic-floor-reflection';reflection.rotation.x=-Math.PI/2;reflection.position.set(0,.013,.69);reflection.material.transparent=true;reflection.material.depthWrite=false;reflection.renderOrder=1;world.add(reflection);
-    const renderReflection=reflection.onBeforeRender,lastCamera=new THREE.Matrix4();let lastTime=-Infinity,lastLighting=-1;
-    reflection.onBeforeRender=function(renderer,scene,camera,...args){
-      const now=performance.now(),lighting=Math.round(scene.children.filter(o=>o.isLight).reduce((v,o)=>v+o.intensity,0)*1000);
-      const changed=!lastCamera.equals(camera.matrixWorld)||lighting!==lastLighting||world.userData.waterActive;
-      if(!changed||now-lastTime<33)return;
-      lastTime=now;lastCamera.copy(camera.matrixWorld);lastLighting=lighting;renderReflection.call(this,renderer,scene,camera,...args);
-    };
+    guardRoomReflection({THREE,world,reflection,interval:33});
   }
   // Subtle contact shadows complement the directional shadows without black corners.
   const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');

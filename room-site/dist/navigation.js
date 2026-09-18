@@ -1,17 +1,19 @@
 import {bayWindow as bay} from './room-layout.js?v=blender18';
 // A 2 mm point, swept against actual indoor surfaces. Furniture is never a full-height column.
 export function createFlyNavigation(THREE,world,excluded=[]){
-  const clearance=.002, meshes=[],ray=new THREE.Raycaster(),dir=new THREE.Vector3(),end=new THREE.Vector3();
+  const clearance=.002, meshes=[],dynamic=[],ray=new THREE.Raycaster(),dir=new THREE.Vector3(),end=new THREE.Vector3();
   const expanded=new THREE.Box3(),segment=new THREE.Box3(),hit=new THREE.Vector3();
   world.updateMatrixWorld(true);
-  function collect(o){
+  function collect(o,moving=false){
     if(excluded.includes(o)||o.userData.noCollision)return;
+    moving=moving||!!o.userData.collisionDynamic;
     if(o.isMesh&&!o.isInstancedMesh&&!o.material.transparent&&!o.material.isShaderMaterial){
       o.geometry.computeBoundingBox();const bounds=o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld);
-      if(bounds.max.y>=0&&bounds.min.y<2.7&&bounds.max.z>=bay.backZ&&bounds.min.z<3.19)meshes.push({object:o,bounds});
+      if(bounds.max.y>=0&&bounds.min.y<2.7&&bounds.max.z>=bay.backZ&&bounds.min.z<3.19){const item={object:o,bounds};meshes.push(item);if(moving)dynamic.push(item);}
     }
-    o.children.forEach(collect);
+    o.children.forEach(child=>collect(child,moving));
   }collect(world);
+  function updateDynamic(){for(const {object,bounds}of dynamic){object.updateWorldMatrix(true,false);bounds.copy(object.geometry.boundingBox).applyMatrix4(object.matrixWorld);}}
   function canTravel(from,to){
     const inBay=to.x>bay.left+clearance&&to.x<bay.right-clearance&&to.y>bay.bottom+.043+clearance&&to.y<bay.top-clearance&&to.z>bay.frameZ+.066;
     if(to.x<=-1.4+clearance||to.x>=1.4-clearance||(to.z<=bay.roomZ+clearance&&!inBay)||to.z>=3.18-clearance||to.y<.017||to.y>2.64)return false;
@@ -24,7 +26,7 @@ export function createFlyNavigation(THREE,world,excluded=[]){
       if(ray.intersectObject(object,false).length)return false;
     }return true;
   }
-  return {canTravel,clearance,surfaces:meshes.length};
+  return {canTravel,updateDynamic,clearance,surfaces:meshes.length,dynamicSurfaces:dynamic.length};
 }
 
 // Combine static siblings by material. Moving/interactive objects and cutaway surfaces retain identity.

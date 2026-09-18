@@ -155,9 +155,33 @@ for(const [id,name,position,state]of fixtures){
  click();assert.equal(state(diagnostics.state),before,`${id} must switch back`);
  for(let i=0;i<30;i++)frame(now+=50);
 }
-const pauseTime=diagnostics.state.breeze.time;
-doc.hidden=true;frame(now+=50);frame(now+=5000);assert.equal(diagnostics.state.breeze.time,pauseTime,'Hidden browser tab pauses wind');doc.hidden=false;
-el('app').hidden=true;frame(now+=50);assert.equal(diagnostics.state.breeze.time,pauseTime,'Archive route pauses wind');el('app').hidden=false;
+if(diagnostics.state.wardrobe.doors.length===3){
+  for(const id of ['wardrobeLeft','wardrobeMiddle','wardrobeRight']){
+    let target;renderedScene.traverse(o=>{if(o.userData.interactive===id)target=o;});
+    const click=()=>{
+      renderedScene.updateMatrixWorld(true);
+      const leaf=target.children.find(o=>o.userData.blenderNode===target.userData.leafNodeId)||target.children.find(o=>o.isMesh);
+      const center=new THREE.Box3().setFromObject(leaf,true).getCenter(new THREE.Vector3());
+      const facing=new THREE.Vector3(1,0,0).applyQuaternion(target.getWorldQuaternion(new THREE.Quaternion()));
+      if(id!=='wardrobeLeft'&&diagnostics.state.wardrobe.doors.find(d=>d.id===id).amount>.5)facing.negate();
+      renderedCamera.position.copy(center).addScaledVector(facing,.62);renderedCamera.lookAt(center);renderedCamera.updateMatrixWorld(true);
+      const p=center.clone().project(renderedCamera),e={clientX:(p.x+1)*640,clientY:(1-p.y)*400,pointerId:1};
+      el('world').handlers.get('pointerdown')(e);el('world').handlers.get('pointerup')(e);
+    };
+    click();assert.equal(diagnostics.state.wardrobe.doors.find(d=>d.id===id).open,true,`${id} actual pointer click opens the authored door`);
+    renderedCamera.position.set(.7,1.4,.2);for(let i=0;i<100;i++)frame(now+=50);
+    assert.equal(diagnostics.state.wardrobe.doors.find(d=>d.id===id).amount,1);
+    click();assert.equal(diagnostics.state.wardrobe.doors.find(d=>d.id===id).open,false,`${id} remains clickable when open`);
+    renderedCamera.position.set(.7,1.4,.2);for(let i=0;i<100;i++)frame(now+=50);
+    assert.equal(diagnostics.state.wardrobe.doors.find(d=>d.id===id).amount,0);
+  }
+  console.log('PASS three Blender cabinet doors: actual pointer picking and complete open/close animation.');
+  tools.get('navigate_room').execute({view:'wardrobe'});
+  assert.deepEqual(Array.from(diagnostics.state.position),[.45,1.30,-1.03],'Wardrobe inspection view faces the cabinet without adding a UI shortcut');
+}else console.log('SKIP wardrobe pointer contract until wardrobe29 model is exported.');
+const pausedBreezeTime=diagnostics.state.breeze.time;
+doc.hidden=true;frame(now+=50);frame(now+=5000);assert.equal(diagnostics.state.breeze.time,pausedBreezeTime,'Hidden browser tab pauses wind');doc.hidden=false;
+el('app').hidden=true;frame(now+=50);assert.equal(diagnostics.state.breeze.time,pausedBreezeTime,'Archive route pauses wind');el('app').hidden=false;
 el('overviewBtn').onclick();frame(now+=50);assert.equal(diagnostics.state.mode,'overview');assert.equal(diagnostics.state.breeze.enabled,false);
 el('walkBtn').onclick();frame(now+=50);assert.equal(diagnostics.state.mode,'walk');
 console.log(JSON.stringify({meshes,physicalMeshes,leaves,shadowLeaves,sunlitFloor,sunlitBed,minRailGap,minGrilleGap,merged:diagnostics.state.batchedMeshes,checks:'complete Blender assets, upper-right rods only, inward window clearances, geometry/contact/cloth/fly controls/sunlight, five clickable fixtures and overview passed'},null,2));

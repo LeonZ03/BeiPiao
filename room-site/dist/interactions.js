@@ -1,10 +1,11 @@
-export function createInteractions({THREE,world,camera,canvas,curtain,toggleCurtain,toggleLight,toast,hint}){
+export function createInteractions({THREE,world,camera,canvas,curtain,toggleCurtain,toggleLight,wardrobe,toast,hint}){
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),targets=[],water={shower:false,faucet:false};
   const thumbturn=world.getObjectByName('clickable-privacy-thumbturn');
   let doorLocked=false,turnTarget=0,lastUpdate=0;
   ray.params.Line.threshold=.002;ray.params.Points.threshold=.002;
   const labels={light:()=> '点击墙壁开关 · 开 / 关灯',curtain:()=> '点击窗帘 · 拉开 / 合上',shower:()=>water.shower?'点击花洒 · 关闭水流':'点击花洒 · 打开水流',faucet:()=>water.faucet?'点击水龙头 · 关闭水流':'点击水龙头 · 打开水流'};
   labels.doorLock=()=>doorLocked?'点击旋钮 · 解除反锁':'点击旋钮 · 反锁';
+  if(wardrobe)for(const id of ['wardrobeLeft','wardrobeMiddle','wardrobeRight'])labels[id]=()=>wardrobe.label(id);
   curtain.userData.interactive='curtain';
   world.traverse(o=>{if(o.userData.interactive)targets.push(o);});
   const effects=new THREE.Group();effects.name='running-water';effects.userData.noCollision=true;effects.userData.dynamic=true;world.add(effects);
@@ -34,17 +35,19 @@ export function createInteractions({THREE,world,camera,canvas,curtain,toggleCurt
     }
     if(water.faucet){const p=(t*2.4)%1;splash.scale.setScalar(.7+p*2);splash.material.opacity=(1-p)*.5;stream.material.opacity=.45+Math.sin(t*21)*.045;}
   }
-  function perform(id){if(id==='light')toggleLight();else if(id==='curtain')toggleCurtain();else if(id==='doorLock'&&thumbturn){doorLocked=!doorLocked;turnTarget=doorLocked?Math.PI/2:0;thumbturn.userData.locked=doorLocked;toast(doorLocked?'门已反锁':'已解除反锁');}else if(id in water){water[id]=!water[id];(id==='shower'?shower:faucet).visible=water[id];world.userData.waterActive=water.shower||water.faucet;toast((id==='shower'?'花洒':'水龙头')+(water[id]?'已打开':'已关闭'));}if(labels[id])hint.textContent=labels[id]();return {...water,doorLocked};}
+  function perform(id){if(id==='light')toggleLight();else if(id==='curtain')toggleCurtain();else if(id.startsWith('wardrobe'))wardrobe?.toggle(id);else if(id==='doorLock'&&thumbturn){doorLocked=!doorLocked;turnTarget=doorLocked?Math.PI/2:0;thumbturn.userData.locked=doorLocked;toast(doorLocked?'门已反锁':'已解除反锁');}else if(id in water){water[id]=!water[id];(id==='shower'?shower:faucet).visible=water[id];world.userData.waterActive=water.shower||water.faucet;toast((id==='shower'?'花洒':'水龙头')+(water[id]?'已打开':'已关闭'));}if(labels[id])hint.textContent=labels[id]();return {...water,doorLocked};}
+  const ownerOf=o=>{while(o&&!o.userData.interactive)o=o.parent;return o;};
+  const visible=o=>{while(o){if(!o.visible)return false;o=o.parent;}return true;};
   function pick(x,y,locked=false){
     if(locked)pointer.set(0,0);else{const r=canvas.getBoundingClientRect();pointer.set((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1);}
     camera.updateMatrixWorld();world.updateMatrixWorld(true);ray.setFromCamera(pointer,camera);ray.far=4;
-    const candidates=ray.intersectObjects(targets,true);
+    const candidates=ray.intersectObjects(targets,true).filter(h=>visible(h.object));
     if(!candidates.length)return null;
-    const first=candidates[0];let owner=first.object;while(owner&&!owner.userData.interactive)owner=owner.parent;
+    const first=candidates[0],owner=ownerOf(first.object);
     // Opaque intervening geometry prevents operating fixtures through a wall.
-    const obstruction=ray.intersectObject(world,true).find(h=>h.object.isMesh&&h.distance<first.distance-.025&&!h.object.material?.transparent&&!h.object.userData.interactive);
+    const obstruction=ray.intersectObject(world,true).find(h=>h.object.isMesh&&visible(h.object)&&h.distance<first.distance-.006&&!(Array.isArray(h.object.material)?h.object.material:[h.object.material]).every(m=>m.transparent)&&ownerOf(h.object)!==owner);
     if(obstruction)return null;return owner?.userData.interactive;
   }
-  function hover(x,y,locked){const id=pick(x,y,locked);canvas.style.cursor=id?'pointer':'grab';hint.textContent=id?labels[id]():'';hint.hidden=!id;return id;}
+  function hover(x,y,locked){const id=pick(x,y,locked);canvas.style.cursor=id?'pointer':'grab';hint.textContent=id?(labels[id]?.()||'点击互动'):'';hint.hidden=!id;return id;}
   return {update,perform,pick,hover,get state(){return {...water,doorLocked,thumbturnAngle:thumbturn?.rotation.z||0};},get active(){return water.shower||water.faucet||(thumbturn&&Math.abs(turnTarget-thumbturn.rotation.z)>.00001);}};
 }

@@ -47,12 +47,13 @@ export function createSoftDaylight({THREE,renderer,scene,camera,sun,breeze}){
     // depth into the static image would hide every leaf behind the window.
     overlays=[];scene.traverse(o=>{if(o.isMesh&&(Array.isArray(o.material)?o.material:[o.material]).some(m=>m.transparent)&&!breeze.objects.includes(o))overlays.push(o);});
     const moving=[...breeze.movingObjects,...overlays],masks=moving.map(o=>o.layers.mask),shadow=renderer.shadowMap.needsUpdate;
+    const reflectionRoots=[];scene.traverse(o=>{if(o.userData&&o.userData.geometryRevision!==undefined){reflectionRoots.push([o,o.userData.staticCacheCapture]);o.userData.staticCacheCapture=true;}});
     try{
       scene.traverse(o=>{if(o.isLight)o.layers.enable(1);});
       moving.forEach(o=>o.layers.disable(0));renderer.shadowMap.needsUpdate=false;
       renderer.setRenderTarget(base);renderer.render(scene,camera);
       baseReady=true;statistics.cacheBuilds++;
-    }finally{moving.forEach((o,i)=>o.layers.mask=masks[i]);overlays.forEach(o=>o.layers.enable(1));renderer.shadowMap.needsUpdate=shadow;}
+    }finally{moving.forEach((o,i)=>o.layers.mask=masks[i]);overlays.forEach(o=>o.layers.enable(1));renderer.shadowMap.needsUpdate=shadow;reflectionRoots.forEach(([o,value])=>o.userData.staticCacheCapture=value);}
   }
   function renderMovingObjects(){
     prepareBase();

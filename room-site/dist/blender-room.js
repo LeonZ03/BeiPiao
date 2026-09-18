@@ -61,7 +61,7 @@ export function parseBlenderRoom(THREE,manifest,buffer,textures){
 
 export async function loadBlenderRoom(THREE,manager,onProgress=()=>{}){
   onProgress(3,'正在读取房间');
-  const response=await fetch('./assets/full-room/scene.json?v=viewer26');
+  const response=await fetch('./assets/full-room/scene.json?v=wardrobe29b');
   if(!response.ok)throw new Error('Room manifest '+response.status);
   const manifest=await response.json(),compressed=typeof DecompressionStream!=='undefined';
   let geometryProgress=0,textureCount=0;

@@ -1,13 +1,15 @@
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
-import {createAfternoon} from './afternoon.js?v=curtain23c';
-import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=breeze27';
-import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=blender18';
-import {createInteractions} from './interactions.js?v=blender18';
-import {loadBlenderRoom} from './blender-room.js?v=viewer26';
+import {Reflector} from './vendor/Reflector.js';
+import {createAfternoon} from './afternoon.js?v=wardrobe29b';
+import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=wardrobe29b';
+import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=wardrobe29b';
+import {createInteractions} from './interactions.js?v=wardrobe29b';
+import {loadBlenderRoom} from './blender-room.js?v=wardrobe29b';
 import {reportRoomLoading,finishRoomLoading,nextPaint} from './room-loading.js?v=viewer26';
 import {createCurtainController} from './curtain.js?v=curtain23d';
 import {createRoomBreeze} from './room-breeze.js?v=breeze28';
+import {createWardrobe} from './wardrobe.js?v=wardrobe29b';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('world');
@@ -33,7 +35,7 @@ const scene=new THREE.Scene();scene.background=new THREE.Color('#c9d2cd');
 const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.003,80);
 camera.rotation.order='YXZ';
 
-let renderSignature='';
+let renderSignature='',curtainOpen=false,curtainAmount=0;
 const manager=new THREE.LoadingManager();
 let roomAsset;
 try {roomAsset=await loadBlenderRoom(THREE,manager,reportRoomLoading);}
@@ -45,6 +47,7 @@ const indirectMaterials=materials.filter(m=>m.userData.bakedIndirect);
 const updateIndirect=amount=>indirectMaterials.forEach(m=>m.lightMapIntensity=.17+.29*amount);
 const {windowLight,sun,setCurtainLight}=createAfternoon({THREE,scene,renderer,world});
 const updateCurtain=createCurtainController(curtainPanels,curtainRings);
+const wardrobe=createWardrobe({THREE,world,camera,renderer,Reflector,refs:roomAsset.refs,getCurtainOpen:()=>curtainOpen,setCurtainOpen:open=>curtainOpen=open,toast});
 const breeze=createRoomBreeze({THREE,world,camera});
 const daylight=createSoftDaylight({THREE,renderer,scene,camera,sun,breeze});
 const lamp=new THREE.PointLight('#ffdca5',0,6,2);lamp.position.set(0,2.35,.05);scene.add(lamp);
@@ -54,9 +57,9 @@ const batchedMeshes=batchStaticGeometry(THREE,world,[curtain,...cutaway,...ceili
 renderer.shadowMap.needsUpdate=true;
 reportRoomLoading(95,'正在准备光影');await nextPaint();
 const orbit=new OrbitControls(camera,canvas);orbit.enabled=false;orbit.enableDamping=true;orbit.minDistance=3;orbit.maxDistance=12;orbit.maxPolarAngle=Math.PI*.46;orbit.target.set(-.3,.65,.7);
-let mode='walk',yaw=.12,pitch=-.08,locked=false,drag=null,curtainOpen=false,lightOn=false,curtainAmount=0;
+let mode='walk',yaw=.12,pitch=-.08,locked=false,drag=null,lightOn=false;
 const keys=new Set();let last=performance.now();let toastTimer;
-const viewpoints={chair:{p:[1.0,1.10,.08],yaw:.47,pitch:-.44,label:'椅子细节'},rackets:{p:[-.93,1.35,.78],yaw:.012,pitch:-.035,label:'球拍网线'},gundam:{p:[.79,1.80,-.505],yaw:-Math.PI/2,pitch:-.085,label:'高达细节'},paperCup:{p:[.84,1.75,-.89],yaw:-Math.PI/2,pitch:-.13,label:'纸杯图案'},shelf:{p:[.35,1.84,-.71],yaw:-Math.PI/2,pitch:-.16,label:'桌架摆件'},mug:{p:[.59,1.05,-1.115],yaw:-1.405,pitch:-.54,label:'杯子细节'},radiator:{p:[.50,.71,-1.10],yaw:-1.3,pitch:-.2,label:'暖气位置'},ac:{p:[.54,2.21,-.71],yaw:-Math.PI/2,pitch:.08,label:'空调细节'},tabletop:{p:[.52,1.20,-.52],yaw:-Math.PI/2,pitch:-.64,label:'桌面细节'},basket:{p:[.62,1.53,-.43],yaw:-Math.PI/2,pitch:.03,label:'花篮细节'},doorframe:{p:[.93,2.05,2.67],yaw:-Math.PI/2,pitch:.25,label:'门框细节'},grille:{p:[.34,1.73,-1.49],yaw:-.63,pitch:0,label:'窗栏细节'},helmetSide:{p:[-.42,2.33,-.95],yaw:Math.PI/2,pitch:-.045,label:'头盔侧面'},helmet:{p:[-.48,2.35,-.29],yaw:.72,pitch:-.07,label:'头盔细节'},pillow:{p:[.27,1.10,1.0],yaw:1.88,pitch:-.40,label:'枕头细节'},shower:{p:[.20,1.40,2.82],yaw:.98,pitch:-.035,label:'花洒细节'},lock:{p:[1.05,1.03,2.38],yaw:-1.48,pitch:-.075,label:'反锁旋钮'},entry:{p:[.92,1.56,2.77],yaw:.08,pitch:-.09,label:'入口过道'},bed:{p:[.48,1.30,.45],yaw:.22,pitch:-.04,label:'床边'},desk:{p:[.42,1.50,-.05],yaw:-1.05,pitch:-.26,label:'书桌'},window:{p:[-.25,1.56,-1.27],yaw:.02,pitch:.02,label:'窗边'},yard:{p:[-.38,1.63,-1.75],yaw:-.83,pitch:-.87,label:'窗边 · 楼下'},closet:{p:[.42,1.54,.55],yaw:.98,pitch:0,label:'衣柜'},door:{p:[.51,1.50,2.70],yaw:-Math.PI/2,pitch:.05,label:'门上细节'},toilet:{p:[-.50,1.15,2.12],yaw:Math.PI-.24,pitch:-.55,label:'洁具细节'},bath:{p:[.04,1.645,2.43],yaw:Math.PI/2,pitch:-.20,label:'卫生间'}};
+const viewpoints={wardrobe:{p:[.45,1.30,-1.03],yaw:Math.PI/2,pitch:-.06,label:'衣柜正面'},chair:{p:[1.0,1.10,.08],yaw:.47,pitch:-.44,label:'椅子细节'},rackets:{p:[-.93,1.35,.78],yaw:.012,pitch:-.035,label:'球拍网线'},gundam:{p:[.79,1.80,-.505],yaw:-Math.PI/2,pitch:-.085,label:'高达细节'},paperCup:{p:[.84,1.75,-.89],yaw:-Math.PI/2,pitch:-.13,label:'纸杯图案'},shelf:{p:[.35,1.84,-.71],yaw:-Math.PI/2,pitch:-.16,label:'桌架摆件'},mug:{p:[.59,1.05,-1.115],yaw:-1.405,pitch:-.54,label:'杯子细节'},radiator:{p:[.50,.71,-1.10],yaw:-1.3,pitch:-.2,label:'暖气位置'},ac:{p:[.54,2.21,-.71],yaw:-Math.PI/2,pitch:.08,label:'空调细节'},tabletop:{p:[.52,1.20,-.52],yaw:-Math.PI/2,pitch:-.64,label:'桌面细节'},basket:{p:[.62,1.53,-.43],yaw:-Math.PI/2,pitch:.03,label:'花篮细节'},doorframe:{p:[.93,2.05,2.67],yaw:-Math.PI/2,pitch:.25,label:'门框细节'},grille:{p:[.34,1.73,-1.49],yaw:-.63,pitch:0,label:'窗栏细节'},helmetSide:{p:[-.42,2.33,-.95],yaw:Math.PI/2,pitch:-.045,label:'头盔侧面'},helmet:{p:[-.48,2.35,-.29],yaw:.72,pitch:-.07,label:'头盔细节'},pillow:{p:[.27,1.10,1.0],yaw:1.88,pitch:-.40,label:'枕头细节'},shower:{p:[.20,1.40,2.82],yaw:.98,pitch:-.035,label:'花洒细节'},lock:{p:[1.05,1.03,2.38],yaw:-1.48,pitch:-.075,label:'反锁旋钮'},entry:{p:[.92,1.56,2.77],yaw:.08,pitch:-.09,label:'入口过道'},bed:{p:[.48,1.30,.45],yaw:.22,pitch:-.04,label:'床边'},desk:{p:[.42,1.50,-.05],yaw:-1.05,pitch:-.26,label:'书桌'},window:{p:[-.25,1.56,-1.27],yaw:.02,pitch:.02,label:'窗边'},yard:{p:[-.38,1.63,-1.75],yaw:-.83,pitch:-.87,label:'窗边 · 楼下'},closet:{p:[.42,1.54,.55],yaw:.98,pitch:0,label:'衣柜'},door:{p:[.51,1.50,2.70],yaw:-Math.PI/2,pitch:.05,label:'门上细节'},toilet:{p:[-.50,1.15,2.12],yaw:Math.PI-.24,pitch:-.55,label:'洁具细节'},bath:{p:[.04,1.645,2.43],yaw:Math.PI/2,pitch:-.20,label:'卫生间'}};
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3600);}
 function setMode(next){mode=next;camera.near=next==='overview'?.05:.003;camera.updateProjectionMatrix();keys.clear();document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));$('interactionHint').hidden=true;renderer.shadowMap.needsUpdate=true;const overview=mode==='overview';orbit.enabled=overview;cutaway.forEach(o=>o.visible=!overview);ceilings.forEach(o=>o.visible=!overview);outside.visible=!overview;$('walkBtn').classList.toggle('active',!overview);$('overviewBtn').classList.toggle('active',overview);$('walkBtn').setAttribute('aria-pressed',String(!overview));$('overviewBtn').setAttribute('aria-pressed',String(overview));$('app').classList.toggle('overview',overview);if(overview){if(document.pointerLockElement)document.exitPointerLock();camera.position.set(5.5,6.1,7.0);orbit.target.set(-.25,.7,.8);orbit.update();scene.background.set('#dfe3dc');}else{scene.background.set('#e5ebe5');goTo('entry',false);}}
 function goTo(name,switchMode=true){$('interactionHint').hidden=true;if(switchMode&&mode!=='walk')setMode('walk');const v=viewpoints[name];camera.position.set(...v.p);yaw=v.yaw;pitch=v.pitch;camera.rotation.set(pitch,yaw,0,'YXZ');}
@@ -70,7 +73,7 @@ function move(dx,dz){
   const target=camera.position.clone();target.x+=dx;if(dx&&navigation.canTravel(camera.position,target))camera.position.x=target.x;
   target.copy(camera.position);target.z+=dz;if(dz&&navigation.canTravel(camera.position,target))camera.position.z=target.z;
 }
-const interactions=createInteractions({THREE,world,camera,canvas,curtain,toggleCurtain,toggleLight,toast,hint:$('interactionHint')});
+const interactions=createInteractions({THREE,world,camera,canvas,curtain,toggleCurtain,toggleLight,wardrobe,toast,hint:$('interactionHint')});
 let lastHover=0;
 canvas.addEventListener('pointerdown',e=>{if(mode!=='walk')return;canvas.focus();drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,id:e.pointerId,moved:false};canvas.setPointerCapture(e.pointerId);});
 canvas.addEventListener('pointermove',e=>{
@@ -90,7 +93,7 @@ for(const b of document.querySelectorAll('[data-move]')){const code={forward:'Ke
 
 function resetView(){if(mode==='overview')setMode('overview');else{goTo('entry');camera.position.set(.83,1.48,1.66);yaw=.20;pitch=-.20;camera.rotation.set(pitch,yaw,0,'YXZ');}}
 $('walkBtn').onclick=()=>setMode('walk');$('overviewBtn').onclick=()=>setMode('overview');$('resetBtn').onclick=()=>{resetView();canvas.focus({preventScroll:true});};
-function toggleCurtain(){curtainOpen=!curtainOpen;toast(curtainOpen?'窗帘已拉开':'窗帘已合上');}
+function toggleCurtain(){wardrobe.requestCurtain(!curtainOpen);toast(curtainOpen?'正在拉开窗帘':wardrobe.state.waitingForDoor?'正在合上柜门，再合上窗帘':'正在合上窗帘');}
 function toggleLight(){lightOn=!lightOn;lamp.intensity=lightOn?7:0;diffuser.material.emissiveIntensity=lightOn?1.5:.1;const rocker=world.getObjectByName('light-switch-rocker');if(rocker)rocker.rotation.z=lightOn?.13:0;toast(lightOn?'房间灯已打开':'房间灯已关闭');}
 
 let immersive=false;
@@ -117,13 +120,15 @@ function tick(now){
     move((-Math.sin(yaw)*forward+Math.cos(yaw)*side)*speed,(-Math.cos(yaw)*forward-Math.sin(yaw)*side)*speed);
     camera.rotation.set(pitch,yaw,0,'YXZ');
   }else orbit.update();
-  const target=curtainOpen?1:0;
+  const target=wardrobe.curtainTarget;
   curtainAmount+=(target-curtainAmount)*Math.min(dt*5,1);
   if(Math.abs(target-curtainAmount)<.0001)curtainAmount=target;
   updateCurtain(curtainAmount);setCurtainLight(curtainAmount);daylight.setCurtain(curtainAmount);updateIndirect(curtainAmount);
+  const doorChanged=wardrobe.update(dt,curtainAmount);
+  if(doorChanged){navigation.updateDynamic();renderer.shadowMap.needsUpdate=true;}
   interactions.update(now/1000);
   const motionChanged=breeze.update(dt,curtainAmount,mode==='walk');
-  const signature=[mode,...camera.position.toArray(),...camera.quaternion.toArray(),Math.round(curtainAmount*10000),lightOn,innerWidth,innerHeight,interactions.active,breeze.enabled,breeze.visibilityMask].join('/');
+  const signature=[mode,...camera.position.toArray(),...camera.quaternion.toArray(),Math.round(curtainAmount*10000),lightOn,innerWidth,innerHeight,interactions.active,wardrobe.revision,breeze.enabled,breeze.visibilityMask].join('/');
   const dustEnabled=mode==='walk'&&curtainAmount>.1;
   if(signature!==renderSignature||interactions.active){
     renderSignature=signature;daylight.render(breeze.time,dustEnabled);
@@ -132,13 +137,13 @@ function tick(now){
 manager.onError=url=>{toast('一张材质未能载入，刷新页面可重试');console.warn('Texture failed',url);};
 window.addEventListener('error',()=>{if(!$('loading').hidden){$('loading').hidden=true;$('error').hidden=false;}});
 // Read-only diagnostics for local verification; no network or user data.
-window.roomDiagnostics={get state(){return{mode,position:camera.position.toArray(),yaw,pitch,curtainOpen,lightOn,objects:world.children.length,colliders:navigation.surfaces,collisionRadius:navigation.clearance,batchedMeshes,assetStatistics,water:interactions.state,breeze:breeze.state,frameCache:daylight.statistics,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles};},canStand,canTravel:(a,b)=>navigation.canTravel(new THREE.Vector3(...a),new THREE.Vector3(...b))};
+window.roomDiagnostics={get state(){return{mode,position:camera.position.toArray(),yaw,pitch,curtainOpen,lightOn,objects:world.children.length,colliders:navigation.surfaces,collisionRadius:navigation.clearance,batchedMeshes,assetStatistics,water:interactions.state,wardrobe:wardrobe.state,breeze:breeze.state,frameCache:daylight.statistics,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles};},canStand,canTravel:(a,b)=>navigation.canTravel(new THREE.Vector3(...a),new THREE.Vector3(...b))};
 const modelContext=document.modelContext;
 if(modelContext?.registerTool){
   const lifecycle=new AbortController();
   const register=t=>{try{Promise.resolve(modelContext.registerTool(t,{signal:lifecycle.signal})).catch(()=>{});}catch{}};
-  register({name:'get_room_view',description:'读取当前房间漫游视角、物品开关状态与渲染信息。',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute(){return {mode,position:camera.position.toArray(),curtainOpen,lightOn,water:interactions.state,rendering:{graphicsDevice,breeze:breeze.state,frameCache:daylight.statistics,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,mergedObjects:batchedMeshes}};}});
-  register({name:'navigate_room',description:'切换房间的可见视角：门口、床边、书桌、窗边、楼下摩托车、衣柜、卫生间、门上细节、洁具细节或空间总览。',inputSchema:{type:'object',properties:{view:{type:'string',enum:['entry','bed','desk','window','yard','closet','bath','door','toilet','helmet','helmetSide','pillow','shower','lock','ac','tabletop','basket','doorframe','grille','mug','radiator','gundam','paperCup','shelf','chair','rackets','overview']}},required:['view'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute(input){if(!input||!['entry','bed','desk','window','yard','closet','bath','door','toilet','helmet','helmetSide','pillow','shower','lock','ac','tabletop','basket','doorframe','grille','mug','radiator','gundam','paperCup','shelf','chair','rackets','overview'].includes(input.view))throw new Error('Unknown view');if(input.view==='overview')setMode('overview');else goTo(input.view);return {mode,position:camera.position.toArray()};}});
+  register({name:'get_room_view',description:'读取当前房间漫游视角、物品开关状态与渲染信息。',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute(){return {mode,position:camera.position.toArray(),curtainOpen,lightOn,water:interactions.state,wardrobe:wardrobe.state,rendering:{graphicsDevice,breeze:breeze.state,frameCache:daylight.statistics,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,mergedObjects:batchedMeshes}};}});
+  register({name:'navigate_room',description:'切换房间的可见视角：门口、床边、书桌、窗边、楼下摩托车、衣柜、衣柜正面、卫生间、门上细节、洁具细节或空间总览。',inputSchema:{type:'object',properties:{view:{type:'string',enum:['entry','bed','desk','window','yard','closet','bath','door','toilet','helmet','helmetSide','pillow','shower','lock','ac','tabletop','basket','doorframe','grille','mug','radiator','gundam','paperCup','shelf','chair','rackets','wardrobe','overview']}},required:['view'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute(input){if(!input||!['entry','bed','desk','window','yard','closet','bath','door','toilet','helmet','helmetSide','pillow','shower','lock','ac','tabletop','basket','doorframe','grille','mug','radiator','gundam','paperCup','shelf','chair','rackets','wardrobe','overview'].includes(input.view))throw new Error('Unknown view');if(input.view==='overview')setMode('overview');else goTo(input.view);return {mode,position:camera.position.toArray()};}});
   register({name:'walk_room',description:'沿当前朝向在房间中移动。遇到墙壁或家具时会停下，单次最多两米。',inputSchema:{type:'object',properties:{direction:{type:'string',enum:['forward','back','left','right','up','down']},distance:{type:'number',minimum:.05,maximum:2}},required:['direction','distance'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute(input){if(!input||!['forward','back','left','right','up','down'].includes(input.direction)||!Number.isFinite(input.distance)||input.distance<.05||input.distance>2)throw new Error('Invalid movement');if(mode!=='walk')throw new Error('Switch to a walking viewpoint first');const start=camera.position.clone();const f=input.direction==='forward'?1:input.direction==='back'?-1:0;const s=input.direction==='right'?1:input.direction==='left'?-1:0;const steps=Math.ceil(input.distance/.025),length=input.distance/steps;for(let i=0;i<steps;i++){if(input.direction==='up'||input.direction==='down')moveVertical(length*(input.direction==='up'?1:-1));else move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*length,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*length);}return {position:camera.position.toArray(),distanceMoved:start.distanceTo(camera.position)};}});
   window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});
 }
