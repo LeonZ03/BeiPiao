@@ -73,7 +73,7 @@ export function createSoftDaylight({THREE,renderer,scene,camera,sun,breeze}){
     void main(){vec3 c=sampleLight(vUv)*.227027;c+=(sampleLight(vUv+stepUV*1.384615)+sampleLight(vUv-stepUV*1.384615))*.316216;c+=(sampleLight(vUv+stepUV*3.230769)+sampleLight(vUv-stepUV*3.230769))*.070270;gl_FragColor=vec4(c,1.);}`});
   const finish=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,
     uniforms:{source:{value:target.texture},bloom:{value:bloomB.texture},volume:{value:volume.texture},depth:{value:target.depthTexture},inverseProjection:{value:camera.projectionMatrixInverse},projection:{value:camera.projectionMatrix},cameraWorld:{value:camera.matrixWorld},sunMap:{value:null},sunMatrix:{value:sun.shadow.matrix},sunDirection:{value:sun.position.clone().sub(sun.target.position).normalize()},sunPower:{value:0},resolution:{value:new THREE.Vector2()},volumePixel:{value:new THREE.Vector2()},contactStrength:{value:.28}},vertexShader:vertex,
-    fragmentShader:`varying vec2 vUv;uniform sampler2D source,bloom,depth,volume,dust;uniform mat4 inverseProjection,projection;uniform vec2 resolution,volumePixel;uniform float contactStrength;
+    fragmentShader:`varying vec2 vUv;uniform sampler2D source,bloom,depth,volume,dust;uniform mat4 inverseProjection,projection,cameraWorld;uniform vec2 resolution,volumePixel;uniform float contactStrength;
     vec3 viewPosition(vec2 uv){float d=texture2D(depth,uv).x;vec4 p=inverseProjection*vec4(uv*2.-1.,d*2.-1.,1.);return p.xyz/p.w;}
     void main(){
       vec3 color=texture2D(source,vUv).rgb;vec3 p=viewPosition(vUv);
@@ -86,7 +86,12 @@ export function createSoftDaylight({THREE,renderer,scene,camera,sun,breeze}){
       color+=texture2D(bloom,vUv).rgb*.11;
       vec3 air=texture2D(volume,vUv).rgb*.28;
       air+=(texture2D(volume,vUv+volumePixel).rgb+texture2D(volume,vUv-volumePixel).rgb+texture2D(volume,vUv+vec2(volumePixel.x,-volumePixel.y)).rgb+texture2D(volume,vUv+vec2(-volumePixel.x,volumePixel.y)).rgb)*.18;
-      color+=air+texture2D(dust,vUv).rgb;
+      // Keep the approved shafts against indoor surfaces. A shallow outward
+      // sightline through the bay window must not put the full indoor haze
+      // over the courtyard; this mask affects neither sun nor room exposure.
+      float surfaceZ=(cameraWorld*vec4(p,1.)).z;
+      float airVisibility=mix(.18,1.,smoothstep(-2.15,-1.80,surfaceZ));
+      color+=air*airVisibility+texture2D(dust,vUv).rgb;
       // Keep shadows neutral and lift only warm highlights, without a yellow veil.
       color*=vec3(1.025,1.008,.985);
       gl_FragColor=vec4(color,1.);

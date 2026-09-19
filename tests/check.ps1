@@ -20,5 +20,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Breeze checks failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Daylight cache checks failed.' }
 & $node (Join-Path $PSScriptRoot 'wardrobe.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Wardrobe interaction checks failed.' }
+& $node (Join-Path $PSScriptRoot 'exterior.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Exterior checks failed.' }
 & (Join-Path $PSScriptRoot 'test-start-room.ps1') -Port $Port
-Write-Host 'PASS syntax, assets, viewer lifecycle, breeze, daylight cache, wardrobe and Windows launcher.' -ForegroundColor Green
+Write-Host 'PASS syntax, assets, viewer lifecycle, breeze, daylight cache, wardrobe, exterior and Windows launcher.' -ForegroundColor Green

@@ -1,5 +1,6 @@
 // Geometry, placements, PBR surfaces and pivots come from the editable Blender
 // project. The browser only uploads the evaluated meshes and animates objects.
+import {installExteriorSurface} from './exterior-surface.js?v=exterior31';
 export function parseBlenderRoom(THREE,manifest,buffer,textures){
   if(manifest.format!=='blender-room-pack-1')throw new Error('Unsupported room asset');
   const array=a=>new ({Float32Array,Uint32Array,Uint16Array,Int16Array}[a.type])(buffer,a.offset,a.length);
@@ -7,7 +8,7 @@ export function parseBlenderRoom(THREE,manifest,buffer,textures){
     const Constructor=THREE[desc.type];if(!Constructor)throw new Error('Unknown room material '+desc.type);
     const m=new Constructor();
     for(const[key,value]of Object.entries(desc.props))if(key in m)m[key]=value;
-    for(const[key,value]of Object.entries(desc.colors))m[key]=new THREE.Color().fromArray(value);
+    for(const[key,value]of Object.entries(desc.colors))if(key in m)m[key]=new THREE.Color().fromArray(value);
     for(const[key,value]of Object.entries(desc.vectors))m[key]=new THREE.Vector2().fromArray(value);
     for(const[key,value]of Object.entries(desc.textures))m[key]=textures[value];
     m.userData={...desc.userData,authoring:'Blender'};
@@ -19,6 +20,7 @@ export function parseBlenderRoom(THREE,manifest,buffer,textures){
       `);};
       m.customProgramCacheKey=()=> 'woven-curtain-backlight-v1';
     }
+    installExteriorSurface(m);
     return m;
   });
   const geometries=manifest.geometries.map(desc=>{
@@ -61,7 +63,7 @@ export function parseBlenderRoom(THREE,manifest,buffer,textures){
 
 export async function loadBlenderRoom(THREE,manager,onProgress=()=>{}){
   onProgress(3,'正在读取房间');
-  const response=await fetch('./assets/full-room/scene.json?v=wardrobe29b');
+  const response=await fetch('./assets/full-room/scene.json?v=exterior31f');
   if(!response.ok)throw new Error('Room manifest '+response.status);
   const manifest=await response.json(),compressed=typeof DecompressionStream!=='undefined';
   let geometryProgress=0,textureCount=0;
@@ -82,7 +84,7 @@ export async function loadBlenderRoom(THREE,manager,onProgress=()=>{}){
   const loader=new THREE.TextureLoader(manager);
   const texturePromise=Promise.all(manifest.textures.map(async desc=>{
     const t=await loader.loadAsync(desc.webPath);
-    for(const key of ['wrapS','wrapT','magFilter','minFilter','anisotropy','flipY','colorSpace','channel','rotation','premultiplyAlpha','generateMipmaps'])if(desc[key]!==undefined)t[key]=desc[key];
+    for(const key of ['wrapS','wrapT','magFilter','minFilter','anisotropy','flipY','colorSpace','channel','rotation','premultiplyAlpha','generateMipmaps','mapping'])if(desc[key]!==undefined)t[key]=desc[key];
     for(const key of ['repeat','offset','center'])t[key].fromArray(desc[key]);
     t.needsUpdate=true;textureCount++;update();return t;
   }));

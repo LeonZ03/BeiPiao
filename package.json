@@ -5,7 +5,7 @@
   "description": "Development-only checks; website playback has no npm dependencies.",
   "engines": { "node": ">=22" },
   "scripts": {
-    "test": "node tests/assets.mjs && node --experimental-vm-modules tests/viewer-lifecycle.mjs && node tests/breeze.mjs && node tests/daylight-cache.mjs && node tests/wardrobe.mjs",
+    "test": "node tests/assets.mjs && node --experimental-vm-modules tests/viewer-lifecycle.mjs && node tests/breeze.mjs && node tests/daylight-cache.mjs && node tests/wardrobe.mjs && node tests/exterior.mjs",
     "test:scene": "node --experimental-vm-modules tests/scene.mjs"
   },
   "devDependencies": { "@napi-rs/canvas": "0.1.100" }

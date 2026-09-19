@@ -215,4 +215,13 @@
 
 ## 11. 完成一次修改时的交付说明
 
+### 窗外精修链与复用边界
+
+- 外景精修链为 `wardrobe29b → refine-exterior-trees.py → exterior31a → refine-exterior-buildings.py → exterior31 → refine-exterior-finish.py → exterior31c`，脚本共用 `exterior-authoring.py`，均通过官方 MCP 执行。父 revision 不匹配时不得直接重放。
+- 网页验收后的性能精修为 `exterior31c → refine-exterior-leaf-shading.py → exterior31e → refine-exterior-far-budget.py → exterior31f`。叶片以轻量漫反射及背光代替逐像素复杂环境高光；远楼保留窗洞、基础色和遮蔽，省略亚像素凹凸与阴影范围外的接收采样。不要恢复这些无明显收益的开销。
+- 三棵树保留 48,412 片叶子及原有投影代理；每棵树共享一款有曲率的叶片（11 个共享顶点、12 个三角形）。导出应按位置、法线、UV 等完整属性合并重复角点，不能只减少三角形却把风动顶点数翻倍。叶柄与枝条使用同一空间变形场，树冠遮蔽写入实例色。
+- 建筑窗洞为真实凹槽，43 扇窗共享环境反射贴图；不为各窗增加实时反射。外景材质单独标记 `exteriorSurface`，由 `exterior-surface.js` 控制远景雾化与叶片背光，不改变全局曝光、太阳或体积光。飘窗玻璃使用单独的低不透明度材质，避免暖白漫反射覆盖近树。
+- `soft-daylight.js` 仅根据最终表面的世界深度减弱窗外像素的雾光覆盖，室内表面的光束强度保持原基准。勿通过全局降低体积光消除窗外泛白。新材质解析只接收对应 Three.js 材质类型实际支持的颜色属性，不能向 MeshBasicMaterial 写入 emissive 导致缺失 uniform。
+- `tests/exterior.mjs` 检查窗洞深度、共享网格/反射、叶片法线与风动兼容；`measure_room_rendering` 为当前视角约 5.5 秒的移动测量工具，测量结束恢复朝向。对比必须使用同一设备、视口、视角及窗帘状态，不能把静止缓存帧与移动完整帧混比。
+
 向用户汇报时只说明：改了什么、为何这样改、验证了什么、还存在哪些由资料不足造成的限制。给出真实文件或预览入口，不堆砌内部执行日志。若某项尺寸来自照片估计，明确说是估计；若只在 Blender 中检查过，不要说网页已经验证。任何“完成”“还原”“无穿模”“运行流畅”的结论都必须与已执行的检查范围一致。
