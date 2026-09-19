@@ -57,6 +57,11 @@ for(const part of windowParts){
 }
 assert.equal(windowPairs.size,43);assert.ok([...windowPairs.values()].every(n=>n===2));
 assert.ok([193,194,195].every(id=>/cement/.test(pack.materials[manifest.nodes[id].material].userData.surfaceFinish)),'All courtyard walking/road surfaces use concrete');
+for(const id of [166,172,178]){
+  const glass=nodes.get(id).material;
+  assert.ok(glass.isMeshPhysicalMaterial&&glass.specularIntensity<=.1,'Bay glazing must not amplify local fill lights into fireflies');
+  assert.equal(glass.depthWrite,false,'Clear panes must not replace the opaque sky/leaf depth used for distant sun occlusion');
+}
 
 // Exterior shading must survive the breeze material clone, without installing
 // exterior fog/backlight onto curtains or other approved interior finishes.

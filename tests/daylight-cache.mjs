@@ -8,7 +8,7 @@ scene.background=new THREE.Color('#c9d2cd');
 camera.position.set(0,1.5,2);camera.lookAt(0,1,-1);camera.updateMatrixWorld();
 const solid=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial());solid.name='stationary';scene.add(solid);
 const leaves=new THREE.Mesh(new THREE.PlaneGeometry(),new THREE.MeshStandardMaterial());leaves.name='moving';leaves.layers.enable(1);scene.add(leaves);
-const glass=new THREE.Mesh(new THREE.PlaneGeometry(),new THREE.MeshStandardMaterial({transparent:true,opacity:.055,depthWrite:true}));glass.name='glass';scene.add(glass);
+const glass=new THREE.Mesh(new THREE.PlaneGeometry(),new THREE.MeshPhysicalMaterial({transparent:true,opacity:.012,depthWrite:false,specularIntensity:.06}));glass.name='glass';scene.add(glass);
 const sun=new THREE.DirectionalLight();sun.position.set(2.7,5.8,-8);sun.shadow.map={texture:new THREE.Texture()};scene.add(sun);
 const passes=[];
 const renderer={

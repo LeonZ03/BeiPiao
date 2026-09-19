@@ -73,7 +73,7 @@ export function createSoftDaylight({THREE,renderer,scene,camera,sun,breeze}){
     void main(){vec3 c=sampleLight(vUv)*.227027;c+=(sampleLight(vUv+stepUV*1.384615)+sampleLight(vUv-stepUV*1.384615))*.316216;c+=(sampleLight(vUv+stepUV*3.230769)+sampleLight(vUv-stepUV*3.230769))*.070270;gl_FragColor=vec4(c,1.);}`});
   const finish=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,
     uniforms:{source:{value:target.texture},bloom:{value:bloomB.texture},volume:{value:volume.texture},depth:{value:target.depthTexture},inverseProjection:{value:camera.projectionMatrixInverse},projection:{value:camera.projectionMatrix},cameraWorld:{value:camera.matrixWorld},sunMap:{value:null},sunMatrix:{value:sun.shadow.matrix},sunDirection:{value:sun.position.clone().sub(sun.target.position).normalize()},sunPower:{value:0},resolution:{value:new THREE.Vector2()},volumePixel:{value:new THREE.Vector2()},contactStrength:{value:.28}},vertexShader:vertex,
-    fragmentShader:`varying vec2 vUv;uniform sampler2D source,bloom,depth,volume,dust;uniform mat4 inverseProjection,projection,cameraWorld;uniform vec2 resolution,volumePixel;uniform float contactStrength;
+    fragmentShader:`varying vec2 vUv;uniform sampler2D source,bloom,depth,volume,dust;uniform mat4 inverseProjection,projection,cameraWorld;uniform vec2 resolution,volumePixel;uniform vec3 sunDirection;uniform float contactStrength;
     vec3 viewPosition(vec2 uv){float d=texture2D(depth,uv).x;vec4 p=inverseProjection*vec4(uv*2.-1.,d*2.-1.,1.);return p.xyz/p.w;}
     void main(){
       vec3 color=texture2D(source,vUv).rgb;vec3 p=viewPosition(vUv);
@@ -92,6 +92,17 @@ export function createSoftDaylight({THREE,renderer,scene,camera,sun,breeze}){
       float surfaceZ=(cameraWorld*vec4(p,1.)).z;
       float airVisibility=mix(.18,1.,smoothstep(-2.15,-1.80,surfaceZ));
       color+=air*airVisibility+texture2D(dust,vUv).rgb;
+      // A distant solar disc, aligned with the SAME directional light as the
+      // room shadows. Sky-depth masking gives walls and moving leaves proper
+      // occlusion; thin transparent bay glazing deliberately writes no depth.
+      // This adds no light, glare sprites or near-camera parallax.
+      vec3 skyRay=normalize(mat3(cameraWorld)*normalize(p));
+      float separation=length(skyRay-sunDirection);
+      float edge=max(fwidth(separation),.00008);
+      float solarDisc=1.-smoothstep(.00465-edge,.00465+edge,separation);
+      float solarHalo=.11*exp(-pow(separation/.018,2.));
+      float skyVisible=step(.9999999,texture2D(depth,vUv).x);
+      color+=vec3(1.,.97,.89)*(solarDisc*8.+solarHalo)*skyVisible;
       // Keep shadows neutral and lift only warm highlights, without a yellow veil.
       color*=vec3(1.025,1.008,.985);
       gl_FragColor=vec4(color,1.);
