@@ -219,6 +219,8 @@
 
 - 外景精修链为 `wardrobe29b → refine-exterior-trees.py → exterior31a → refine-exterior-buildings.py → exterior31 → refine-exterior-finish.py → exterior31c`，脚本共用 `exterior-authoring.py`，均通过官方 MCP 执行。父 revision 不匹配时不得直接重放。
 - 网页验收后的性能精修为 `exterior31c → refine-exterior-leaf-shading.py → exterior31e → refine-exterior-far-budget.py → exterior31f`。叶片以轻量漫反射及背光代替逐像素复杂环境高光；远楼保留窗洞、基础色和遮蔽，省略亚像素凹凸与阴影范围外的接收采样。不要恢复这些无明显收益的开销。
+- 后续修正链为 `exterior31f → refine-exterior-alignment.py → exterior32`。建筑附件设父级后，必须刷新依赖图再导出 `matrix_local`，并核对网页世界坐标与 Blender `matrix_world`；旧导出曾让 60 个窗洞背板/窗台偏离楼体 2.8 米。全部 43 扇窗的 86 个附件用 `exteriorWindowGlass` 关联，回归必须覆盖侧视连接，而不只检查一扇窗洞深度。
+- Blender 字节缓冲图像的像素应直接写入 sRGB 编码值，再标注 sRGB；不要先转线性再存入该缓冲，否则 PNG 被重复压暗。`exterior-authoring.py` 已修正此行为，新贴图发布前应重新读取采样检查。保留旧贴图供历史资产引用；不为修正墙色重放树木或改变室内曝光。当前院内行走面为灰色水泥，土色仅用于树池；墙体为浅灰、米白，不能恢复深褐立面。
 - 三棵树保留 48,412 片叶子及原有投影代理；每棵树共享一款有曲率的叶片（11 个共享顶点、12 个三角形）。导出应按位置、法线、UV 等完整属性合并重复角点，不能只减少三角形却把风动顶点数翻倍。叶柄与枝条使用同一空间变形场，树冠遮蔽写入实例色。
 - 建筑窗洞为真实凹槽，43 扇窗共享环境反射贴图；不为各窗增加实时反射。外景材质单独标记 `exteriorSurface`，由 `exterior-surface.js` 控制远景雾化与叶片背光，不改变全局曝光、太阳或体积光。飘窗玻璃使用单独的低不透明度材质，避免暖白漫反射覆盖近树。
 - `soft-daylight.js` 仅根据最终表面的世界深度减弱窗外像素的雾光覆盖，室内表面的光束强度保持原基准。勿通过全局降低体积光消除窗外泛白。新材质解析只接收对应 Three.js 材质类型实际支持的颜色属性，不能向 MeshBasicMaterial 写入 emissive 导致缺失 uniform。

@@ -39,7 +39,9 @@ def srgb(c):
 def texture(name,pixels,repeat=(1,1),color=True):
     h,w=pixels.shape[:2];rgba=np.ones((h,w,4),dtype=np.float32)
     rgb=np.repeat(pixels[:,:,None],3,axis=2) if pixels.ndim==2 else pixels[:,:,:3]
-    rgba[:,:,:3]=srgb(np.clip(rgb,0,1)) if color else rgb
+    # Byte-backed Blender images store encoded samples. Their sRGB tag performs
+    # decoding when sampled; pre-decoding here would darken the PNG a second time.
+    rgba[:,:,:3]=np.clip(rgb,0,1)
     has_alpha=pixels.ndim==3 and pixels.shape[2]==4
     if has_alpha:rgba[:,:,3]=pixels[:,:,3]
     im=bpy.data.images.new(name,width=w,height=h,alpha=has_alpha)
@@ -102,6 +104,9 @@ def attach(me,name,mid,parent=192,nid=None):
     else:o=obs[nid];o.modifiers.clear();o.data=me;d=data['nodes'][nid]
     o.name=name;o['web_node_id']=nid;o['web_name']=name
     meta={'authoring':'Blender','blenderNode':nid,'revision':'exterior31'};o['web_user_data']=json.dumps(meta)
+    # matrix_local depends on the evaluated parent transform (not just basis).
+    # Without this refresh, translated parents produce a stale inverse offset.
+    bpy.context.view_layer.update()
     d.update(id=nid,parent=parent,name=name,material=mid,type='Mesh',matrix=flat(C.inverted()@o.matrix_local@C),userData=meta)
     set_material(nid,mid);return o
 def mesh(name,verts,faces,uvs=None,smooth=False):

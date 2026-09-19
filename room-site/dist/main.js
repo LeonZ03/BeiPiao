@@ -2,15 +2,15 @@ import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {Reflector} from './vendor/Reflector.js';
 import {createAfternoon} from './afternoon.js?v=wardrobe30';
-import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=exterior31f';
+import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=exterior32';
 import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=wardrobe29b';
 import {createInteractions} from './interactions.js?v=wardrobe29b';
-import {loadBlenderRoom} from './blender-room.js?v=exterior31f';
+import {loadBlenderRoom} from './blender-room.js?v=exterior32';
 import {reportRoomLoading,finishRoomLoading,nextPaint} from './room-loading.js?v=viewer26';
 import {createCurtainController} from './curtain.js?v=curtain23d';
 import {createRoomBreeze} from './room-breeze.js?v=breeze28';
 import {createWardrobe} from './wardrobe.js?v=wardrobe30';
-import {createRenderProbe} from './render-probe.js?v=exterior31f';
+import {createRenderProbe} from './render-probe.js?v=exterior32';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('world');

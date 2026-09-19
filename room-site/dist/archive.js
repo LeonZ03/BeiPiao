@@ -19,7 +19,7 @@ async function route(){
   }
   archive.hidden=true;app.hidden=false;document.title='永旺家园 · 北漂';
   try{
-    if(!roomPromise){startRoomLoading();roomPromise=import('./main.js?v=exterior31f');}
+    if(!roomPromise){startRoomLoading();roomPromise=import('./main.js?v=exterior32');}
     roomModule=await roomPromise;
     if(version===routeVersion){roomModule.enterRoom(view);document.getElementById('world').focus({preventScroll:true});}
   }catch(error){if(version===routeVersion)failRoomLoading();console.error('Room could not load',error);}

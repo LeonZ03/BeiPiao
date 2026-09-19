@@ -38,6 +38,26 @@ for(const m of pack.materials)if(m.isMeshBasicMaterial)assert.equal(m.emissive,u
 assert.ok(glassMaterials.every(m=>m.envMap===glassMaterials[0].envMap),'All windows share their reflection map');
 assert.equal(manifest.statistics.exteriorRefinement.windows,43);
 
+// All cavity backs and sill drips must align in WORLD space. A translated
+// building parent used to shift 60 exported attachments 2.8 metres off the wall.
+const windowParts=manifest.nodes.filter(n=>n.userData.exteriorWindowGlass!==undefined);
+assert.equal(windowParts.length,86);
+const windowPairs=new Map();
+for(const part of windowParts){
+  const glassId=part.userData.exteriorWindowGlass,glass=nodes.get(glassId);
+  const gb=new THREE.Box3().setFromObject(glass),pb=new THREE.Box3().setFromObject(nodes.get(part.id));
+  const gc=gb.getCenter(new THREE.Vector3()),pc=pb.getCenter(new THREE.Vector3());
+  assert.ok(Math.abs(gc.x-pc.x)<.001,`Window attachment ${part.id} must align horizontally with glazing ${glassId}`);
+  if(part.userData.exteriorWindowPart==='Window cavity'){
+    assert.ok(Math.abs(gc.y-pc.y)<.001&&Math.abs(gc.z-pc.z-.18)<.001,'Cavity back stays centered and behind glass');
+  }else{
+    assert.ok(Math.abs(pb.max.y-gb.min.y+.04)<.002&&pc.z>gc.z,'Sill sits directly below this window');
+  }
+  windowPairs.set(glassId,(windowPairs.get(glassId)||0)+1);
+}
+assert.equal(windowPairs.size,43);assert.ok([...windowPairs.values()].every(n=>n===2));
+assert.ok([193,194,195].every(id=>/cement/.test(pack.materials[manifest.nodes[id].material].userData.surfaceFinish)),'All courtyard walking/road surfaces use concrete');
+
 // Exterior shading must survive the breeze material clone, without installing
 // exterior fog/backlight onto curtains or other approved interior finishes.
 const camera=new THREE.PerspectiveCamera();
