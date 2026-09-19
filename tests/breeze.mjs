@@ -15,7 +15,7 @@ const transforms=[];pack.world.traverse(o=>transforms.push([o,o.matrix.clone(),o
 const camera=new THREE.PerspectiveCamera(62,1.6,.003,80);camera.position.set(.83,1.48,1.66);camera.rotation.set(-.20,.20,0,'YXZ');
 const reduced={matches:false},coarse={matches:false};
 const breeze=createRoomBreeze({THREE,world:pack.world,camera,media:q=>q.includes('reduced')?reduced:coarse});
-assert.equal(breeze.objects.length,12);assert.equal(breeze.state.leafInstances,48412);
+assert.equal(breeze.objects.length,12);assert.equal(breeze.state.leafInstances,48209);
 const animated=new Set(breeze.objects);
 for(const [object,,material] of transforms){
   if(animated.has(object)){assert.notEqual(object.material,material,'Animation must clone shared materials');assert.ok(object.layers.isEnabled(0),'Picking stays on layer 0');}
@@ -57,4 +57,4 @@ for(const [object,matrix,,version]of transforms){
   if(object.isInstancedMesh)assert.equal(object.instanceMatrix.version,version,'No per-frame instance uploads');
 }
 assert.equal(hash(),before,'Blender vertex and instance buffers are unmodified');
-console.log('PASS breeze: 48,412 leaves, pinned curtain morphs, coherent flower flow, static furnishings/shadows, reduced motion, pause/resume, unchanged Blender buffers.');
+console.log('PASS breeze: 48,209 leaves, pinned curtain morphs, coherent flower flow, static furnishings/shadows, reduced motion, pause/resume, unchanged Blender buffers.');

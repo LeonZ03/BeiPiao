@@ -40,7 +40,7 @@ renderedScene.traverse(o=>{
   if(o.name==='summer-leaf-canopy')leaves+=o.count;
   if(o.name==='summer-leaf-shadow-layer')shadowLeaves+=o.count;
 });
-assert.equal(leaves,48412);assert.equal(shadowLeaves,1596);
+assert.equal(leaves,48209);assert.equal(shadowLeaves,1596);
 const source=(await import('../room-site/dist/assets/summer/models.js')).default;
 const poses=source.leaves.filter((_,i)=>i%7===0),dummy=new THREE.Object3D(),matrix=new THREE.Matrix4();
 for(let id=0;id<3;id++){

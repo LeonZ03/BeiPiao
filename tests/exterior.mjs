@@ -11,7 +11,18 @@ const bytes=fs.readFileSync(new URL('geometry.bin',url));
 const pack=parseBlenderRoom(THREE,manifest,bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),manifest.textures.map(()=>new THREE.Texture()));
 const nodes=new Map();pack.world.traverse(o=>nodes.set(o.userData.blenderNode,o));pack.world.updateMatrixWorld(true);
 const trees=[644,649,654].map(id=>nodes.get(id));
-assert.equal(trees.reduce((n,o)=>n+o.count,0),48412);
+assert.equal(trees.reduce((n,o)=>n+o.count,0),48209);
+assert.equal(manifest.statistics.exteriorRefinement.leafCount,48209);
+assert.equal(manifest.statistics.exteriorRefinement.solarOpening.trees.reduce((n,t)=>n+t.removedLeaves,0),203,'Only the explicitly approved 203 leaves are pruned');
+// At ordinary standing height near the glass, the whole physical solar disc
+// must have a real clear sightline. Do not fake visibility over opaque leaves.
+const opaque=[];pack.world.traverseVisible(o=>{if(o.isMesh&&!o.material.transparent&&o.material.colorWrite!==false)opaque.push(o);});
+const solarDirection=new THREE.Vector3(2.6,5.7,-9).normalize();
+const solarSide=solarDirection.clone().cross(new THREE.Vector3(0,1,0)).normalize(),solarUp=solarSide.clone().cross(solarDirection);
+for(const [u,v] of [[0,0],[.00465,0],[-.00465,0],[0,.00465],[0,-.00465]]){
+  const ray=new THREE.Raycaster(new THREE.Vector3(-.25,1.56,-2),solarDirection.clone().addScaledVector(solarSide,u).addScaledVector(solarUp,v).normalize(),.01,80);
+  assert.equal(ray.intersectObjects(opaque,false).length,0,'Solar centre and rim are unoccluded from the near-window view');
+}
 assert.equal(new Set(trees.map(o=>o.geometry)).size,3);
 for(const tree of trees){
   assert.equal(tree.castShadow,false,'Retain cheap separate shadow casters');

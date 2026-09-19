@@ -18,10 +18,20 @@ const renderer={
 };
 const breeze={objects:[leaves],movingObjects:[leaves],active:true};
 const daylight=createSoftDaylight({THREE,renderer,scene,camera,sun,breeze});
-daylight.render(0,false);assert.deepEqual(passes[0].names,['stationary','moving','glass']);
+const solarDisc=scene.getObjectByName('distant-solar-disc');
+assert.ok(solarDisc.material.depthTest&&solarDisc.material.depthWrite,'Solar disc participates in actual leaf and frame occlusion');
+assert.equal(solarDisc.castShadow,false,'Sky disc must not modify room shadows');
+const expectedDirection=sun.position.clone().sub(sun.target.position).normalize();
+for(const position of [[-.25,1.56,-2],[.5,1.3,.4]]){
+  const view=camera.clone();view.position.set(...position);view.updateMatrixWorld();solarDisc.onBeforeRender(renderer,scene,view);
+  const offset=solarDisc.position.clone().sub(view.position);
+  assert.ok(offset.clone().normalize().distanceTo(expectedDirection)<1e-8,'Solar direction has no room-scale parallax');
+  assert.ok(Math.abs(solarDisc.geometry.parameters.radius/offset.length()-.00465)<1e-8);
+}
+daylight.render(0,false);assert.deepEqual(passes[0].names,['stationary','moving','glass','distant-solar-disc']);
 const originalBackground=scene.background;
 daylight.animate(.1,false,true);
-assert.deepEqual(passes[1].names,['stationary'],'Cache only opaque stationary objects; transparent window cannot occlude moving foliage');
+assert.deepEqual(passes[1].names,['stationary','distant-solar-disc'],'Cache opaque room and sun; transparent window cannot occlude moving foliage');
 assert.deepEqual(passes[2].names,['moving','glass'],'Render foliage and transparent window together, in normal material order');
 assert.notEqual(passes[1].target,passes[2].target,'Static color/depth are independent from the moving image');
 assert.equal(passes[2].target,passes[0].target,'Full and moving passes share the final depth texture');

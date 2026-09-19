@@ -31,6 +31,20 @@ export function createSoftDaylight({THREE,renderer,scene,camera,sun,breeze}){
   const screen=new THREE.Scene(),screenCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   const vertex=`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`;
   const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.MeshBasicMaterial());screen.add(quad);
+  // Rasterize the HDR sun with scene geometry so leaves and window frames
+  // occlude its coverage before the cached color and depth are composited.
+  const solarDirection=sun.position.clone().sub(sun.target.position).normalize();
+  const solarDistance=camera.far*.75;
+  const solarDisc=new THREE.Mesh(new THREE.CircleGeometry(solarDistance*.00465,48),new THREE.MeshBasicMaterial({color:new THREE.Color(8,7.76,7.12),toneMapped:false,fog:false}));
+  solarDisc.name='distant-solar-disc';solarDisc.frustumCulled=false;
+  solarDisc.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),solarDirection.clone().negate());
+  solarDisc.onBeforeRender=(_renderer,_scene,viewCamera)=>{
+    // Camera-relative distance is only a numerical device: direction and
+    // apparent size stay fixed, including reflected views. It emits no light.
+    solarDisc.position.copy(viewCamera.getWorldPosition(new THREE.Vector3())).addScaledVector(solarDirection,solarDistance);
+    solarDisc.updateMatrixWorld(true);
+  };
+  scene.add(solarDisc);
   // Keep an HDR/depth image of the stationary room. While the camera is idle,
   // redraw only the Blender foliage/cloth/flowers over it (layer 1). No CPU
   // instance uploads, full-room shading or shadow-map updates for a breeze frame.
@@ -77,6 +91,13 @@ export function createSoftDaylight({THREE,renderer,scene,camera,sun,breeze}){
     vec3 viewPosition(vec2 uv){float d=texture2D(depth,uv).x;vec4 p=inverseProjection*vec4(uv*2.-1.,d*2.-1.,1.);return p.xyz/p.w;}
     void main(){
       vec3 color=texture2D(source,vUv).rgb;vec3 p=viewPosition(vUv);
+      vec3 skyRay=normalize(mat3(cameraWorld)*normalize(p));
+      float skyVisible=step(.9999999,texture2D(depth,vUv).x);
+      vec3 summerSky=mix(vec3(.76,.83,.84),vec3(.30,.48,.66),smoothstep(.03,.85,skyRay.y));
+      float skyRadiance=max(color.r,max(color.g,color.b));
+      // Grade the sky BEFORE adding bloom/air. Preserve HDR solar coverage:
+      // far-depth rounding must not classify the luminous disc as background.
+      color=mix(color,summerSky,skyVisible*(1.-smoothstep(1.,2.,skyRadiance)));
       vec3 normal=normalize(cross(dFdx(p),dFdy(p)));if(dot(normal,-p)<0.)normal=-normal;
       float occ=0.;float radius=.15;vec2 size=vec2(projection[0][0],projection[1][1])*radius/max(.08,-p.z)*.5;
       size=min(size,vec2(22.)/resolution);
@@ -92,17 +113,11 @@ export function createSoftDaylight({THREE,renderer,scene,camera,sun,breeze}){
       float surfaceZ=(cameraWorld*vec4(p,1.)).z;
       float airVisibility=mix(.18,1.,smoothstep(-2.15,-1.80,surfaceZ));
       color+=air*airVisibility+texture2D(dust,vUv).rgb;
-      // A distant solar disc, aligned with the SAME directional light as the
-      // room shadows. Sky-depth masking gives walls and moving leaves proper
-      // occlusion; thin transparent bay glazing deliberately writes no depth.
-      // This adds no light, glare sprites or near-camera parallax.
-      vec3 skyRay=normalize(mat3(cameraWorld)*normalize(p));
+      // A soft optical aureole makes the physical 0.53-degree disc legible.
+      // It stays on sky depth; it cannot float in front of leaves or walls.
       float separation=length(skyRay-sunDirection);
-      float edge=max(fwidth(separation),.00008);
-      float solarDisc=1.-smoothstep(.00465-edge,.00465+edge,separation);
-      float solarHalo=.11*exp(-pow(separation/.018,2.));
-      float skyVisible=step(.9999999,texture2D(depth,vUv).x);
-      color+=vec3(1.,.97,.89)*(solarDisc*8.+solarHalo)*skyVisible;
+      float solarHalo=1.2*exp(-pow(separation/.018,2.))+.12*exp(-pow(separation/.055,2.));
+      color+=vec3(1.,.96,.86)*solarHalo*skyVisible;
       // Keep shadows neutral and lift only warm highlights, without a yellow veil.
       color*=vec3(1.025,1.008,.985);
       gl_FragColor=vec4(color,1.);
