@@ -90,6 +90,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/test-start-room.ps
 
 ## Cloudflare Pages 部署
 
+在线访问：[room.leonz03.dpdns.org](https://room.leonz03.dpdns.org)。备用地址：[beipiao-4op.pages.dev](https://beipiao-4op.pages.dev)。Pages 项目名为 `beipiao`，已连接此仓库的 `main` 分支；推送后自动部署，访问无需运行本地启动器。
+
 Cloudflare Pages 托管网站后，访问不再依赖本机开机或临时隧道。连接 GitHub 仓库 `LeonZ03/BeiPiao`，生产分支选 `main`，框架选 `None`，构建命令填 `npm run build:pages`，输出目录填 `.pages-dist`，项目根目录保留仓库根目录，Node.js 使用 22 或更新版本。
 
 构建只复制 `room-site/dist/` 的网页资源，并将模型二进制拆为最多 8 MiB 的文件，适配 Pages 的单文件限制；网页合并后数据与 Blender 原始导出完全一致。源工程和本地模型包不变，本地启动器仍可使用。`.pages-dist/` 为可重复生成的发布目录，不提交 Git。
@@ -99,7 +101,7 @@ npm run build:pages
 npm run test:pages
 ```
 
-在 Pages 的 Custom domains 中绑定 `leonz03.dpdns.org`，按控制台提示配置 DNS，并等待 HTTPS 生效。后续推送 `main` 会触发自动构建。哈希命名的模型分块长期缓存，页面和清单重新验证缓存，避免发布后混用旧文件。免费托管不等于国内所有网络均可稳定直连，首次加载速度仍取决于线路与设备。
+在 Pages 的 Custom domains 中绑定 `room.leonz03.dpdns.org`，按控制台提示配置 DNS，并等待 HTTPS 生效。当前 CNAME 指向 `beipiao-4op.pages.dev`；根域名不绑定此网站。后续推送 `main` 会触发自动构建。哈希命名的模型分块长期缓存，页面和清单重新验证缓存，避免发布后混用旧文件。免费托管不等于国内所有网络均可稳定直连，首次加载速度仍取决于线路与设备。
 
 ## 工程结构
 
