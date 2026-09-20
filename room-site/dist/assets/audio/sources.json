@@ -34,20 +34,33 @@
     "bytes": 319244
   },
   {
-    "file": "wardrobe-soft.wav",
-    "author": "zajac27",
-    "page": "https://freesound.org/people/zajac27/sounds/848136/",
-    "preview": "https://cdn.freesound.org/previews/848/848136_18358066-hq.mp3",
-    "license": "CC0-1.0",
-    "sourceSha256": "c07ef8bd0b1ea4affc894761a60b4486ba1a0e3f29d8487f0feb493f103f1b47",
+    "file": "wardrobe-open.wav",
+    "source": "generated-assets/audio/cabinet-door-opens-and-closes.mp3",
+    "origin": "user-provided",
+    "license": "not-specified-by-user",
+    "sourceSha256": "de0777afcce58bf8e2c9a6ce779f5bab9a8e76f86f53ca6df6f9cff5df2f3ea2",
     "trimSeconds": [
-      0,
-      0.886
+      0.32,
+      1.11
     ],
-    "overlapSeconds": 0,
-    "filters": "highpass=f=90,lowpass=f=1800,lowpass=f=1800",
+    "filters": "atrim=start=0.32:end=1.43,asetpts=PTS-STARTPTS,afade=t=in:d=0.006,afade=t=out:st=1.104:d=0.006",
     "playback": "one-shot",
-    "durationSeconds": 0.886,
-    "bytes": 42572
+    "durationSeconds": 1.11,
+    "bytes": 53324
+  },
+  {
+    "file": "wardrobe-close.wav",
+    "source": "generated-assets/audio/cabinet-door-opens-and-closes.mp3",
+    "origin": "user-provided",
+    "license": "not-specified-by-user",
+    "sourceSha256": "de0777afcce58bf8e2c9a6ce779f5bab9a8e76f86f53ca6df6f9cff5df2f3ea2",
+    "trimSeconds": [
+      3.3,
+      1.52
+    ],
+    "filters": "atrim=start=3.3:end=4.82,asetpts=PTS-STARTPTS,afade=t=in:d=0.006,afade=t=out:st=1.514:d=0.006",
+    "playback": "one-shot",
+    "durationSeconds": 1.52,
+    "bytes": 73004
   }
 ]

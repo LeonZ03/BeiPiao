@@ -1,20 +1,21 @@
-// CC0 recorded water loops and one-shot wood foley, fetched only after opt-in.
+// Recorded water loops and user-supplied open/close foley, fetched after opt-in.
 // Cloth and small clicks remain synthesized. No autoplay or saved opt-in.
 // Motion follows authored animation, so blocked doors and stopped curtains are silent.
 const positions={curtain:[0,1.6,-1.9],wardrobeLeft:[-1.2,1.2,-.9],wardrobeMiddle:[-1.2,1.2,-.4],wardrobeRight:[-1.2,1.2,.1],shower:[-.95,1.4,2.65],faucet:[-.065,.89,2.986],doorLock:[1.5,1.05,2.6],light:[1.4,1.3,2.3]};
-const profiles={curtain:[950,.55,.36],wardrobe:[1800,.5,.30],shower:[7500,.5,.72],faucet:[6800,.5,.7]};
+const profiles={curtain:[950,.55,.36],shower:[7500,.5,.72],faucet:[6800,.5,.7]};
+const cabinetFiles={wardrobeOpen:'wardrobe-open.wav',wardrobeClose:'wardrobe-close.wav'};
 export function createRoomAudio({createContext=()=>{const Audio=globalThis.AudioContext||globalThis.webkitAudioContext;return Audio?new Audio({latencyHint:'interactive'}):null;},loadSample=async(kind,ctx)=>{
-  const file=kind==='wardrobe'?'wardrobe-soft.wav':`${kind}-loop.wav`;
+  const file=cabinetFiles[kind]||`${kind}-loop.wav`;
   const response=await fetch(new URL(`./assets/audio/${file}`,import.meta.url));
   if(!response.ok)throw new Error(`Room audio ${response.status}`);
   return ctx.decodeAudioData(await response.arrayBuffer());
 },onChange=()=>{}}={}){
   let context=null,master=null,buffer=null,muted=true,active=false,disposed=false,serial=0;
   let listener={x:0,y:1.5,z:0,yaw:0},previous=null,pending=0;
-  const loops=new Map(),shots=new Set();
+  const loops=new Map(),shots=new Set(),cabinetMotions=new Map();
   const samples=new Map();let samplePromise=null;
   function loadRecordings(){
-    if(!samplePromise)samplePromise=Promise.all(['wardrobe','shower','faucet'].map(async kind=>{
+    if(!samplePromise)samplePromise=Promise.all(['wardrobeOpen','wardrobeClose','shower','faucet'].map(async kind=>{
       if(!samples.has(kind))samples.set(kind,await loadSample(kind,context));
     })).catch(error=>{samplePromise=null;throw error;});
     return samplePromise;
@@ -41,10 +42,10 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
   function voice(frequency,q,kind=null){
     const source=context.createBufferSource(),filter=context.createBiquadFilter(),gain=context.createGain(),pan=context.createStereoPanner();
     const sample=samples.get(kind);
-    source.buffer=sample||buffer;source.loop=kind!=='wardrobe';filter.type=sample?'lowpass':'bandpass';filter.frequency.value=frequency;filter.Q.value=q;gain.gain.value=0;
+    source.buffer=sample||buffer;source.loop=!cabinetFiles[kind];filter.type=sample?'lowpass':'bandpass';filter.frequency.value=frequency;filter.Q.value=q;gain.gain.value=0;
     source.connect(filter);filter.connect(gain);gain.connect(pan);pan.connect(master);source.start(0,sample?0:Math.random()*3);
     const v={source,filter,gain,pan,stopped:false};
-    source.onended=()=>{for(const n of [source,filter,gain,pan])n.disconnect();shots.delete(v);};
+    source.onended=()=>{for(const n of [source,filter,gain,pan])n.disconnect();shots.delete(v);if(v.id&&loops.get(v.id)===v)loops.delete(v.id);};
     return v;
   }
   function stop(voice,immediate=false){
@@ -53,7 +54,7 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
     else ramp(voice.gain.gain,0,.025);
     voice.source.stop(context.currentTime+(immediate?0:.18));
   }
-  function silence(){for(const v of loops.values())stop(v,true);loops.clear();for(const v of shots)stop(v,true);shots.clear();previous=null;pending=0;}
+  function silence(){for(const v of loops.values())stop(v,true);loops.clear();for(const v of shots)stop(v,true);shots.clear();cabinetMotions.clear();previous=null;pending=0;}
   function sync(){
     if(!context)return;
     master.gain.cancelScheduledValues(context.currentTime);master.gain.setValueAtTime(0,context.currentTime);
@@ -91,9 +92,25 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
     const [frequency,q,level]=profiles[kind];
     if(kind!=='curtain'&&!samples.has(kind))return;
     if(!v){v=voice(frequency,q,kind);loops.set(id,v);}
-    // Keep a completed cabinet voice until motion stops, so it cannot retrigger
-    // every frame. Natural pitch stays fixed instead of sweeping with door speed.
-    ramp(v.gain.gain,level*(kind==='wardrobe'?Math.sqrt(Math.min(1,amount)):Math.min(1,amount))*spatial(v,positions[id]),.055);
+    ramp(v.gain.gain,level*Math.min(1,amount)*spatial(v,positions[id]),.055);
+  }
+  function cabinetSound(door,delta){
+    const id=door.id;let v=loops.get(id),motion=cabinetMotions.get(id);
+    if(door.blocked){if(v)stop(v);loops.delete(id);cabinetMotions.delete(id);return;}
+    if(v)ramp(v.gain.gain,.85*spatial(v,positions[id]),.055);
+    if(Math.abs(delta)<1e-7)return;
+    const direction=Math.sign(delta);
+    if(motion?.direction!==direction){
+      if(v)stop(v);loops.delete(id);
+      motion={direction,played:false};cabinetMotions.set(id,motion);
+    }
+    // The closing recording includes the latch impact: begin near the end
+    // of the door arc, not while it is still wide open. Keep its natural tail.
+    if(motion.played||(direction<0&&door.amount>.03))return;
+    const kind=direction>0?'wardrobeOpen':'wardrobeClose';
+    if(!samples.has(kind))return;
+    motion.played=true;v=voice(11000,.707,kind);v.id=id;loops.set(id,v);
+    ramp(v.gain.gain,.85*spatial(v,positions[id]),.008);
   }
   function update(dt,{curtain,doors,water,position,yaw}){
     if(!audible()){previous=null;pending=0;return;}
@@ -104,9 +121,8 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
     const elapsed=Math.max(.016,dt);
     sustain('curtain','curtain',previous?Math.min(1,Math.abs(curtain-previous.curtain)/elapsed)*.9:0);
     doors.forEach((d,i)=>{
-      const before=previous?.doors[i]??d.amount,speed=d.blocked?0:Math.abs(d.amount-before)/elapsed;
-      sustain(d.id,'wardrobe',Math.min(1,speed));
-      if(before>0&&d.amount===0)impact(d.id,true);
+      const before=previous?.doors[i]??d.amount;
+      cabinetSound(d,d.amount-before);
     });
     previous=current;
   }

@@ -21,24 +21,35 @@ assert.equal(loaded,0,'Muted visitors must not download recordings');
 assert.equal(audio.muted,true);
 await audio.setMuted(false);step();
 assert.equal(created,1);assert.deepEqual(audio.state.loops,['shower']);
-assert.equal(loaded,3);
+assert.equal(loaded,4);
 for(let i=0;i<60;i++)step();assert.equal(ctx.sources.length,1,'Continuous water reuses a single source');
 state.water.faucet=true;step();assert.equal(audio.state.loops.length,2);
 assert.notEqual(ctx.sources[0].buffer,ctx.sources[1].buffer,'Faucet and shower must use distinct recordings');
 state.curtain=.1;state.doors[0].amount=.1;step();
 assert.ok(audio.state.loops.includes('curtain'));assert.ok(audio.state.loops.includes('wardrobeLeft'));
-const creak=ctx.sources.find(s=>s.buffer.kind==='wardrobe');
+const creak=ctx.sources.find(s=>s.buffer.kind==='wardrobeOpen');
 assert.equal(creak.loop,false,'Cabinet uses one short gesture, not a repeating squeal');
 const sourceCount=ctx.sources.length;creak.onended();
 for(let i=0;i<8;i++){state.doors[0].amount+=.01;step();}
 assert.equal(ctx.sources.length,sourceCount,'A finished creak must not retrigger while the same motion continues');
 state.doors[0].blocked=true;step();assert.ok(!audio.state.loops.includes('wardrobeLeft'));
 assert.ok(!audio.state.loops.includes('curtain'),'Still cloth must become quiet');
-state.doors[0].blocked=false;state.doors[0].amount=0;step();assert.equal(audio.state.transients,1,'Closing reaches a soft impact');
+state.doors[0].blocked=false;state.doors[0].amount=.10;step();
+assert.ok(!ctx.sources.some(s=>s.buffer.kind==='wardrobeClose'),'Do not play the latch while door is wide open');
+state.doors[0].amount=.025;step();
+const close=ctx.sources.find(s=>s.buffer.kind==='wardrobeClose');assert.ok(close);assert.equal(close.loop,false);
+assert.notEqual(close.buffer,creak.buffer,'Opening and closing use different sections of the supplied recording');
+state.doors[0].amount=0;step();assert.equal(audio.state.transients,0,'Do not add a synthesized impact over the recorded closing sound');
+assert.equal(close.stopAt,undefined,'Let the recorded closing tail finish naturally');
+close.onended();assert.ok(!audio.state.loops.includes('wardrobeLeft'));
+state.doors[0].amount=.2;step();const openingAgain=ctx.sources.at(-1);
+assert.equal(openingAgain.buffer.kind,'wardrobeOpen');
+state.doors[0].amount=.1;step();assert.notEqual(openingAgain.stopAt,undefined,'Reversing stops the previous opening sound');
+state.doors[0].amount=.02;step();assert.equal(ctx.sources.at(-1).buffer.kind,'wardrobeClose');
 await audio.setMuted(true);assert.equal(ctx.state,'suspended');assert.deepEqual(audio.state.loops,[]);
 audio.interaction('doorLock');assert.equal(audio.state.transients,0);
 await audio.setMuted(false);step();assert.deepEqual(audio.state.loops,['shower','faucet']);
-assert.equal(loaded,3,'Reuse decoded recordings after muting');
+assert.equal(loaded,4,'Reuse decoded recordings after muting');
 audio.setActive(false);assert.equal(ctx.state,'suspended');assert.deepEqual(audio.state.loops,[]);
 audio.setActive(true);await Promise.resolve();step();assert.equal(audio.state.loops.length,2,'Returning restores currently running water');
 state.water.shower=false;state.water.faucet=false;step();assert.equal(audio.state.loops.length,0);
@@ -51,21 +62,22 @@ const retry=createRoomAudio({createContext:()=>new Context(),loadSample:async()=
 retry.setActive(true);assert.equal(await retry.setMuted(false),false);assert.equal(retry.muted,true);
 fail=false;assert.equal(await retry.setMuted(false),true);retry.dispose();
 // PCM has no encoder delay. Inspect every 50 ms window and the wrap seam.
-for(const kind of ['faucet','shower','wardrobe']){
-  const filename=kind==='wardrobe'?'wardrobe-soft.wav':`${kind}-loop.wav`;
+for(const kind of ['faucet','shower','wardrobe-open','wardrobe-close']){
+  const cabinet=kind.startsWith('wardrobe');
+  const filename=cabinet?`${kind}.wav`:`${kind}-loop.wav`;
   const wav=fs.readFileSync(new URL(`../room-site/dist/assets/audio/${filename}`,import.meta.url));
   assert.equal(wav.toString('ascii',0,4),'RIFF');assert.equal(wav.readUInt16LE(22),1);assert.equal(wav.readUInt32LE(24),24000);
   const pcm=[];for(let i=44;i<wav.length;i+=2)pcm.push(wav.readInt16LE(i));
   assert.ok(pcm.every(x=>Math.abs(x)<30000),'No clipped samples');
   const diffs=pcm.slice(1).map((x,i)=>Math.abs(x-pcm[i])).sort((a,b)=>a-b);
-  assert.ok(Math.abs(pcm[0]-pcm.at(-1))<=diffs[Math.floor(diffs.length*.99)],'Wrap must not introduce an isolated click');
+  if(!cabinet)assert.ok(Math.abs(pcm[0]-pcm.at(-1))<=diffs[Math.floor(diffs.length*.99)],'Wrap must not introduce an isolated click');
   const wholeRms=Math.sqrt(pcm.reduce((sum,x)=>sum+x*x,0)/pcm.length);
-  if(kind==='wardrobe'){
-    assert.ok(pcm.length/24000<1,'Cabinet creak is brief');
-    assert.equal(pcm[0],0);assert.equal(pcm.at(-1),0);
-    assert.ok(wholeRms<3400,'Cabinet sample retains a restrained level');
+  if(cabinet){
+    assert.ok(pcm.length/24000<1.6,'Exclude the gap between the original actions');
+    assert.ok(Math.abs(pcm[0])<10&&Math.abs(pcm.at(-1))<10,'Quiet cut edges');
+    assert.ok(wholeRms>300&&wholeRms<3400,'Both supplied actions must remain audible, with original restrained levels');
   }
-  if(kind!=='wardrobe')for(let i=0;i<pcm.length-1200;i+=1200){
+  if(!cabinet)for(let i=0;i<pcm.length-1200;i+=1200){
     const rms=Math.sqrt(pcm.slice(i,i+1200).reduce((sum,x)=>sum+x*x,0)/1200);
     assert.ok(rms>wholeRms*.1,'Water must not drop more than 20 dB below its average into a quiet gap');
   }
