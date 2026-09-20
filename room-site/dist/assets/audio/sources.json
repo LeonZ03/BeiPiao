@@ -1,0 +1,47 @@
+[
+  {
+    "file": "faucet-loop.wav",
+    "author": "peridactyloptrix",
+    "page": "https://freesound.org/people/peridactyloptrix/sounds/202529/",
+    "preview": "https://cdn.freesound.org/previews/202/202529_2737063-hq.mp3",
+    "license": "CC0-1.0",
+    "sourceSha256": "6a9ed81e863c4e958bd89c600eb0a8d60a91270c33f4361ec7a67e33f7107528",
+    "trimSeconds": [
+      4,
+      12
+    ],
+    "overlapSeconds": 0.35,
+    "durationSeconds": 11.65,
+    "bytes": 559244
+  },
+  {
+    "file": "shower-loop.wav",
+    "author": "vmgraw",
+    "page": "https://freesound.org/people/vmgraw/sounds/235624/",
+    "preview": "https://cdn.freesound.org/previews/235/235624_4028838-hq.mp3",
+    "license": "CC0-1.0",
+    "sourceSha256": "687c8325ad3e5280ddf6486b266289170a199c6b4621898aef1b26518c40fd1a",
+    "trimSeconds": [
+      1.2,
+      7
+    ],
+    "overlapSeconds": 0.35,
+    "durationSeconds": 6.65,
+    "bytes": 319244
+  },
+  {
+    "file": "wardrobe-loop.wav",
+    "author": "brunoboselli",
+    "page": "https://freesound.org/people/brunoboselli/sounds/478600/",
+    "preview": "https://cdn.freesound.org/previews/478/478600_300738-hq.mp3",
+    "license": "CC0-1.0",
+    "sourceSha256": "7332cbf600fdcf6107b5ad5db6597caab70745124ea8bb0ec67665a7e7d3721c",
+    "trimSeconds": [
+      3.45,
+      1.25
+    ],
+    "overlapSeconds": 0.06,
+    "durationSeconds": 1.19,
+    "bytes": 57164
+  }
+]

@@ -18,7 +18,9 @@ assert.equal(batchStaticGeometry(THREE,world),0,'Moving leaves retain their pivo
 function step(n=1){for(let i=0;i<n;i++)if(wardrobe.update(.05))navigation.updateDynamic();}
 const path=[new THREE.Vector3(-.4,1,-.74),new THREE.Vector3(-1,1,-.74)];
 assert.equal(navigation.canTravel(...path),false,'Closed panel blocks actual door surface');
-wardrobe.toggle('wardrobeLeft');step(100);
+wardrobe.toggle('wardrobeLeft');step(10);
+assert.ok(wardrobe.state.doors[0].amount>.7&&wardrobe.state.doors[0].amount<.85,'Door should ease open slowly enough for its creak, not snap almost fully open within half a second');
+step(90);
 assert.equal(wardrobe.state.doors[0].amount,1);assert.equal(wardrobe.state.doors[1].amount,0);
 assert.equal(navigation.canTravel(...path),true,'Open door no longer leaves a stale collision in its old location');
 assert.equal(navigation.canTravel(new THREE.Vector3(-.60,1,-.40),new THREE.Vector3(-.60,1,-.80)),false,'Open door collision moves into the aisle');

@@ -1,11 +1,23 @@
-// Small, locally synthesized foley: no downloads, autoplay or saved opt-in.
+// CC0 recorded water/wood loops, fetched locally only after explicit opt-in.
+// Cloth and small clicks remain synthesized. No autoplay or saved opt-in.
 // Motion follows authored animation, so blocked doors and stopped curtains are silent.
 const positions={curtain:[0,1.6,-1.9],wardrobeLeft:[-1.2,1.2,-.9],wardrobeMiddle:[-1.2,1.2,-.4],wardrobeRight:[-1.2,1.2,.1],shower:[-.95,1.4,2.65],faucet:[-.065,.89,2.986],doorLock:[1.5,1.05,2.6],light:[1.4,1.3,2.3]};
-const profiles={curtain:[950,.55,.36],wardrobe:[310,.85,.24],shower:[3100,.55,.44],faucet:[1450,.75,.4]};
-export function createRoomAudio({createContext=()=>{const Audio=globalThis.AudioContext||globalThis.webkitAudioContext;return Audio?new Audio({latencyHint:'interactive'}):null;},onChange=()=>{}}={}){
+const profiles={curtain:[950,.55,.36],wardrobe:[6800,.5,.55],shower:[7500,.5,.72],faucet:[6800,.5,.7]};
+export function createRoomAudio({createContext=()=>{const Audio=globalThis.AudioContext||globalThis.webkitAudioContext;return Audio?new Audio({latencyHint:'interactive'}):null;},loadSample=async(kind,ctx)=>{
+  const response=await fetch(new URL(`./assets/audio/${kind}-loop.wav`,import.meta.url));
+  if(!response.ok)throw new Error(`Room audio ${response.status}`);
+  return ctx.decodeAudioData(await response.arrayBuffer());
+},onChange=()=>{}}={}){
   let context=null,master=null,buffer=null,muted=true,active=false,disposed=false,serial=0;
   let listener={x:0,y:1.5,z:0,yaw:0},previous=null,pending=0;
   const loops=new Map(),shots=new Set();
+  const samples=new Map();let samplePromise=null;
+  function loadRecordings(){
+    if(!samplePromise)samplePromise=Promise.all(['wardrobe','shower','faucet'].map(async kind=>{
+      if(!samples.has(kind))samples.set(kind,await loadSample(kind,context));
+    })).catch(error=>{samplePromise=null;throw error;});
+    return samplePromise;
+  }
   const audible=()=>!!context&&!muted&&active&&!disposed&&context.state==='running';
   const notify=()=>onChange(muted);
   function ramp(param,value,time=.05){param.setTargetAtTime(value,context.currentTime,time);}
@@ -25,10 +37,11 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
     ramp(voice.pan.pan,Math.max(-.8,Math.min(.8,pan)),.08);
     return 1/(1+.28*distance*distance);
   }
-  function voice(frequency,q){
+  function voice(frequency,q,kind=null){
     const source=context.createBufferSource(),filter=context.createBiquadFilter(),gain=context.createGain(),pan=context.createStereoPanner();
-    source.buffer=buffer;source.loop=true;filter.type='bandpass';filter.frequency.value=frequency;filter.Q.value=q;gain.gain.value=0;
-    source.connect(filter);filter.connect(gain);gain.connect(pan);pan.connect(master);source.start(0,Math.random()*3);
+    const sample=samples.get(kind);
+    source.buffer=sample||buffer;source.loop=true;filter.type=sample?'lowpass':'bandpass';filter.frequency.value=frequency;filter.Q.value=q;gain.gain.value=0;
+    source.connect(filter);filter.connect(gain);gain.connect(pan);pan.connect(master);source.start(0,sample?0:Math.random()*3);
     const v={source,filter,gain,pan,stopped:false};
     source.onended=()=>{for(const n of [source,filter,gain,pan])n.disconnect();shots.delete(v);};
     return v;
@@ -54,6 +67,7 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
       if(!context){context=createContext();if(!context)throw new Error('Web Audio unavailable');master=context.createGain();master.gain.value=0;master.connect(context.destination);buffer=createNoise();}
       // Called directly by the sound button's user gesture, including on iOS.
       if(active)await context.resume();
+      await loadRecordings();
       if(request!==serial||disposed)return true;
       if(active&&context.state!=='running')throw new Error('Audio could not start');
       sync();return true;
@@ -74,8 +88,10 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
     let v=loops.get(id);
     if(amount<.002){if(v){stop(v);loops.delete(id);}return;}
     const [frequency,q,level]=profiles[kind];
-    if(!v){v=voice(frequency,q);loops.set(id,v);}
-    ramp(v.gain.gain,level*Math.min(1,amount)*spatial(v,positions[id]),.055);
+    if(kind!=='curtain'&&!samples.has(kind))return;
+    if(!v){v=voice(frequency,q,kind);loops.set(id,v);}
+    if(kind==='wardrobe')ramp(v.source.playbackRate,.82+.22*Math.min(1,amount),.1);
+    ramp(v.gain.gain,level*(kind==='wardrobe'?Math.sqrt(Math.min(1,amount)):Math.min(1,amount))*spatial(v,positions[id]),.055);
   }
   function update(dt,{curtain,doors,water,position,yaw}){
     if(!audible()){previous=null;pending=0;return;}
@@ -94,5 +110,5 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
   }
   function dispose(){disposed=true;serial++;muted=true;silence();void context?.close().catch(()=>{});notify();}
   notify();
-  return {setMuted,setActive,interaction,update,dispose,get muted(){return muted;},get state(){return {muted,active,context:context?.state||'not-created',loops:[...loops.keys()],transients:shots.size};}};
+  return {setMuted,setActive,interaction,update,dispose,get muted(){return muted;},get state(){return {muted,active,context:context?.state||'not-created',recordings:samples.size,loops:[...loops.keys()],transients:shots.size};}};
 }

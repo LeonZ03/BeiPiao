@@ -104,7 +104,8 @@ export function createWardrobe({THREE,world,camera,refs={},renderer,Reflector,to
       const target=door.wanted?1:0;
       door.blocked=false;
       if(Math.abs(target-door.value)<1e-7)continue;
-      let next=door.value+(target-door.value)*(1-Math.exp(-Math.min(.05,Math.max(0,dt))*7));
+      // Slower travel leaves room for the wooden hinge creak (about 1 s to 95%).
+      let next=door.value+(target-door.value)*(1-Math.exp(-Math.min(.05,Math.max(0,dt))*3.1));
       if(Math.abs(target-next)<.0004)next=target;
       // Sweep a 2 mm viewpoint against the moving solid door, not only its
       // final pose. A blocked door waits for the observer to move out of reach.
@@ -123,6 +124,6 @@ export function createWardrobe({THREE,world,camera,refs={},renderer,Reflector,to
     get revision(){return revision;},
     get active(){return doors.some(d=>Math.abs((d.wanted?1:0)-d.value)>1e-7);},
     label(id){const d=doors.find(d=>d.id===id);return d?.wanted?'点击柜门 · 合上':'点击柜门 · 打开';},
-    get state(){return {version:'wardrobe30',doors:doors.map(d=>({id:d.id,open:d.wanted,amount:Number(d.value.toFixed(5)),angle:Number((d.value*d.openAngle).toFixed(5)),blocked:d.blocked})),revision};}
+    get state(){return {version:'wardrobe-audio2',doors:doors.map(d=>({id:d.id,open:d.wanted,amount:Number(d.value.toFixed(5)),angle:Number((d.value*d.openAngle).toFixed(5)),blocked:d.blocked})),revision};}
   };
 }

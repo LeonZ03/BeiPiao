@@ -5,12 +5,12 @@ import {createAfternoon} from './afternoon.js?v=wardrobe30';
 import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=sunview34h';
 import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=wardrobe29b';
 import {createInteractions} from './interactions.js?v=audio1';
-import {createRoomAudio} from './room-audio.js?v=audio1';
+import {createRoomAudio} from './room-audio.js?v=audio2';
 import {loadBlenderRoom} from './blender-room.js?v=pages1';
 import {reportRoomLoading,finishRoomLoading,nextPaint} from './room-loading.js?v=viewer26';
 import {createCurtainController} from './curtain.js?v=curtain23d';
 import {createRoomBreeze} from './room-breeze.js?v=breeze28';
-import {createWardrobe} from './wardrobe.js?v=wardrobe30';
+import {createWardrobe} from './wardrobe.js?v=audio2';
 import {createRenderProbe} from './render-probe.js?v=sunlight33';
 
 const $ = (id) => document.getElementById(id);
