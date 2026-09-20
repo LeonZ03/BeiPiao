@@ -11,6 +11,8 @@
       12
     ],
     "overlapSeconds": 0.35,
+    "filters": "highpass=f=75,lowpass=f=7800",
+    "playback": "loop",
     "durationSeconds": 11.65,
     "bytes": 559244
   },
@@ -26,22 +28,26 @@
       7
     ],
     "overlapSeconds": 0.35,
+    "filters": "highpass=f=75,lowpass=f=7800",
+    "playback": "loop",
     "durationSeconds": 6.65,
     "bytes": 319244
   },
   {
-    "file": "wardrobe-loop.wav",
-    "author": "brunoboselli",
-    "page": "https://freesound.org/people/brunoboselli/sounds/478600/",
-    "preview": "https://cdn.freesound.org/previews/478/478600_300738-hq.mp3",
+    "file": "wardrobe-soft.wav",
+    "author": "zajac27",
+    "page": "https://freesound.org/people/zajac27/sounds/848136/",
+    "preview": "https://cdn.freesound.org/previews/848/848136_18358066-hq.mp3",
     "license": "CC0-1.0",
-    "sourceSha256": "7332cbf600fdcf6107b5ad5db6597caab70745124ea8bb0ec67665a7e7d3721c",
+    "sourceSha256": "c07ef8bd0b1ea4affc894761a60b4486ba1a0e3f29d8487f0feb493f103f1b47",
     "trimSeconds": [
-      3.45,
-      1.25
+      0,
+      0.886
     ],
-    "overlapSeconds": 0.06,
-    "durationSeconds": 1.19,
-    "bytes": 57164
+    "overlapSeconds": 0,
+    "filters": "highpass=f=90,lowpass=f=1800,lowpass=f=1800",
+    "playback": "one-shot",
+    "durationSeconds": 0.886,
+    "bytes": 42572
   }
 ]

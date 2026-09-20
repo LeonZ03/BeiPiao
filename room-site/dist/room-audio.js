@@ -1,10 +1,11 @@
-// CC0 recorded water/wood loops, fetched locally only after explicit opt-in.
+// CC0 recorded water loops and one-shot wood foley, fetched only after opt-in.
 // Cloth and small clicks remain synthesized. No autoplay or saved opt-in.
 // Motion follows authored animation, so blocked doors and stopped curtains are silent.
 const positions={curtain:[0,1.6,-1.9],wardrobeLeft:[-1.2,1.2,-.9],wardrobeMiddle:[-1.2,1.2,-.4],wardrobeRight:[-1.2,1.2,.1],shower:[-.95,1.4,2.65],faucet:[-.065,.89,2.986],doorLock:[1.5,1.05,2.6],light:[1.4,1.3,2.3]};
-const profiles={curtain:[950,.55,.36],wardrobe:[6800,.5,.55],shower:[7500,.5,.72],faucet:[6800,.5,.7]};
+const profiles={curtain:[950,.55,.36],wardrobe:[1800,.5,.30],shower:[7500,.5,.72],faucet:[6800,.5,.7]};
 export function createRoomAudio({createContext=()=>{const Audio=globalThis.AudioContext||globalThis.webkitAudioContext;return Audio?new Audio({latencyHint:'interactive'}):null;},loadSample=async(kind,ctx)=>{
-  const response=await fetch(new URL(`./assets/audio/${kind}-loop.wav`,import.meta.url));
+  const file=kind==='wardrobe'?'wardrobe-soft.wav':`${kind}-loop.wav`;
+  const response=await fetch(new URL(`./assets/audio/${file}`,import.meta.url));
   if(!response.ok)throw new Error(`Room audio ${response.status}`);
   return ctx.decodeAudioData(await response.arrayBuffer());
 },onChange=()=>{}}={}){
@@ -40,7 +41,7 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
   function voice(frequency,q,kind=null){
     const source=context.createBufferSource(),filter=context.createBiquadFilter(),gain=context.createGain(),pan=context.createStereoPanner();
     const sample=samples.get(kind);
-    source.buffer=sample||buffer;source.loop=true;filter.type=sample?'lowpass':'bandpass';filter.frequency.value=frequency;filter.Q.value=q;gain.gain.value=0;
+    source.buffer=sample||buffer;source.loop=kind!=='wardrobe';filter.type=sample?'lowpass':'bandpass';filter.frequency.value=frequency;filter.Q.value=q;gain.gain.value=0;
     source.connect(filter);filter.connect(gain);gain.connect(pan);pan.connect(master);source.start(0,sample?0:Math.random()*3);
     const v={source,filter,gain,pan,stopped:false};
     source.onended=()=>{for(const n of [source,filter,gain,pan])n.disconnect();shots.delete(v);};
@@ -90,7 +91,8 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
     const [frequency,q,level]=profiles[kind];
     if(kind!=='curtain'&&!samples.has(kind))return;
     if(!v){v=voice(frequency,q,kind);loops.set(id,v);}
-    if(kind==='wardrobe')ramp(v.source.playbackRate,.82+.22*Math.min(1,amount),.1);
+    // Keep a completed cabinet voice until motion stops, so it cannot retrigger
+    // every frame. Natural pitch stays fixed instead of sweeping with door speed.
     ramp(v.gain.gain,level*(kind==='wardrobe'?Math.sqrt(Math.min(1,amount)):Math.min(1,amount))*spatial(v,positions[id]),.055);
   }
   function update(dt,{curtain,doors,water,position,yaw}){

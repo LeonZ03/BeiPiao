@@ -27,6 +27,11 @@ state.water.faucet=true;step();assert.equal(audio.state.loops.length,2);
 assert.notEqual(ctx.sources[0].buffer,ctx.sources[1].buffer,'Faucet and shower must use distinct recordings');
 state.curtain=.1;state.doors[0].amount=.1;step();
 assert.ok(audio.state.loops.includes('curtain'));assert.ok(audio.state.loops.includes('wardrobeLeft'));
+const creak=ctx.sources.find(s=>s.buffer.kind==='wardrobe');
+assert.equal(creak.loop,false,'Cabinet uses one short gesture, not a repeating squeal');
+const sourceCount=ctx.sources.length;creak.onended();
+for(let i=0;i<8;i++){state.doors[0].amount+=.01;step();}
+assert.equal(ctx.sources.length,sourceCount,'A finished creak must not retrigger while the same motion continues');
 state.doors[0].blocked=true;step();assert.ok(!audio.state.loops.includes('wardrobeLeft'));
 assert.ok(!audio.state.loops.includes('curtain'),'Still cloth must become quiet');
 state.doors[0].blocked=false;state.doors[0].amount=0;step();assert.equal(audio.state.transients,1,'Closing reaches a soft impact');
@@ -47,13 +52,19 @@ retry.setActive(true);assert.equal(await retry.setMuted(false),false);assert.equ
 fail=false;assert.equal(await retry.setMuted(false),true);retry.dispose();
 // PCM has no encoder delay. Inspect every 50 ms window and the wrap seam.
 for(const kind of ['faucet','shower','wardrobe']){
-  const wav=fs.readFileSync(new URL(`../room-site/dist/assets/audio/${kind}-loop.wav`,import.meta.url));
+  const filename=kind==='wardrobe'?'wardrobe-soft.wav':`${kind}-loop.wav`;
+  const wav=fs.readFileSync(new URL(`../room-site/dist/assets/audio/${filename}`,import.meta.url));
   assert.equal(wav.toString('ascii',0,4),'RIFF');assert.equal(wav.readUInt16LE(22),1);assert.equal(wav.readUInt32LE(24),24000);
   const pcm=[];for(let i=44;i<wav.length;i+=2)pcm.push(wav.readInt16LE(i));
   assert.ok(pcm.every(x=>Math.abs(x)<30000),'No clipped samples');
   const diffs=pcm.slice(1).map((x,i)=>Math.abs(x-pcm[i])).sort((a,b)=>a-b);
   assert.ok(Math.abs(pcm[0]-pcm.at(-1))<=diffs[Math.floor(diffs.length*.99)],'Wrap must not introduce an isolated click');
   const wholeRms=Math.sqrt(pcm.reduce((sum,x)=>sum+x*x,0)/pcm.length);
+  if(kind==='wardrobe'){
+    assert.ok(pcm.length/24000<1,'Cabinet creak is brief');
+    assert.equal(pcm[0],0);assert.equal(pcm.at(-1),0);
+    assert.ok(wholeRms<3400,'Cabinet sample retains a restrained level');
+  }
   if(kind!=='wardrobe')for(let i=0;i<pcm.length-1200;i+=1200){
     const rms=Math.sqrt(pcm.slice(i,i+1200).reduce((sum,x)=>sum+x*x,0)/1200);
     assert.ok(rms>wholeRms*.1,'Water must not drop more than 20 dB below its average into a quiet gap');
