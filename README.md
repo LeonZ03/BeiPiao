@@ -92,6 +92,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/test-start-room.ps
 
 在线访问：[room.leonz03.dpdns.org](https://room.leonz03.dpdns.org)。备用地址：[beipiao-4op.pages.dev](https://beipiao-4op.pages.dev)。Pages 项目名为 `beipiao`，已连接此仓库的 `main` 分支；推送后自动部署，访问无需运行本地启动器。
 
+2026-09-20 已验证 GitHub 推送自动部署、正式域名 HTTPS 和线上房间加载。后续更新：提交改动 → `git push origin main` → 在 Pages 的 Deployments 中确认对应提交部署成功。交付前检查工作区干净、本地与 `origin/main` 同步；推送成功不代表线上构建已完成。
+
 Cloudflare Pages 托管网站后，访问不再依赖本机开机或临时隧道。连接 GitHub 仓库 `LeonZ03/BeiPiao`，生产分支选 `main`，框架选 `None`，构建命令填 `npm run build:pages`，输出目录填 `.pages-dist`，项目根目录保留仓库根目录，Node.js 使用 22 或更新版本。
 
 构建只复制 `room-site/dist/` 的网页资源，并将模型二进制拆为最多 8 MiB 的文件，适配 Pages 的单文件限制；网页合并后数据与 Blender 原始导出完全一致。源工程和本地模型包不变，本地启动器仍可使用。`.pages-dist/` 为可重复生成的发布目录，不提交 Git。
