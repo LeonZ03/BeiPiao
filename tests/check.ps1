@@ -23,4 +23,6 @@ if ($LASTEXITCODE -ne 0) { throw 'Wardrobe interaction checks failed.' }
 & $node (Join-Path $PSScriptRoot 'exterior.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Exterior checks failed.' }
 & (Join-Path $PSScriptRoot 'test-start-room.ps1') -Port $Port
+& $node (Join-Path $PSScriptRoot 'audio.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Audio checks failed.' }
 Write-Host 'PASS syntax, assets, viewer lifecycle, breeze, daylight cache, wardrobe, exterior and Windows launcher.' -ForegroundColor Green

@@ -4,7 +4,8 @@ import {Reflector} from './vendor/Reflector.js';
 import {createAfternoon} from './afternoon.js?v=wardrobe30';
 import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=sunview34h';
 import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=wardrobe29b';
-import {createInteractions} from './interactions.js?v=wardrobe29b';
+import {createInteractions} from './interactions.js?v=audio1';
+import {createRoomAudio} from './room-audio.js?v=audio1';
 import {loadBlenderRoom} from './blender-room.js?v=pages1';
 import {reportRoomLoading,finishRoomLoading,nextPaint} from './room-loading.js?v=viewer26';
 import {createCurtainController} from './curtain.js?v=curtain23d';
@@ -14,6 +15,16 @@ import {createRenderProbe} from './render-probe.js?v=sunlight33';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('world');
+const roomAudio=createRoomAudio({onChange:muted=>{
+  const button=$('soundBtn');button.setAttribute('aria-pressed',String(!muted));
+  button.setAttribute('aria-label',muted?'开启声音':'静音');button.title=muted?'开启声音':'静音';
+}});
+let roomEntered=false;
+const syncAudioVisibility=()=>roomAudio.setActive(roomEntered&&!document.hidden);
+document.addEventListener('visibilitychange',syncAudioVisibility);
+window.addEventListener('pagehide',()=>roomAudio.setActive(false));
+window.addEventListener('pageshow',syncAudioVisibility);
+$('soundBtn').onclick=async()=>{if(!await roomAudio.setMuted(!roomAudio.muted))toast('声音暂时无法开启，请再点一次重试');};
 for(const event of ['selectstart','dragstart','contextmenu'])$('app').addEventListener(event,e=>e.preventDefault());
 const touchQuery=matchMedia('(pointer: coarse)');
 const updateTouch=()=> $('app').classList.toggle('touch-device',touchQuery.matches||innerWidth<=900);updateTouch();touchQuery.addEventListener('change',updateTouch);window.addEventListener('resize',updateTouch);
@@ -74,7 +85,7 @@ function move(dx,dz){
   const target=camera.position.clone();target.x+=dx;if(dx&&navigation.canTravel(camera.position,target))camera.position.x=target.x;
   target.copy(camera.position);target.z+=dz;if(dz&&navigation.canTravel(camera.position,target))camera.position.z=target.z;
 }
-const interactions=createInteractions({THREE,world,camera,canvas,curtain,toggleCurtain,toggleLight,wardrobe,toast,hint:$('interactionHint')});
+const interactions=createInteractions({THREE,world,camera,canvas,curtain,toggleCurtain,toggleLight,wardrobe,toast,hint:$('interactionHint'),onSound:id=>roomAudio.interaction(id)});
 let lastHover=0;
 canvas.addEventListener('pointerdown',e=>{if(mode!=='walk')return;canvas.focus();drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,id:e.pointerId,moved:false};canvas.setPointerCapture(e.pointerId);});
 canvas.addEventListener('pointermove',e=>{
@@ -103,10 +114,8 @@ $('immersiveBtn').onclick=toggleImmersive;
 $('fullscreenBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else{await document.documentElement.requestFullscreen();if(navigator.maxTouchPoints>0)await screen.orientation?.lock?.('landscape').catch(()=>{});}}catch{toast('当前浏览器不支持全屏，可放大窗口浏览');}};
 document.addEventListener('fullscreenchange',()=>{$('fullscreenBtn').setAttribute('aria-label',document.fullscreenElement?'退出全屏':'全屏');resize();});
 function showDialog(id){keys.clear();if(document.pointerLockElement)document.exitPointerLock();$(id).showModal();}
-$('helpBtn').onclick=()=>showDialog('helpDialog');$('referenceBtn').onclick=()=>showDialog('referenceDialog');
+$('helpBtn').onclick=()=>showDialog('helpDialog');
 document.querySelectorAll('dialog').forEach(d=>{d.querySelectorAll('.close,.close-action').forEach(b=>b.onclick=()=>d.close());d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});});
-const photos=[['reference-window.jpg','窗边与床铺 · 装修后'],['reference-desk.jpg','书桌与生活用品 · 装修后'],['reference-bed.jpg','纱帘与床品 · 装修后'],['reference-entry.jpg','入口与家具布局 · 入住前'],['reference-bath.jpg','卫生间 · 入住后的洗衣机'],['reference-bath-new.jpg','卫生间 · 左侧洁具与右侧花洒'],['reference-entry-new.jpg','门口 · 左转卫生间、前方卧室'],['reference-headboard.jpg','床头后的白色卫生间隔墙'],['reference-closet-new.jpg','衣柜侧面的球拍与帽子'],['reference-window-new.jpg','窗台与晾衣杆 · 入住后'],['reference-exterior-level.jpg','窗外 · 近处灰楼与左侧住宅楼（视频帧）'],['reference-motorcycle.jpg','蓝色 Suzuki GSX250R · 车辆细节'],['reference-helmet.jpg','LS2 FF801 碳纤维头盔 · 实物'],['reference-bike-position.jpg','窗外摩托车位置 · 车头朝灰楼墙面'],['reference-exterior-down.jpg','窗外 · 楼下树木与道路（视频帧）']];let photoIndex=0;
-function photo(delta){photoIndex=(photoIndex+delta+photos.length)%photos.length;$('referenceImage').src='./assets/'+photos[photoIndex][0];$('referenceImage').alt=photos[photoIndex][1];$('photoCaption').textContent=photos[photoIndex][1];}$('prevPhoto').onclick=()=>photo(-1);$('nextPhoto').onclick=()=>photo(1);
 function resize(){const w=$('app').clientWidth,h=$('app').clientHeight;if(w<=0||h<=0)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);daylight.resize();renderSignature='';}window.addEventListener('resize',resize);window.visualViewport?.addEventListener('resize',resize);window.addEventListener('orientationchange',()=>requestAnimationFrame(resize));
 const renderProbe=createRenderProbe();
 function tick(now){
@@ -130,6 +139,7 @@ function tick(now){
   const doorChanged=wardrobe.update(dt);
   if(doorChanged){navigation.updateDynamic();renderer.shadowMap.needsUpdate=true;}
   interactions.update(now/1000);
+  roomAudio.update(dt,{curtain:curtainAmount,doors:wardrobe.state.doors,water:interactions.state,position:camera.position,yaw});
   const motionChanged=breeze.update(dt,curtainAmount,mode==='walk');
   const signature=[mode,...camera.position.toArray(),...camera.quaternion.toArray(),Math.round(curtainAmount*10000),lightOn,innerWidth,innerHeight,interactions.active,wardrobe.revision,breeze.enabled,breeze.visibilityMask].join('/');
   const dustEnabled=mode==='walk'&&curtainAmount>.1;
@@ -140,21 +150,21 @@ function tick(now){
 manager.onError=url=>{toast('一张材质未能载入，刷新页面可重试');console.warn('Texture failed',url);};
 window.addEventListener('error',()=>{if(!$('loading').hidden){$('loading').hidden=true;$('error').hidden=false;}});
 // Read-only diagnostics for local verification; no network or user data.
-window.roomDiagnostics={get state(){return{mode,position:camera.position.toArray(),yaw,pitch,curtainOpen,lightOn,objects:world.children.length,colliders:navigation.surfaces,collisionRadius:navigation.clearance,batchedMeshes,assetStatistics,water:interactions.state,wardrobe:wardrobe.state,breeze:breeze.state,frameCache:daylight.statistics,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles};},canStand,canTravel:(a,b)=>navigation.canTravel(new THREE.Vector3(...a),new THREE.Vector3(...b))};
+window.roomDiagnostics={get state(){return{mode,position:camera.position.toArray(),yaw,pitch,curtainOpen,lightOn,objects:world.children.length,colliders:navigation.surfaces,collisionRadius:navigation.clearance,batchedMeshes,assetStatistics,sound:roomAudio.state,water:interactions.state,wardrobe:wardrobe.state,breeze:breeze.state,frameCache:daylight.statistics,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles};},canStand,canTravel:(a,b)=>navigation.canTravel(new THREE.Vector3(...a),new THREE.Vector3(...b))};
 const modelContext=document.modelContext;
 if(modelContext?.registerTool){
   const lifecycle=new AbortController();
   const register=t=>{try{Promise.resolve(modelContext.registerTool(t,{signal:lifecycle.signal})).catch(()=>{});}catch{}};
   register({name:'measure_room_rendering',description:'在当前视角左右缓慢转动约 5 秒，测量帧间隔后恢复视角，用于本地性能比较。',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:false},execute(){if(mode!=='walk')throw new Error('Use a walking viewpoint');keys.clear();return renderProbe.start(camera);}});
-  register({name:'get_room_view',description:'读取当前房间漫游视角、物品开关状态与渲染信息。',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute(){const solarDirection=sun.position.clone().sub(sun.target.position).normalize(),solarScreen=camera.position.clone().addScaledVector(solarDirection,20).project(camera);return {mode,position:camera.position.toArray(),yaw,pitch,solarDirection:solarDirection.toArray(),solarScreen:solarScreen.toArray(),curtainOpen,lightOn,water:interactions.state,wardrobe:wardrobe.state,rendering:{graphicsDevice,breeze:breeze.state,frameCache:daylight.statistics,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,mergedObjects:batchedMeshes}};}});
+  register({name:'get_room_view',description:'读取当前房间漫游视角、物品开关状态与渲染信息。',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute(){const solarDirection=sun.position.clone().sub(sun.target.position).normalize(),solarScreen=camera.position.clone().addScaledVector(solarDirection,20).project(camera);return {mode,position:camera.position.toArray(),yaw,pitch,solarDirection:solarDirection.toArray(),solarScreen:solarScreen.toArray(),curtainOpen,lightOn,sound:roomAudio.state,water:interactions.state,wardrobe:wardrobe.state,rendering:{graphicsDevice,breeze:breeze.state,frameCache:daylight.statistics,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,mergedObjects:batchedMeshes}};}});
   register({name:'navigate_room',description:'切换房间的可见视角：门口、床边、书桌、窗边、楼下摩托车、衣柜、衣柜正面、卫生间、门上细节、洁具细节或空间总览。',inputSchema:{type:'object',properties:{view:{type:'string',enum:['sun','entry','bed','desk','window','yard','closet','bath','door','toilet','helmet','helmetSide','pillow','shower','lock','ac','tabletop','basket','doorframe','grille','mug','radiator','gundam','paperCup','shelf','chair','rackets','wardrobe','overview']}},required:['view'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute(input){if(!input||!['sun','entry','bed','desk','window','yard','closet','bath','door','toilet','helmet','helmetSide','pillow','shower','lock','ac','tabletop','basket','doorframe','grille','mug','radiator','gundam','paperCup','shelf','chair','rackets','wardrobe','overview'].includes(input.view))throw new Error('Unknown view');if(input.view==='overview')setMode('overview');else goTo(input.view);return {mode,position:camera.position.toArray()};}});
   register({name:'walk_room',description:'沿当前朝向在房间中移动。遇到墙壁或家具时会停下，单次最多两米。',inputSchema:{type:'object',properties:{direction:{type:'string',enum:['forward','back','left','right','up','down']},distance:{type:'number',minimum:.05,maximum:2}},required:['direction','distance'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute(input){if(!input||!['forward','back','left','right','up','down'].includes(input.direction)||!Number.isFinite(input.distance)||input.distance<.05||input.distance>2)throw new Error('Invalid movement');if(mode!=='walk')throw new Error('Switch to a walking viewpoint first');const start=camera.position.clone();const f=input.direction==='forward'?1:input.direction==='back'?-1:0;const s=input.direction==='right'?1:input.direction==='left'?-1:0;const steps=Math.ceil(input.distance/.025),length=input.distance/steps;for(let i=0;i<steps;i++){if(input.direction==='up'||input.direction==='down')moveVertical(length*(input.direction==='up'?1:-1));else move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*length,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*length);}return {position:camera.position.toArray(),distanceMoved:start.distanceTo(camera.position)};}});
   window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});
 }
 
 
-export function enterRoom(view='walk'){keys.clear();setMode(view==='overview'?'overview':'walk');if(view!=='overview')resetView();resize();last=performance.now();}
-export function pauseRoom(){keys.clear();drag=null;document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));if(immersive)toggleImmersive();$('interactionHint').hidden=true;document.querySelectorAll('#app dialog[open]').forEach(d=>d.close());if(document.pointerLockElement)document.exitPointerLock();}
+export function enterRoom(view='walk'){roomEntered=true;syncAudioVisibility();keys.clear();setMode(view==='overview'?'overview':'walk');if(view!=='overview')resetView();resize();last=performance.now();}
+export function pauseRoom(){roomEntered=false;syncAudioVisibility();keys.clear();drag=null;document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));if(immersive)toggleImmersive();$('interactionHint').hidden=true;document.querySelectorAll('#app dialog[open]').forEach(d=>d.close());if(document.pointerLockElement)document.exitPointerLock();}
 updateCurtain(0);setCurtainLight(0);daylight.setCurtain(0);updateIndirect(0);
 await renderer.compileAsync(scene,camera);
 reportRoomLoading(98,'正在呈现房间');await nextPaint();

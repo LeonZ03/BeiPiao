@@ -50,6 +50,11 @@ html,body{margin:0;width:100%;height:100%;background:var(--archive-dark)}
 #archiveHomeBtn{color:inherit;text-decoration:none;font-family:var(--archive-serif);font-size:18px;display:flex;gap:9px;align-items:center;min-height:32px}
 .room-identity{font-size:14px;letter-spacing:.1em;border-left:1px solid #d7c3a366;padding-left:17px}
 #app .top-actions button{border-radius:3px;background:#201e19b8;color:#f4ead8;border:1px solid #d7c3a329;box-shadow:none}
+#app .top-actions #soundBtn{width:44px;min-width:44px;min-height:44px;padding:0;display:grid;place-items:center}
+#soundBtn .sound-on,#soundBtn[aria-pressed=true] .sound-off{display:none}
+#soundBtn[aria-pressed=true] .sound-on{display:block}
+#app #soundBtn:hover{background:#383229db}
+@media(max-width:420px){#app .topbar{gap:8px}#app .top-actions{gap:4px}#app .identity{padding:6px}#app .top-actions #immersiveBtn{padding:0 6px}}
 #app .bottom-panel{border-radius:3px;background:#201e19d4;border:1px solid #d7c3a34d;box-shadow:none;color:#f4ead8}
 #app .mode-control button{border-radius:1px;color:#c9c1b2}#app .mode-control .active{background:#eee2ce;color:#332b22}
 #app #resetBtn{border-color:#d7c3a355;color:#f4ead8}
