@@ -189,6 +189,8 @@
 
 ## 9. 运行和启动器契约
 
+- Cloudflare Pages 使用 `npm run build:pages` 生成 `.pages-dist/`，只部署该目录。`tools/build-pages.mjs` 保留模型描述符，将原始及 gzip 二进制分别拆为最多 8 MiB、含内容哈希的分块；`room-binary.js` 兼容线上分块和本地单文件。不要降低模型精度来绕过单文件限制，也不要把 `.blend`、参考图或整个仓库发布到网站。运行 `npm run test:pages` 核对合并后字节一致、原始格式回退、下载进度及错误处理；分块使用长期缓存，其余资源重新验证缓存。源场景 revision 不因仅修改传输封装而变化。
+
 - 面向普通用户的首选入口是仓库根目录 `启动房间.cmd`。首次克隆可先运行 `local-access/init-room.ps1`，或使用可选的 `make init`；初始化只准备便携运行时和必要依赖，不修改房间资产。之后双击启动器即可调用 `local-access/start-room.ps1`，启动本地 HTTP 服务、自动打开浏览器，并在可用时创建和验证 Cloudflare 临时链接。
 - 关闭启动器的 PowerShell 窗口，应同时结束它创建的本地服务和 Cloudflare 进程；不要把浏览器纳入该进程组。
 - 本地和公网健康检查都必须验证真实房间首页，而不是只看端口或 Cloudflare 注册成功。公开链接可能因 DNS、代理或网络环境不可达；应保留本地服务并给出可诊断日志，不能把候选 URL 冒充已验证地址。

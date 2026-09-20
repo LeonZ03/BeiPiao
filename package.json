@@ -5,6 +5,8 @@
   "description": "Development-only checks; website playback has no npm dependencies.",
   "engines": { "node": ">=22" },
   "scripts": {
+    "build:pages": "node tools/build-pages.mjs",
+    "test:pages": "node tests/pages.mjs",
     "test": "node tests/assets.mjs && node --experimental-vm-modules tests/viewer-lifecycle.mjs && node tests/breeze.mjs && node tests/daylight-cache.mjs && node tests/wardrobe.mjs && node tests/exterior.mjs",
     "test:scene": "node --experimental-vm-modules tests/scene.mjs"
   },

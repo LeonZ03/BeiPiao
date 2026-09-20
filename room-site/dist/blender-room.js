@@ -1,6 +1,7 @@
 // Geometry, placements, PBR surfaces and pivots come from the editable Blender
 // project. The browser only uploads the evaluated meshes and animates objects.
 import {installExteriorSurface} from './exterior-surface.js?v=exterior31';
+import {loadRoomBinary} from './room-binary.js?v=pages1';
 export function parseBlenderRoom(THREE,manifest,buffer,textures){
   if(manifest.format!=='blender-room-pack-1')throw new Error('Unsupported room asset');
   const array=a=>new ({Float32Array,Uint32Array,Uint16Array,Int16Array}[a.type])(buffer,a.offset,a.length);
@@ -65,22 +66,11 @@ export async function loadBlenderRoom(THREE,manager,onProgress=()=>{}){
   onProgress(3,'正在读取房间');
   const response=await fetch('./assets/full-room/scene.json?v=sunview34');
   if(!response.ok)throw new Error('Room manifest '+response.status);
-  const manifest=await response.json(),compressed=typeof DecompressionStream!=='undefined';
+  const manifest=await response.json();
   let geometryProgress=0,textureCount=0;
   const update=()=>onProgress(8+60*geometryProgress+20*textureCount/Math.max(1,manifest.textures.length),geometryProgress<1?'正在载入房间':'正在准备材质');
   update();
-  const binary=fetch((compressed?manifest.compressedBinary:manifest.binary)+'?v='+manifest.revision).then(async r=>{
-    if(!r.ok)throw new Error('Room geometry '+r.status);
-    const total=Number(r.headers.get('Content-Length')),chunks=[];
-    let received=0,bytes;
-    if(r.body){
-      const reader=r.body.getReader();
-      while(true){const {done,value}=await reader.read();if(done)break;chunks.push(value);received+=value.length;if(total>0){geometryProgress=Math.min(.99,received/total);update();}}
-      bytes=new Uint8Array(received);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
-    }else bytes=new Uint8Array(await r.arrayBuffer());
-    const buffer=compressed?await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer():bytes.buffer;
-    geometryProgress=1;update();return buffer;
-  });
+  const binary=loadRoomBinary(manifest,value=>{geometryProgress=value;update();});
   const loader=new THREE.TextureLoader(manager);
   const texturePromise=Promise.all(manifest.textures.map(async desc=>{
     const t=await loader.loadAsync(desc.webPath);

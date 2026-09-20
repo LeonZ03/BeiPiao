@@ -88,6 +88,19 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/test-start-room.ps
 - 若报端口占用，关闭原来启动的窗口，或使用 `-Port` 换一个端口。若下载失败，可以手动安装 Node.js 22+、cloudflared 后重试；不需要修改系统 DNS 或关闭证书验证。
 - 改完网页刷新即可；遇到旧缓存可用 `Ctrl+F5`。不要直接双击 `index.html`，浏览器模块和模型需要 HTTP 服务。
 
+## Cloudflare Pages 部署
+
+Cloudflare Pages 托管网站后，访问不再依赖本机开机或临时隧道。连接 GitHub 仓库 `LeonZ03/BeiPiao`，生产分支选 `main`，框架选 `None`，构建命令填 `npm run build:pages`，输出目录填 `.pages-dist`，项目根目录保留仓库根目录，Node.js 使用 22 或更新版本。
+
+构建只复制 `room-site/dist/` 的网页资源，并将模型二进制拆为最多 8 MiB 的文件，适配 Pages 的单文件限制；网页合并后数据与 Blender 原始导出完全一致。源工程和本地模型包不变，本地启动器仍可使用。`.pages-dist/` 为可重复生成的发布目录，不提交 Git。
+
+```powershell
+npm run build:pages
+npm run test:pages
+```
+
+在 Pages 的 Custom domains 中绑定 `leonz03.dpdns.org`，按控制台提示配置 DNS，并等待 HTTPS 生效。后续推送 `main` 会触发自动构建。哈希命名的模型分块长期缓存，页面和清单重新验证缓存，避免发布后混用旧文件。免费托管不等于国内所有网络均可稳定直连，首次加载速度仍取决于线路与设备。
+
 ## 工程结构
 
 ```text
