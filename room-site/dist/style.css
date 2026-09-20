@@ -9,8 +9,8 @@
 @media(max-width:700px){.top-actions #immersiveBtn{font-size:12px;padding:0 9px}}
 .touch-controls .height-controls{justify-content:center;gap:10px;margin-bottom:5px}.touch-controls .height-controls button{font-size:16px}
 
-#interactionHint{position:fixed;left:50%;bottom:174px;transform:translateX(-50%);padding:10px 17px;background:#faf7efed;color:#354c40;border:1px solid #e2d8c7;border-radius:20px;pointer-events:none;font-size:13px;z-index:6;box-shadow:0 3px 20px #36352215}#interactionHint[hidden]{display:none}
-@media(max-width:700px){#interactionHint{top:96px;bottom:auto;max-width:94%;font-size:12px;white-space:nowrap}}
+
+@media(max-width:700px){}
 
 /* Compact controls remain usable with a thumb, in either orientation. */
 #app{position:relative;height:100dvh;overflow:hidden}
@@ -40,7 +40,7 @@
 #app.immersive .topbar{justify-content:flex-end}
 #app.immersive .top-actions button:not(#immersiveBtn):not(#soundBtn){display:none}
 #toast{bottom:94px;z-index:7}
-#interactionHint{bottom:94px;top:auto}
+
 @media(max-width:700px){
  .top-actions #fullscreenBtn{display:block}
  .topbar{top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right))}
@@ -50,14 +50,14 @@
  .bottom-panel{padding:5px;bottom:max(14px,env(safe-area-inset-bottom));gap:5px}
  .mode-control button{font-size:13px;padding:0 14px}
  #toast{bottom:190px;width:auto;max-width:85%}
- #interactionHint{bottom:190px;white-space:normal;text-align:center}
+
 }
 @media(orientation:landscape) and (max-height:600px){
  .identity{padding:6px 12px}.identity .mark{width:30px;height:34px;font-size:25px;line-height:32px}.identity h1{font-size:16px}.identity p{font-size:10px}
  .topbar{top:max(8px,env(safe-area-inset-top))}
  .touch-controls{bottom:max(16px,env(safe-area-inset-bottom))}
  .bottom-panel{bottom:max(16px,env(safe-area-inset-bottom))}
- #toast,#interactionHint{bottom:83px;top:auto}
+ #toast{bottom:83px;top:auto}
  dialog{max-height:90dvh}
 }
 @media(max-width:360px){.identity .mark{display:none}.identity{padding:9px}.identity h1{font-size:15px}.top-actions{gap:4px}}

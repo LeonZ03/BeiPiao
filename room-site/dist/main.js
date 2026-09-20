@@ -4,7 +4,7 @@ import {Reflector} from './vendor/Reflector.js';
 import {createAfternoon} from './afternoon.js?v=wardrobe30';
 import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=sunview34h';
 import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=wardrobe29b';
-import {createInteractions} from './interactions.js?v=audio1';
+import {createInteractions} from './interactions.js?v=feedback1';
 import {createRoomAudio} from './room-audio.js?v=audio4';
 import {loadBlenderRoom} from './blender-room.js?v=pages1';
 import {reportRoomLoading,finishRoomLoading,nextPaint} from './room-loading.js?v=viewer26';
@@ -73,8 +73,8 @@ let mode='walk',yaw=.12,pitch=-.08,locked=false,drag=null,lightOn=false;
 const keys=new Set();let last=performance.now();let toastTimer;
 const viewpoints={sun:{p:[-.25,1.56,-2],yaw:-Math.atan2(2.6,9),pitch:Math.asin(5.7/Math.hypot(2.6,5.7,9)),label:'窗边太阳'},wardrobe:{p:[.45,1.30,-1.03],yaw:Math.PI/2,pitch:-.06,label:'衣柜正面'},chair:{p:[1.0,1.10,.08],yaw:.47,pitch:-.44,label:'椅子细节'},rackets:{p:[-.93,1.35,.78],yaw:.012,pitch:-.035,label:'球拍网线'},gundam:{p:[.79,1.80,-.505],yaw:-Math.PI/2,pitch:-.085,label:'高达细节'},paperCup:{p:[.84,1.75,-.89],yaw:-Math.PI/2,pitch:-.13,label:'纸杯图案'},shelf:{p:[.35,1.84,-.71],yaw:-Math.PI/2,pitch:-.16,label:'桌架摆件'},mug:{p:[.59,1.05,-1.115],yaw:-1.405,pitch:-.54,label:'杯子细节'},radiator:{p:[.50,.71,-1.10],yaw:-1.3,pitch:-.2,label:'暖气位置'},ac:{p:[.54,2.21,-.71],yaw:-Math.PI/2,pitch:.08,label:'空调细节'},tabletop:{p:[.52,1.20,-.52],yaw:-Math.PI/2,pitch:-.64,label:'桌面细节'},basket:{p:[.62,1.53,-.43],yaw:-Math.PI/2,pitch:.03,label:'花篮细节'},doorframe:{p:[.93,2.05,2.67],yaw:-Math.PI/2,pitch:.25,label:'门框细节'},grille:{p:[.34,1.73,-1.49],yaw:-.63,pitch:0,label:'窗栏细节'},helmetSide:{p:[-.42,2.33,-.95],yaw:Math.PI/2,pitch:-.045,label:'头盔侧面'},helmet:{p:[-.48,2.35,-.29],yaw:.72,pitch:-.07,label:'头盔细节'},pillow:{p:[.27,1.10,1.0],yaw:1.88,pitch:-.40,label:'枕头细节'},shower:{p:[.20,1.40,2.82],yaw:.98,pitch:-.035,label:'花洒细节'},lock:{p:[1.05,1.03,2.38],yaw:-1.48,pitch:-.075,label:'反锁旋钮'},entry:{p:[.92,1.56,2.77],yaw:.08,pitch:-.09,label:'入口过道'},bed:{p:[.48,1.30,.45],yaw:.22,pitch:-.04,label:'床边'},desk:{p:[.42,1.50,-.05],yaw:-1.05,pitch:-.26,label:'书桌'},window:{p:[-.25,1.56,-1.27],yaw:.02,pitch:.02,label:'窗边'},yard:{p:[-.38,1.63,-1.75],yaw:-.83,pitch:-.87,label:'窗边 · 楼下'},closet:{p:[.42,1.54,.55],yaw:.98,pitch:0,label:'衣柜'},door:{p:[.51,1.50,2.70],yaw:-Math.PI/2,pitch:.05,label:'门上细节'},toilet:{p:[-.50,1.15,2.12],yaw:Math.PI-.24,pitch:-.55,label:'洁具细节'},bath:{p:[.04,1.645,2.43],yaw:Math.PI/2,pitch:-.20,label:'卫生间'}};
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3600);}
-function setMode(next){mode=next;camera.near=next==='overview'?.05:.003;camera.updateProjectionMatrix();keys.clear();document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));$('interactionHint').hidden=true;renderer.shadowMap.needsUpdate=true;const overview=mode==='overview';orbit.enabled=overview;cutaway.forEach(o=>o.visible=!overview);ceilings.forEach(o=>o.visible=!overview);outside.visible=!overview;$('walkBtn').classList.toggle('active',!overview);$('overviewBtn').classList.toggle('active',overview);$('walkBtn').setAttribute('aria-pressed',String(!overview));$('overviewBtn').setAttribute('aria-pressed',String(overview));$('app').classList.toggle('overview',overview);if(overview){if(document.pointerLockElement)document.exitPointerLock();camera.position.set(5.5,6.1,7.0);orbit.target.set(-.25,.7,.8);orbit.update();scene.background.set('#dfe3dc');}else{scene.background.set('#e5ebe5');goTo('entry',false);}}
-function goTo(name,switchMode=true){$('interactionHint').hidden=true;if(switchMode&&mode!=='walk')setMode('walk');const v=viewpoints[name];camera.position.set(...v.p);yaw=v.yaw;pitch=v.pitch;camera.rotation.set(pitch,yaw,0,'YXZ');}
+function setMode(next){mode=next;camera.near=next==='overview'?.05:.003;camera.updateProjectionMatrix();keys.clear();document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));renderer.shadowMap.needsUpdate=true;const overview=mode==='overview';orbit.enabled=overview;cutaway.forEach(o=>o.visible=!overview);ceilings.forEach(o=>o.visible=!overview);outside.visible=!overview;$('walkBtn').classList.toggle('active',!overview);$('overviewBtn').classList.toggle('active',overview);$('walkBtn').setAttribute('aria-pressed',String(!overview));$('overviewBtn').setAttribute('aria-pressed',String(overview));$('app').classList.toggle('overview',overview);if(overview){if(document.pointerLockElement)document.exitPointerLock();camera.position.set(5.5,6.1,7.0);orbit.target.set(-.25,.7,.8);orbit.update();scene.background.set('#dfe3dc');}else{scene.background.set('#e5ebe5');goTo('entry',false);}}
+function goTo(name,switchMode=true){if(switchMode&&mode!=='walk')setMode('walk');const v=viewpoints[name];camera.position.set(...v.p);yaw=v.yaw;pitch=v.pitch;camera.rotation.set(pitch,yaw,0,'YXZ');}
 goTo('entry');
 // Begin just inside the bedroom, where the sunlit bedding and the window can be
 // appreciated together. The entrance shortcut retains the original doorway view.
@@ -85,7 +85,7 @@ function move(dx,dz){
   const target=camera.position.clone();target.x+=dx;if(dx&&navigation.canTravel(camera.position,target))camera.position.x=target.x;
   target.copy(camera.position);target.z+=dz;if(dz&&navigation.canTravel(camera.position,target))camera.position.z=target.z;
 }
-const interactions=createInteractions({THREE,world,camera,canvas,curtain,toggleCurtain,toggleLight,wardrobe,toast,hint:$('interactionHint'),onSound:id=>roomAudio.interaction(id)});
+const interactions=createInteractions({THREE,world,camera,canvas,curtain,toggleCurtain,toggleLight,wardrobe,toast,onSound:id=>roomAudio.interaction(id)});
 let lastHover=0;
 canvas.addEventListener('pointerdown',e=>{if(mode!=='walk')return;canvas.focus();drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,id:e.pointerId,moved:false};canvas.setPointerCapture(e.pointerId);});
 canvas.addEventListener('pointermove',e=>{
@@ -164,7 +164,7 @@ if(modelContext?.registerTool){
 
 
 export function enterRoom(view='walk'){roomEntered=true;syncAudioVisibility();keys.clear();setMode(view==='overview'?'overview':'walk');if(view!=='overview')resetView();resize();last=performance.now();}
-export function pauseRoom(){roomEntered=false;syncAudioVisibility();keys.clear();drag=null;document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));if(immersive)toggleImmersive();$('interactionHint').hidden=true;document.querySelectorAll('#app dialog[open]').forEach(d=>d.close());if(document.pointerLockElement)document.exitPointerLock();}
+export function pauseRoom(){roomEntered=false;syncAudioVisibility();keys.clear();drag=null;document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));if(immersive)toggleImmersive();document.querySelectorAll('#app dialog[open]').forEach(d=>d.close());if(document.pointerLockElement)document.exitPointerLock();}
 updateCurtain(0);setCurtainLight(0);daylight.setCurtain(0);updateIndirect(0);
 await renderer.compileAsync(scene,camera);
 reportRoomLoading(98,'正在呈现房间');await nextPaint();

@@ -6,7 +6,7 @@
   <title>北漂 · 居住记录</title>
   <meta name="description" content="按居住顺序记录北漂的出租屋，走进永旺家园，重访真实生活里的房间。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232e3b36'/%3E%3Cpath d='M8 25V8h16v17M16 8v17M8 17h16' stroke='%23ead6bd' stroke-width='2' fill='none'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./style.css?v=audio1">
+  <link rel="stylesheet" href="./style.css?v=feedback1">
   <link rel="stylesheet" href="./archive.css?v=audio1">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
@@ -42,7 +42,7 @@
     </div>
   </div>
   <div id="error" hidden><h2>暂时无法打开三维视图</h2><p>请使用支持 WebGL 的浏览器，并开启硬件加速。</p><button onclick="location.reload()">重新打开</button></div>
-  <div class="crosshair" id="crosshair" hidden>+</div><div id="toast" role="status"></div><div id="interactionHint" hidden></div>
+  <div class="crosshair" id="crosshair" hidden>+</div><div id="toast" role="status"></div>
   <section class="bottom-panel" aria-label="漫游控制">
     <div class="mode-control"><button id="walkBtn" class="active" aria-pressed="true">自由探索</button><button id="overviewBtn" aria-pressed="false">空间总览</button></div>
     <button id="resetBtn" aria-label="复位视角" title="复位视角"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
@@ -51,5 +51,5 @@
   <div class="touch-controls height-controls" role="group" aria-label="升降视角"><button data-move="up" aria-label="上升"><span aria-hidden="true">↑</span><small>升</small></button><button data-move="down" aria-label="下降"><span aria-hidden="true">↓</span><small>降</small></button></div>
   <dialog id="helpDialog"><button class="close" aria-label="关闭">×</button><p class="eyebrow">EXPLORE THE ROOM</p><h2>像回家一样，走进来。</h2><div class="help-items"><p><kbd>拖动</kbd><span>环顾四周</span></p><p><kbd>W A S D</kbd><span>前后左右移动，也可用方向键</span></p><p><kbd>Shift / Ctrl</kbd><span>按住上升 / 下降，可近看物件和低处细节</span></p><p><kbd>点击物品</kbd><span>墙上开关、窗帘、花洒和水龙头可以直接操作</span></p><p><kbd>右上角声音</kbd><span>默认静音；点击开启柜门、窗帘与水流音效</span></p><p><kbd>双击画面</kbd><span>锁定鼠标环顾，Esc 退出</span></p><p><kbd>空间总览</kbd><span>旋转、缩放，查看房间布局</span></p></div><p class="note">手机：可竖屏或横屏浏览；左下方向键移动，右下竖排按键上升／下降，滑动画面环顾。沉浸看房时仍保留移动键。视点约 2 毫米，可从家具上方、下方和间隙穿行；实体表面会阻挡移动。</p><button class="primary close-action">开始探索</button></dialog>
 </main>
-<script type="module" src="./archive.js?v=audio4"></script>
+<script type="module" src="./archive.js?v=feedback1"></script>
 </body></html>
