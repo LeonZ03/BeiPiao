@@ -81,7 +81,7 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
     // Bound transient voices during repeated clicks.
     if(shots.size>=8){const old=shots.values().next().value;stop(old,true);shots.delete(old);}
     const v=voice(heavy?150:1800,heavy?.8:1.2);shots.add(v);
-    const now=context.currentTime,level=(heavy?.58:.16)*spatial(v,positions[id]||positions.light);
+    const now=context.currentTime,level=(heavy?.58:id==='doorLock'?.40:.16)*spatial(v,positions[id]||positions.light);
     v.gain.gain.setValueAtTime(0,now);v.gain.gain.linearRampToValueAtTime(level,now+.008);v.gain.gain.exponentialRampToValueAtTime(.0001,now+(heavy?.23:.065));
     v.source.stop(now+(heavy?.28:.09));
   }
@@ -104,9 +104,9 @@ export function createRoomAudio({createContext=()=>{const Audio=globalThis.Audio
       if(v)stop(v);loops.delete(id);
       motion={direction,played:false};cabinetMotions.set(id,motion);
     }
-    // The closing recording includes the latch impact: begin near the end
-    // of the door arc, not while it is still wide open. Keep its natural tail.
-    if(motion.played||(direction<0&&door.amount>.03))return;
+    // The recording's latch lands ~0.5 s after its start. Start earlier in
+    // the arc so that impact matches the door's visually closed pose (~95%).
+    if(motion.played||(direction<0&&door.amount>.18))return;
     const kind=direction>0?'wardrobeOpen':'wardrobeClose';
     if(!samples.has(kind))return;
     motion.played=true;v=voice(11000,.707,kind);v.id=id;loops.set(id,v);

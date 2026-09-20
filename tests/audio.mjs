@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createRoomAudio} from '../room-site/dist/room-audio.js';
 
-class Param {value=0;setTargetAtTime(v){this.value=v;}setValueAtTime(v){this.value=v;}linearRampToValueAtTime(v){this.value=v;}exponentialRampToValueAtTime(v){this.value=v;}cancelScheduledValues(){}}
+class Param {value=0;setTargetAtTime(v){this.value=v;}setValueAtTime(v){this.value=v;}linearRampToValueAtTime(v){this.value=v;this.peak=v;}exponentialRampToValueAtTime(v){this.value=v;}cancelScheduledValues(){}}
 class Node {gain=new Param();frequency=new Param();Q=new Param();pan=new Param();playbackRate=new Param();connect(){}disconnect(){}start(){this.started=true;}stop(t){this.stopAt=t;}}
 class Context {
-  state='suspended';currentTime=0;sampleRate=8000;destination=new Node();sources=[];
+  state='suspended';currentTime=0;sampleRate=8000;destination=new Node();sources=[];gains=[];
   createBuffer(channels,length){const data=new Float32Array(length);return {getChannelData:()=>data};}
-  createGain(){return new Node();}createBiquadFilter(){return new Node();}createStereoPanner(){return new Node();}
+  createGain(){const n=new Node();this.gains.push(n);return n;}createBiquadFilter(){return new Node();}createStereoPanner(){return new Node();}
   createBufferSource(){const n=new Node();this.sources.push(n);return n;}
   async resume(){this.state='running';}async suspend(){this.state='suspended';}async close(){this.state='closed';}
 }
@@ -34,9 +34,9 @@ for(let i=0;i<8;i++){state.doors[0].amount+=.01;step();}
 assert.equal(ctx.sources.length,sourceCount,'A finished creak must not retrigger while the same motion continues');
 state.doors[0].blocked=true;step();assert.ok(!audio.state.loops.includes('wardrobeLeft'));
 assert.ok(!audio.state.loops.includes('curtain'),'Still cloth must become quiet');
-state.doors[0].blocked=false;state.doors[0].amount=.10;step();
+state.doors[0].blocked=false;state.doors[0].amount=.8;step();state.doors[0].amount=.3;step();
 assert.ok(!ctx.sources.some(s=>s.buffer.kind==='wardrobeClose'),'Do not play the latch while door is wide open');
-state.doors[0].amount=.025;step();
+state.doors[0].amount=.15;step();
 const close=ctx.sources.find(s=>s.buffer.kind==='wardrobeClose');assert.ok(close);assert.equal(close.loop,false);
 assert.notEqual(close.buffer,creak.buffer,'Opening and closing use different sections of the supplied recording');
 state.doors[0].amount=0;step();assert.equal(audio.state.transients,0,'Do not add a synthesized impact over the recorded closing sound');
@@ -53,6 +53,8 @@ assert.equal(loaded,4,'Reuse decoded recordings after muting');
 audio.setActive(false);assert.equal(ctx.state,'suspended');assert.deepEqual(audio.state.loops,[]);
 audio.setActive(true);await Promise.resolve();step();assert.equal(audio.state.loops.length,2,'Returning restores currently running water');
 state.water.shower=false;state.water.faucet=false;step();assert.equal(audio.state.loops.length,0);
+audio.interaction('light');const lightPeak=ctx.gains.at(-1).gain.peak;
+audio.interaction('doorLock');assert.ok(ctx.gains.at(-1).gain.peak>lightPeak*2,'Door lock click is distinctly louder without raising other switches');
 for(let i=0;i<30;i++)audio.interaction('light');assert.ok(audio.state.transients<=8,'Repeated input stays bounded');
 audio.dispose();assert.equal(ctx.state,'closed');assert.equal(audio.muted,true);
 const unavailable=createRoomAudio({createContext:()=>null});unavailable.setActive(true);
