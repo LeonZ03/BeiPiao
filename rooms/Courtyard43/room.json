@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "Courtyard43",
+  "name": "Courtyard43",
+  "status": "pending",
+  "sourceBlend": "rooms/Courtyard43/assets/full-room/Courtyard43-whitebox.blend",
+  "scripts": "rooms/Courtyard43/scripts",
+  "history": "rooms/Courtyard43/HISTORY.md",
+  "runtimeScene": "room-site/dist/assets/rooms/Courtyard43/scene.json"
+}

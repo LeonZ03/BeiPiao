@@ -6,6 +6,8 @@ $root = Split-Path $PSScriptRoot -Parent
 $node = Resolve-RoomProgram 'node'
 & $node (Join-Path $PSScriptRoot 'structure.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Room structure checks failed.' }
+& $node (Join-Path $PSScriptRoot 'courtyard43-whitebox.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 whitebox checks failed.' }
 foreach ($folder in @('room-site/dist','local-access','tests')) {
     foreach ($file in Get-ChildItem -LiteralPath (Join-Path $root $folder) -File -Recurse | Where-Object { $_.Extension -in @('.js','.mjs') }) {
         & $node --check $file.FullName

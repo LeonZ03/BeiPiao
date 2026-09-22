@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- beipiao-room-app:v1 -->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Courtyard43 · 结构白模</title>
+  <meta name="description" content="Courtyard43 结构白模；全部尺寸为照片估计，待用户确认。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232e3b36'/%3E%3Cpath d='M8 25V8h16v17M16 8v17M8 17h16' stroke='%23ead6bd' stroke-width='2' fill='none'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css?v=feedback1">
+  <link rel="stylesheet" href="./archive.css?v=audio1">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+<style>.review-note{position:fixed;z-index:3;top:74px;left:22px;margin:0;padding:10px 14px;background:#f2eee4e8;color:#383a37;font:14px/1.6 system-ui;pointer-events:none;max-width:calc(100vw - 44px)}.review-note small{font-size:12px}.immersive .review-note{display:none}#soundBtn:disabled{opacity:.5;cursor:default}@media(max-width:600px){.review-note{top:66px;left:12px;max-width:calc(100vw - 24px);font-size:12px}.review-note small{font-size:11px}}</style></head>
+<body>
+<main id="app" aria-label="Courtyard43 · 白模三维漫游">
+  <p class="review-note">结构白模 · 待确认<br><small>尺寸均为照片估计 · 浅棕色为暂定边界</small></p><canvas id="world" tabindex="0" aria-label="房间三维视图，拖动环顾，WASD 或方向键移动，Shift 上升，Ctrl 下降"></canvas>
+  <header class="topbar">
+    <div class="identity"><a id="archiveHomeBtn" href="./" aria-label="返回居住记录">← <span>北漂</span></a><span class="room-identity">Courtyard43 · 白模</span></div>
+    <nav class="top-actions" aria-label="视图选项"><button id="immersiveBtn" aria-pressed="false">沉浸看房</button><button id="soundBtn" disabled aria-label="白模阶段，暂无音效" title="白模阶段，暂无音效" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4 6 8H3v8h3l5 4Z"/><path class="sound-off" d="m16 9 6 6m0-6-6 6"/><path class="sound-on" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg></button><button id="helpBtn" aria-label="操作帮助">?</button><button id="fullscreenBtn" aria-label="全屏">⛶</button></nav>
+  </header>
+  <div id="loading">
+    <div class="room-loading-content"><p class="loading-eyebrow">STRUCTURE REVIEW</p><h2>Courtyard43 · 白模</h2>
+      <div class="loading-meta"><span id="roomLoadStatus" role="status">正在打开房间</span><span id="roomLoadValue" aria-hidden="true">0%</span></div>
+      <progress id="roomLoadProgress" max="100" value="0" aria-label="房间加载进度"></progress>
+      <a href="./" class="loading-back">← 返回居住记录</a>
+    </div>
+  </div>
+  <div id="error" hidden><h2>暂时无法打开三维视图</h2><p><span id="errorDetail">请检查连接，或使用支持 WebGL 的浏览器。</span></p><button onclick="location.reload()">重新打开</button></div>
+  <div class="crosshair" id="crosshair" hidden>+</div><div id="toast" role="status"></div>
+  <section class="bottom-panel" aria-label="漫游控制">
+    <div class="mode-control"><button id="walkBtn" class="active" aria-pressed="true">自由探索</button><button id="overviewBtn" aria-pressed="false">空间总览</button></div>
+    <button id="resetBtn" aria-label="复位视角" title="复位视角"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+  </section>
+  <div class="touch-controls direction-controls" role="group" aria-label="前后左右移动"><button data-move="forward" aria-label="向前">↑</button><button data-move="left" aria-label="向左">←</button><button data-move="back" aria-label="向后">↓</button><button data-move="right" aria-label="向右">→</button></div>
+  <div class="touch-controls height-controls" role="group" aria-label="升降视角"><button data-move="up" aria-label="上升"><span aria-hidden="true">↑</span><small>升</small></button><button data-move="down" aria-label="下降"><span aria-hidden="true">↓</span><small>降</small></button></div>
+  <dialog id="helpDialog"><button class="close" aria-label="关闭">×</button><p class="eyebrow">EXPLORE THE ROOM</p><h2>像回家一样，走进来。</h2><div class="help-items"><p><kbd>拖动</kbd><span>环顾四周</span></p><p><kbd>W A S D</kbd><span>前后左右移动，也可用方向键</span></p><p><kbd>Shift / Ctrl</kbd><span>按住上升 / 下降，可近看物件和低处细节</span></p><p><kbd>点击物品</kbd><span>此阶段仅核对结构；物件开合将在结构确认后制作</span></p><p><kbd>右上角声音</kbd><span>白模暂无音效，正式房间将保持默认静音</span></p><p><kbd>双击画面</kbd><span>锁定鼠标环顾，Esc 退出</span></p><p><kbd>空间总览</kbd><span>旋转、缩放，查看房间布局</span></p></div><p class="note">手机：可竖屏或横屏浏览；左下方向键移动，右下竖排按键上升／下降，滑动画面环顾。沉浸看房时仍保留移动键。视点约 2 毫米，可从家具上方、下方和间隙穿行；实体表面会阻挡移动。</p><button class="primary close-action">开始探索</button></dialog>
+</main>
+<script type="module" src="./courtyard43-whitebox.js?v=courtyard43-whitebox01"></script>
+</body></html>

@@ -9,6 +9,7 @@
     "test:pages": "node tests/pages.mjs",
     "test": "node tests/structure.mjs && node tests/assets.mjs && node --experimental-vm-modules tests/viewer-lifecycle.mjs && node tests/breeze.mjs && node tests/daylight-cache.mjs && node tests/wardrobe.mjs && node tests/exterior.mjs && node tests/audio.mjs",
     "test:structure": "node tests/structure.mjs",
+    "test:courtyard43": "node tests/courtyard43-whitebox.mjs",
     "test:scene": "node --experimental-vm-modules tests/scene.mjs"
   },
   "devDependencies": { "@napi-rs/canvas": "0.1.100" }

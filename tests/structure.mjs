@@ -21,8 +21,11 @@ for (const entry of fs.readdirSync(path.join(root, 'rooms'), {withFileTypes: tru
   const room = JSON.parse(fs.readFileSync(existing(prefix + 'room.json')));
   assert.equal(room.schemaVersion, 1);
   assert.equal(room.id, entry.name);
-  assert.match(room.id, /^[a-z][a-z0-9-]*$/);
-  assert.ok(!ids.has(room.id)); ids.add(room.id);
+  // Preserve user-selected directory spelling, including Courtyard43, while
+  // rejecting aliases that collide on Windows' case-insensitive filesystem.
+  assert.match(room.id, /^[A-Za-z][A-Za-z0-9-]*$/);
+  const canonicalId = room.id.toLowerCase();
+  assert.ok(!ids.has(canonicalId)); ids.add(canonicalId);
   assert.ok(['pending', 'ready'].includes(room.status));
   existing(prefix + 'README.md');
   if (room.scripts !== null) { assert.ok(room.scripts.startsWith(prefix)); existing(room.scripts, true); }
