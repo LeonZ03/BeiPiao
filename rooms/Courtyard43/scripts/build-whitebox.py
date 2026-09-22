@@ -13,7 +13,7 @@ import bpy
 
 ROOT = Path(__file__).resolve().parents[3]
 ROOM = ROOT / "rooms/Courtyard43"
-PARAMETERS = json.loads((ROOM / "history/inputs/whitebox-02.json").read_text(encoding="utf-8"))
+PARAMETERS = json.loads((ROOM / "history/inputs/whitebox-03.json").read_text(encoding="utf-8"))
 OUT = ROOT / "room-site/dist/assets/rooms/Courtyard43/scene.json"
 if OUT.exists():
     previous = json.loads(OUT.read_text(encoding="utf-8"))
@@ -76,9 +76,10 @@ def box(name, center, size, mat=wall, bevel=.007, **tags):
 p = PARAMETERS
 r, b = p["room"], p["balcony"]
 w, d, h, t = r["width"], r["depth"], r["height"], r["wall"]
-left, right = -w/2, w/2
-box("bedroom-floor", (0, -.065, d/2), (w, .13, d), floor)
-box("balcony-floor", (0, -.025, -b["depth"]/2), (w, .08, b["depth"]), furniture)
+cx = r.get("centerX", 0)
+left, right = cx-w/2, cx+w/2
+box("bedroom-floor", (cx, -.065, d/2), (w, .13, d), floor)
+box("balcony-floor", (cx, -.025, -b["depth"]/2), (w, .08, b["depth"]), furniture)
 box("left-wall", (left-t/2, h/2, d/2), (t, h, d), wall)
 box("right-wall", (right+t/2, h/2, d/2), (t, h, d), wall, cutaway=True)
 entry = p["entry"]
@@ -87,11 +88,11 @@ for name, a, c in [("entry-wall-left", left, door_l), ("entry-wall-right", door_
     box(name, ((a+c)/2, h/2, d+t/2), (c-a, h, t), unknown, cutaway=True, uncertain=True)
 box("entry-header", (entry["centerX"], (h+entry["height"])/2, d+t/2), (entry["width"], h-entry["height"], t), unknown, cutaway=True, uncertain=True)
 box("door-open-provisional", (door_r-.02, entry["height"]/2, d-entry["width"]/2), (.04, entry["height"], entry["width"]), furniture, cutaway=True, uncertain=True)
-box("ceiling", (0, h+.065, d/2), (w+.24, .13, d+.24), wall, ceilings=True)
+box("ceiling", (cx, h+.065, d/2), (w+.24, .13, d+.24), wall, ceilings=True)
 for x in [left+.14, right-.14]:
     box("ceiling-side-border", (x, h-.1, d/2), (.28, .2, d), wall, ceilings=True)
 for z in [.14, d-.14]:
-    box("ceiling-cross-border", (0, h-.1, z), (w, .2, .28), wall, ceilings=True)
+    box("ceiling-cross-border", (cx, h-.1, z), (w, .2, .28), wall, ceilings=True)
 
 opening_l, opening_r = b["openingLeft"], b["openingRight"]
 for name, a, c in [("balcony-left-pier", left, opening_l), ("balcony-right-pier", opening_r, right)]:
@@ -106,15 +107,15 @@ for z in [-b["depth"], -.05]:
 for y in [b["sill"], 1.98, b["windowTop"]]:
     box("balcony-return-window-rail", (right, y, -b["depth"]/2), (.075, .045, b["depth"]), furniture)
 box("balcony-return-glass", (right+.018, (b["sill"]+b["windowTop"])/2, -b["depth"]/2), (.008, b["windowTop"]-b["sill"]-.045, b["depth"]-.045), glass, 0, noCollision=True)
-box("balcony-ceiling-unconfirmed", (0, h+.05, -b["depth"]/2), (w+.24, .1, b["depth"]), unknown, ceilings=True, uncertain=True)
-box("balcony-window-parapet", (0, b["sill"]/2, -b["depth"]-.06), (w, b["sill"], .12), furniture)
-box("balcony-window-header", (0, (h+b["windowTop"])/2, -b["depth"]-.06), (w, h-b["windowTop"], .12), unknown, ceilings=True, uncertain=True)
+box("balcony-ceiling-unconfirmed", (cx, h+.05, -b["depth"]/2), (w+.24, .1, b["depth"]), unknown, ceilings=True, uncertain=True)
+box("balcony-window-parapet", (cx, b["sill"]/2, -b["depth"]-.06), (w, b["sill"], .12), furniture)
+box("balcony-window-header", (cx, (h+b["windowTop"])/2, -b["depth"]-.06), (w, h-b["windowTop"], .12), unknown, ceilings=True, uncertain=True)
 for x in [left, left+w/3, left+2*w/3, right]:
     box("outer-window-upright", (x, (b["sill"]+b["windowTop"])/2, -b["depth"]), (.045, b["windowTop"]-b["sill"], .075), furniture)
 for y in [b["sill"], 1.98, b["windowTop"]]:
-    box("outer-window-horizontal", (0, y, -b["depth"]), (w, .045, .075), furniture)
-box("window-glass-provisional", (0, (b["sill"]+b["windowTop"])/2, -b["depth"]-.018), (w-.045, b["windowTop"]-b["sill"]-.045, .008), glass, 0, noCollision=True, uncertain=True)
-box("clothes-rail", (0, 2.27, -.85), (w-.14, .025, .025), dark)
+    box("outer-window-horizontal", (cx, y, -b["depth"]), (w, .045, .075), furniture)
+box("window-glass-provisional", (cx, (b["sill"]+b["windowTop"])/2, -b["depth"]-.018), (w-.045, b["windowTop"]-b["sill"]-.045, .008), glass, 0, noCollision=True, uncertain=True)
+box("clothes-rail", (cx, 2.27, -.85), (w-.14, .025, .025), dark)
 
 # Characteristic partition and radiator cover: recognizable massing only.
 box("radiator-cover-body", (.84, .48, .08), (1.1, .96, .34), furniture)
@@ -157,7 +158,7 @@ def chair(name, x, z):
 
 
 chair("desk-chair", -.77, dz)
-chair("spare-chair", 1.00, 1.78)
+# User correction: keep the entrance clear; no spare chair by the door.
 wardrobe = p["wardrobe"]
 box("wardrobe-unconfirmed-volume", (right-wardrobe["depth"]/2, wardrobe["height"]/2, wardrobe["centerZ"]),
     (wardrobe["depth"], wardrobe["height"], wardrobe["width"]), furniture, .012, uncertain=True)

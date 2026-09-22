@@ -9,7 +9,7 @@ import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} fr
 const $=id=>document.getElementById(id),canvas=$('world');
 startRoomLoading();
 try {
-  const response=await fetch('./assets/rooms/Courtyard43/scene.json?v=courtyard43-whitebox02');
+  const response=await fetch('./assets/rooms/Courtyard43/scene.json?v=courtyard43-whitebox03');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='whitebox')throw Error('白模资料版本不匹配');
@@ -36,9 +36,9 @@ try {
   const keys=new Set(),surfaces=[],ray=new THREE.Raycaster(),dir=new THREE.Vector3(),segment=new THREE.Box3();
   world.updateMatrixWorld(true);
   world.traverse(o=>{if(o.isMesh&&!o.material.transparent&&!o.userData.noCollision){o.geometry.computeBoundingBox();surfaces.push({object:o,bounds:o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld)});}});
-  const p=manifest.review,r=p.room;
+  const p=manifest.review,r=p.room,centerX=r.centerX??0;
   function canTravel(from,to){
-    if(to.x<=-r.width/2+.002||to.x>=r.width/2-.002||to.z<=-p.balcony.depth+.025||to.z>=r.depth-.002||to.y<.025||to.y>r.height-.02)return false;
+    if(to.x<=centerX-r.width/2+.002||to.x>=centerX+r.width/2-.002||to.z<=-p.balcony.depth+.025||to.z>=r.depth-.002||to.y<.025||to.y>r.height-.02)return false;
     dir.subVectors(to,from);const distance=dir.length();if(distance<1e-8)return true;
     dir.divideScalar(distance);ray.set(from,dir);ray.near=0;ray.far=distance+.002;
     segment.setFromPoints([from,to]);segment.expandByScalar(.002);

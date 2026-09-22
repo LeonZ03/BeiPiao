@@ -40,7 +40,12 @@ function hits(from,to){
 assert.equal(hits([-.45,1.5,.5],[-.45,1.5,-.6]).length,0,'Balcony passage must remain open');
 assert.equal(hits([-.7,.20,1.1],[-.7,.20,2.80]).length,0,'The empty gap under the bed must remain traversable');
 assert.ok(hits([-.7,.49,1.1],[-.7,.49,2.80]).length,'The mattress must block movement');
-assert.ok(hits([1.3,1.2,2.0],[1.3,1.2,.8]).length,'Wardrobe must block movement');
+const right=(manifest.review.room.centerX??0)+manifest.review.room.width/2;
+assert.ok(hits([right-.3,1.2,2.0],[right-.3,1.2,.8]).length,'Wardrobe must block movement');
+assert.equal(hits([1.5,1.5,1.7],[2.3,1.5,1.7]).length,0,'The enlarged aisle must cross the old right wall');
+assert.ok(hits([right-.1,1.5,1.7],[right+.2,1.5,1.7]).length,'The new right wall must remain solid');
+assert.ok(!manifest.nodes.some(n=>n.name.startsWith('spare-chair')),'User requires the entrance to have no chair');
+assert.equal(hits([1.8,.45,2.4],[1.8,.45,1.55]).length,0,'The former entrance chair position must be clear');
 assert.ok(refs.ceilings.length&&refs.cutaway.length);
 assert.equal(Object.keys(manifest.review.viewpoints).length,6);
 const room=JSON.parse(fs.readFileSync(new URL('../rooms/Courtyard43/room.json',import.meta.url)));
