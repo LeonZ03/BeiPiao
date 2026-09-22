@@ -35,7 +35,7 @@
   },
   {
     "file": "wardrobe-open.wav",
-    "source": "generated-assets/audio/cabinet-door-opens-and-closes.mp3",
+    "source": "rooms/yongwang-jiayuan/assets/audio/cabinet-door-opens-and-closes.mp3",
     "origin": "user-provided",
     "license": "not-specified-by-user",
     "sourceSha256": "de0777afcce58bf8e2c9a6ce779f5bab9a8e76f86f53ca6df6f9cff5df2f3ea2",
@@ -50,7 +50,7 @@
   },
   {
     "file": "wardrobe-close.wav",
-    "source": "generated-assets/audio/cabinet-door-opens-and-closes.mp3",
+    "source": "rooms/yongwang-jiayuan/assets/audio/cabinet-door-opens-and-closes.mp3",
     "origin": "user-provided",
     "license": "not-specified-by-user",
     "sourceSha256": "de0777afcce58bf8e2c9a6ce779f5bab9a8e76f86f53ca6df6f9cff5df2f3ea2",

@@ -33,6 +33,8 @@ analysis/
 output/
 backups/
 Ref/
+rooms/*/references/
+rooms/*/local-history/
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -47,7 +49,6 @@ tools/blender-mcp-env/
 tools/blender-mcp-official/
 tools/blender-lab-mcp-*.zip
 tools/blender-mcp-installed.txt
-generated-assets/full-room/build-report.json
-generated-assets/summer/raw-irradiance/
+rooms/*/assets/full-room/build-report.json
 
 # Keep dist: it is the self-contained, runnable website, not disposable output.

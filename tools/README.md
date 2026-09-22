@@ -32,7 +32,7 @@ tools/blender-mcp-env/Scripts/python.exe tools/call-blender-mcp.py --tool execut
 from pathlib import Path
 import os
 root = Path(os.environ['BEIPIAO_ROOT'])
-script = root / 'room-site/tools/your-stage.py'
+script = root / 'rooms/yongwang-jiayuan/scripts/your-stage.py'
 exec(compile(script.read_text(encoding='utf-8'), str(script), 'exec'),
      {'__file__': str(script), '__name__': '__main__'})
 ```
@@ -41,8 +41,8 @@ exec(compile(script.read_text(encoding='utf-8'), str(script), 'exec'),
 
 ## 源工程与历史脚本
 
-当前主工程在 `generated-assets/full-room/永旺家园-完整场景.blend`。材质源图在同级 `textures/`，浏览器最终包在 `room-site/dist/assets/full-room/`。修改前确认当前版本已有 Git 提交；修改后同步保存 `.blend`、完整模型包、运行用的 `geometry.bin.gz` 和 revision，检查真实浏览器并提交。项目不再生成备份压缩包。
+当前主工程在 `rooms/yongwang-jiayuan/assets/full-room/永旺家园-完整场景.blend`。材质源图在同级 `textures/`，浏览器最终包在 `room-site/dist/assets/full-room/`。修改前确认当前版本已有 Git 提交；修改后同步保存 `.blend`、完整模型包、运行用的 `geometry.bin.gz` 和 revision，检查真实浏览器并提交。项目不再生成备份压缩包。
 
-`room-site/tools/build-*` 与 `refine-*` 保留了制作过程，**不是一条从头重跑的构建命令**。部分依赖特定父 revision、旧参考图或未入库的 `analysis/` 阶段数据；它们不能直接用于当前精修工程。不要删除版本断言后强跑。新房间应创建自己的生成脚本，不复用一长串历史补丁。
+`rooms/yongwang-jiayuan/scripts/build-*` 与 `refine-*` 保留了制作过程，**不是一条从头重跑的构建命令**。部分依赖特定父 revision 或本地私人参考；地砖与高达的必要阶段数据保存在该房间 `history/inputs/`。它们不能直接用于当前精修工程。不要删除版本断言后强跑。新房间遵循 `rooms/README.md`，创建自己的生成脚本，不复用一长串历史补丁。
 
 `capture-room-for-blender.mjs` 是旧网页迁入 Blender 时的尺寸采集工具；需要 `npm ci` 的开发依赖，不是新房间建模入口。`install-official-blender-addon.py` 仅在确实需要交互扩展时使用，并需自行准备官方 `tools/blender-mcp-official/` 源码；常规后台 MCP 工作流不需要安装或启动该扩展。

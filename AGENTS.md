@@ -1,6 +1,6 @@
 # 北漂居住记录：AI 工程约定
 
-本文件面向继续维护本仓库的 AI。目标是让新的房间复刻沿用已经验证过的建模、导出和网页运行方式，减少结构反复、穿模、材质失真、性能退化和不可复现修改。它不是历史日志；具体版本变化和用户可见说明写入 `room-site/README.md`。
+本文件面向继续维护本仓库的 AI。目标是让新的房间复刻沿用已经验证过的建模、导出和网页运行方式，减少结构反复、穿模、材质失真、性能退化和不可复现修改。它不是历史日志；具体版本变化和用户可见说明写入 `rooms/yongwang-jiayuan/HISTORY.md`。
 
 ## 1. 基本原则
 
@@ -22,17 +22,27 @@
   ```
 
 - 优先使用官方 `execute_blender_code_for_cli` 等后台工具。后台工具按需打开 `.blend`，不需要常驻 TCP 控制端口。扩展的自动启动已明确关闭，不得擅自重新开启。
-- 建模脚本可保存在 `room-site/tools/`，但必须经官方 MCP 在 Blender 中执行。不要绕过 MCP 直接调用 Blender 可执行文件运行脚本。
+- 建模脚本可保存在 `rooms/yongwang-jiayuan/scripts/`，但必须经官方 MCP 在 Blender 中执行。不要绕过 MCP 直接调用 Blender 可执行文件运行脚本。
 - 开发环境使用的官方 MCP Python 依赖固定到 `ff54e4d8f6b09502f2f466189cca0e52b4a91643#subdirectory=mcp`；升级前先验证工具参数和导出结果。不要改用仓库内未审查的第三方同名实现。
 - `tools/call-blender-mcp.py` 应通过 `BLENDER_PATH` 或 PATH/标准安装位置发现 Blender。MCP 参数、检查输出和临时报告放在未跟踪的 `analysis/`；不要把盘符、用户名、个人虚拟环境或 Blender 安装路径写进长期脚本和文档。脚本内路径应由仓库根目录或脚本目录推导。
 
 ## 3. 权威文件与派生文件
 
+### 主要目录与多房间边界
+
+- `rooms/<room-id>/` 保存各房间独立的 `room.json`、`assets/`（模型与源素材）、`scripts/`（建模/精修）、`docs/`（参考定稿）、`history/inputs/`（不可再生的阶段输入）和 `HISTORY.md`（经验记录）。永旺家园的 ID 为 `yongwang-jiayuan`。新增流程和空白约束模板见 `rooms/README.md`、`rooms/ROOM_TEMPLATE.md`。
+- `room.json` 的路径相对仓库根目录，是给维护者和检查工具用的资料索引，不是网页加载清单。当前网站只接入永旺家园；新增目录不会自动上线，不能把“待录入”误报为已完成。
+- `room-site/dist/` 保持现有可运行网站和 URL；当前模型资源仍在 `assets/full-room/`，不为本次整理改动运行时语义。新房间使用 `room-site/dist/assets/rooms/<room-id>/` 独立导出目录，接入时才增加明确的房间选择/加载映射，并回归既有房间。
+- `docs/ui-concepts/` 放全站共用 UI 定稿；`tools/` 放共用 MCP/发布工具；`local-access/` 放启动器；`tests/` 放可提交的回归。根目录只保留主要入口、配置和总说明。
+- 私人原图/视频在 `rooms/<room-id>/references/`，早期未整理调查与试验资料在 `local-history/`，均保持忽略，不上传；其中可复用经验应提炼进文档，必要的数值输入应审查后放进 `history/inputs/`。`analysis/` 是临时工作区，不允许正式脚本依赖其中的唯一源数据。
+- 迁移旧资料时一并修正脚本根目录计算、文档链接、源音频出处和 Blender 相对贴图路径。Blender 源路径通过官方 MCP 修改并重新打开检查；纯路径调整不重导模型、不改变场景 revision。运行层模型、材质、音频与代码应保持原内容。
+- 清理仅针对可再生成产物、过期日志、已确认无改动的测试克隆和 `.blend1` 自动备份；保留原始参考、定稿、源工程、历史脚本及重要输入。不要删除正在运行的启动器日志/状态文件，不创建压缩备份。
+
 | 内容 | 权威位置 | 说明 |
 | --- | --- | --- |
-| 当前完整房间 Blender 工程 | `generated-assets/full-room/永旺家园-完整场景.blend` | 当前场景几何、材质、实例、接触关系和交互轴的主要源文件 |
-| 独立精修资产源 | `generated-assets/<asset>/` | 例如高达、门饰、头盔、摩托车；应保留 `.blend` 和必要生成记录 |
-| 可重复建模/精修脚本 | `room-site/tools/` | `build-*` 创建资产；`refine-*` 针对特定父版本精修；先读脚本头部和 revision 断言 |
+| 当前完整房间 Blender 工程 | `rooms/yongwang-jiayuan/assets/full-room/永旺家园-完整场景.blend` | 当前场景几何、材质、实例、接触关系和交互轴的主要源文件 |
+| 独立精修资产源 | `rooms/yongwang-jiayuan/assets/<asset>/` | 例如高达、门饰、头盔、摩托车；应保留 `.blend` 和必要生成记录 |
+| 可重复建模/精修脚本 | `rooms/yongwang-jiayuan/scripts/` | `build-*` 创建资产；`refine-*` 针对特定父版本精修；先读脚本头部和 revision 断言 |
 | 浏览器最终模型包 | `room-site/dist/assets/full-room/` | `scene.json`、`geometry.bin`、`geometry.bin.gz` 是派生成品，不是唯一源 |
 | 浏览器运行时 | `room-site/dist/` | Three.js 场景加载、实时灯光、交互、导航、UI、粒子、水流和后处理 |
 | 本地与公网启动器 | `启动房间.cmd`、`local-access/` | Windows 双击入口、本地服务、Cloudflare 临时隧道和健康检查 |
@@ -40,7 +50,7 @@
 | 本地检查报告 | `analysis/` | 未跟踪的临时 MCP 参数和检查输出；报告不是模型源 |
 | 版本历史 | Git commits | 通过提交记录追溯和恢复模型、材质、导出包及网页代码；不创建 ZIP/TAR 等备份压缩包 |
 
-处理现有房间时，先读取 `room-site/dist/assets/full-room/scene.json` 的当前 `revision`，不要把本文件中的示例版本当作永远有效。当前完整生成器 `room-site/tools/build-full-room.py` 会重建并覆盖完整工程。完整工程已经经过多轮 MCP 精修后，**禁止直接运行该生成器覆盖当前 `.blend` 和模型包**。如果确实需要从基础版本重建，先通过 Git 提交保存当前工程，再按父 revision 顺序重放所有必要的 `refine-*` 步骤，并逐步验收。
+处理现有房间时，先读取 `room-site/dist/assets/full-room/scene.json` 的当前 `revision`，不要把本文件中的示例版本当作永远有效。当前完整生成器 `rooms/yongwang-jiayuan/scripts/build-full-room.py` 会重建并覆盖完整工程。完整工程已经经过多轮 MCP 精修后，**禁止直接运行该生成器覆盖当前 `.blend` 和模型包**。如果确实需要从基础版本重建，先通过 Git 提交保存当前工程，再按父 revision 顺序重放所有必要的 `refine-*` 步骤，并逐步验收。
 
 精修脚本里的输入 revision 断言是保护措施。断言失败时先调查当前父版本和变更链；不得删除断言、强行套用到不匹配的场景。对现有工程做了手工或 MCP 编辑后，必须保存源工程并建立 Git 检查点，不能让旧生成脚本覆盖新成果。
 
@@ -88,7 +98,7 @@
 
 **交互音效**
 
-交互音效由 `room-site/dist/room-audio.js` 管理，首次打开网页必须默认静音，不持久化取消静音的选择。仅用户点击右上角声音按钮后创建/恢复 AudioContext 并加载本地录音；沉浸模式保留此按钮，不恢复“对照照片”。柜门使用用户提供的 `generated-assets/audio/cabinet-door-opens-and-closes.mp3`，按原声前后两次动作裁出独立的开门与关门音频；每次运动只播放对应片段一次，保持原音调和原始相对音量，不循环、不叠加旧咯吱声或合成关门撞击。开门声随实际正向运动启动，关门声在 amount ≤ 0.18 时启动，为录音内约 0.5 秒的碰合前奏预留提前量，让撞击声对齐视觉合拢并保留自然尾音；不能等到几乎完全合上才启动整段录音。门锁瞬态增益为普通开关的 2.5 倍，其他音量保持独立；反向或阻挡时停止旧动作声。静音/后台清理所有声源与动作状态。开合仍采用较缓的指数缓动（系数 3.1）；窗帘仍使用轻量合成布料声。水龙头和花洒分别使用独立的 CC0 水柱落盆、喷淋实录，不能退回同一段噪声仅改滤波。`room-site/tools/prepare-room-audio.py` 为水声裁取稳定段并交叉混合循环接缝，为柜门分离开关动作并淡化裁切边缘，导出无编码延迟的单声道 PCM；来源和许可见 `dist/assets/audio/sources.json`。水声跟随当前水流状态，不能在每帧创建重复声源。首页、后台暂停并清理声源，返回房间按当前状态恢复。修改后运行 `tests/audio.mjs` 和 `tests/wardrobe.mjs`，检查默认静音、独立持续水声、循环接缝、开合速度、暂停/重入及加载失败重试。
+交互音效由 `room-site/dist/room-audio.js` 管理，首次打开网页必须默认静音，不持久化取消静音的选择。仅用户点击右上角声音按钮后创建/恢复 AudioContext 并加载本地录音；沉浸模式保留此按钮，不恢复“对照照片”。柜门使用用户提供的 `rooms/yongwang-jiayuan/assets/audio/cabinet-door-opens-and-closes.mp3`，按原声前后两次动作裁出独立的开门与关门音频；每次运动只播放对应片段一次，保持原音调和原始相对音量，不循环、不叠加旧咯吱声或合成关门撞击。开门声随实际正向运动启动，关门声在 amount ≤ 0.18 时启动，为录音内约 0.5 秒的碰合前奏预留提前量，让撞击声对齐视觉合拢并保留自然尾音；不能等到几乎完全合上才启动整段录音。门锁瞬态增益为普通开关的 2.5 倍，其他音量保持独立；反向或阻挡时停止旧动作声。静音/后台清理所有声源与动作状态。开合仍采用较缓的指数缓动（系数 3.1）；窗帘仍使用轻量合成布料声。水龙头和花洒分别使用独立的 CC0 水柱落盆、喷淋实录，不能退回同一段噪声仅改滤波。`rooms/yongwang-jiayuan/scripts/prepare-room-audio.py` 为水声裁取稳定段并交叉混合循环接缝，为柜门分离开关动作并淡化裁切边缘，导出无编码延迟的单声道 PCM；来源和许可见 `dist/assets/audio/sources.json`。水声跟随当前水流状态，不能在每帧创建重复声源。首页、后台暂停并清理声源，返回房间按当前状态恢复。修改后运行 `tests/audio.mjs` 和 `tests/wardrobe.mjs`，检查默认静音、独立持续水声、循环接缝、开合速度、暂停/重入及加载失败重试。
 
 ### 4.6 自然微风：已验证的可复用做法
 
@@ -160,7 +170,7 @@
 - 不把无关改动、私有参考图、日志或临时文件一起提交；不自动清空用户改动、不使用破坏性的 reset。需要回退时定位已知提交，按文件恢复目标内容。
 - 先记录父 revision，再执行修改；新 revision 应表达阶段，而不是覆盖父版本名字。脚本的输入断言和输出 revision 必须与记录一致。
 - 新房间建立独立生成链，避免复制一长串永旺家园的历史补丁。基础生成器应能从明确输入生成结构版；后续精修脚本按少量、职责清晰的阶段串联。
-- `room-site/tools/capture-room-for-blender.mjs` 仅用于离线保留旧网页场景的尺寸和贴图，不是常规建模入口。
+- `rooms/yongwang-jiayuan/scripts/capture-room-for-blender.mjs` 仅用于离线保留旧网页场景的尺寸和贴图，不是常规建模入口。
 
 ## 8. 最小验收门槛
 

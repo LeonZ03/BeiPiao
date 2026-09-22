@@ -4,7 +4,7 @@
 
 这是一个个人房间档案：用照片和视频整理空间，在 Blender 中建模，再放进浏览器里自由探索。首页沿居住顺序展开，目前可以进入 **永旺家园**，其他房间保留为“待录入”。
 
-![北漂居住记录首页](generated-assets/ui-concepts/B-cinematic-timeline.png)
+![北漂居住记录首页](docs/ui-concepts/B-cinematic-timeline.png)
 
 *首页设计参考。进入房间后是可交互的实时三维场景，不是这张静态图片。模型依据照片比例制作，未做实测扫描。*
 
@@ -112,23 +112,36 @@ npm run test:pages
 ```text
 启动房间.cmd               Windows 双击启动入口
 local-access/              初始化、本地静态服务、Cloudflare 和进程清理
-room-site/dist/            自包含网页源码、Three.js、贴图和可运行模型包
-room-site/tools/           Blender 建模与精修脚本，包含有父版本约束的历史脚本
-generated-assets/          完整 .blend、独立资产源、材质、UI 定稿
-tools/                     Blender Lab 官方 MCP 客户端及可选建模依赖
+room-site/dist/            网站运行层：网页、Three.js、贴图、模型包（保留现有路径）
+rooms/                     按房间分开的建模资料；新增房间从这里开始
+  README.md                新房间目录约定与接入步骤
+  ROOM_TEMPLATE.md          参考证据、尺寸来源、验收清单模板
+  yongwang-jiayuan/         永旺家园
+    room.json              建模资料索引（不直接控制网站路由）
+    assets/                完整 .blend、独立物件源、材质、原始音效
+    scripts/               本房间的建模、精修、素材处理脚本
+    docs/                  窗帘/衣柜等定稿、Blender 迁移记录
+    history/inputs/        历史精修必需的输入数据
+    HISTORY.md             各阶段制作记录与经验
+    references/            私人原图/视频，仅本地保存，不入库
+    local-history/         旧调查资料、试验脚本与报告，仅本地保留
+docs/ui-concepts/          网站共用 UI 方案与 B 方案定稿
+tools/                     共用 Pages 构建、Blender 官方 MCP 客户端及依赖说明
 tests/                     资源完整性、路由/全屏、场景和启动器回归
 AGENTS.md                  AI 建模与维护规范：已确认约束、工作流、踩坑和验收
 ```
 
-这里的 `dist/` 是直接维护的可运行网站，**必须提交**，不要按一般前端项目习惯将其忽略。权威 Blender 工程是 `generated-assets/full-room/永旺家园-完整场景.blend`；网页使用同目录体系导出的 `scene.json`、`geometry.bin` 和压缩版本。Git 中保留实际模型文件，不依赖作者电脑上的路径。
+这里的 `dist/` 是直接维护的可运行网站，**必须提交**，不要按一般前端项目习惯将其忽略。权威 Blender 工程是 `rooms/yongwang-jiayuan/assets/full-room/永旺家园-完整场景.blend`；网页使用同目录体系导出的 `scene.json`、`geometry.bin` 和压缩版本。Git 中保留实际模型文件，不依赖作者电脑上的路径。
 
-原始私人参考目录 `Ref/`、过程报告 `analysis/`、工具安装目录和日志均不入库。网站实际使用的展示照片与纹理保留在运行资源中。
+原始私人参考已从 `Ref/永旺家园/` 移入该房间的 `references/`，保留原文件；旧调查与试验资料归入 `local-history/`。两者不入 Git，也不发布到网站。`analysis/` 只放可再生成的临时检查结果；`.pages-dist/` 是发布产物，`.runtime/`、`node_modules/` 和 `tools/blender-mcp-env/` 是本机依赖。网站实际使用的展示照片与纹理保留在运行资源中。
+
+此次目录迁移的对照见 [房间说明](rooms/yongwang-jiayuan/README.md)。清理目录不能删除 `.blend`、源贴图、定稿或历史输入；过期日志、旧克隆测试副本和 Blender 的 `.blend1` 自动备份无需保留。运行中的服务日志应等服务退出后再清理。
 
 项目使用 **Git 提交管理版本**，不再生成备份压缩包。模型源文件、材质和网页导出物一起保存到对应提交；通过 `git log --oneline` 查看历史，按需要从指定提交恢复相关文件。
 
 ## 继续建模 / 增加房间
 
-先读 [AGENTS.md](AGENTS.md)，再读 [建模工具说明](tools/README.md)。所有 Blender 操作使用 [Blender Lab 官方 MCP](https://projects.blender.org/lab/blender_mcp)，不是同名第三方插件。
+先读 [AGENTS.md](AGENTS.md)、[新增房间说明](rooms/README.md)，再读 [建模工具说明](tools/README.md)。所有 Blender 操作使用 [Blender Lab 官方 MCP](https://projects.blender.org/lab/blender_mcp)，不是同名第三方插件。
 
 不要重新运行历史 `build-full-room.py` 覆盖精修后的工程，也不要把全部 `refine-*` 依次执行当作初始化。当前 `.blend` 与网页包已是完成品。新房间建立独立工程和资源目录，从参考约束、结构、重点物件、材质光照到浏览器验收逐步推进。无需复制过去的整串试错补丁。
 

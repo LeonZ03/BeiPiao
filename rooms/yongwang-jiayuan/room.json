@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "yongwang-jiayuan",
+  "name": "永旺家园",
+  "status": "ready",
+  "sourceBlend": "rooms/yongwang-jiayuan/assets/full-room/永旺家园-完整场景.blend",
+  "scripts": "rooms/yongwang-jiayuan/scripts",
+  "history": "rooms/yongwang-jiayuan/HISTORY.md",
+  "runtimeScene": "room-site/dist/assets/full-room/scene.json"
+}
