@@ -13,7 +13,7 @@ import bpy
 
 ROOT = Path(__file__).resolve().parents[3]
 ROOM = ROOT / "rooms/Courtyard43"
-PARAMETERS = json.loads((ROOM / "history/inputs/whitebox-05.json").read_text(encoding="utf-8"))
+PARAMETERS = json.loads((ROOM / "history/inputs/whitebox-06.json").read_text(encoding="utf-8"))
 OUT = ROOT / "room-site/dist/assets/rooms/Courtyard43/scene.json"
 if OUT.exists():
     previous = json.loads(OUT.read_text(encoding="utf-8"))
