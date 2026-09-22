@@ -1,0 +1,190 @@
+{
+  "revision": "courtyard43-whitebox04",
+  "structureApproved": false,
+  "referencePeriod": "入住后；用户已确认",
+  "dimensionSource": "以下全部为照片估计，仅用于可修改白模，不是实测",
+  "geographicOrientation": null,
+  "room": {
+    "width": 4.05,
+    "depth": 2.85,
+    "height": 2.75,
+    "wall": 0.12,
+    "centerX": 0.4
+  },
+  "balcony": {
+    "depth": 1.1,
+    "sill": 0.88,
+    "windowTop": 2.45,
+    "openingLeft": -0.65,
+    "openingRight": 1.45
+  },
+  "bed": {
+    "length": 2,
+    "width": 1.5,
+    "top": 0.55,
+    "centerZ": 2.03
+  },
+  "desk": {
+    "width": 0.9,
+    "depth": 0.55,
+    "height": 0.74,
+    "centerZ": 0.305,
+    "longAxis": "X；长边贴阳台入口左侧墙面"
+  },
+  "wardrobe": {
+    "width": 1.15,
+    "depth": 0.55,
+    "height": 2.05,
+    "centerZ": 0.8
+  },
+  "entry": {
+    "centerX": 1.68,
+    "width": 0.85,
+    "height": 2.1
+  },
+  "unknownBoundaries": [
+    "入口墙右侧完整关系与门洞精确位置",
+    "阳台完整宽深与左端",
+    "窗外建筑距离",
+    "柜内结构"
+  ],
+  "viewpoints": {
+    "entry": {
+      "label": "入口",
+      "position": [
+        1.64,
+        1.56,
+        2.62
+      ],
+      "target": [
+        -0.15,
+        1.08,
+        0.35
+      ]
+    },
+    "bed": {
+      "label": "床边",
+      "position": [
+        0.86,
+        1.32,
+        2.0
+      ],
+      "target": [
+        -0.68,
+        0.58,
+        1.91
+      ]
+    },
+    "desk": {
+      "label": "书桌",
+      "position": [
+        -0.08,
+        1.4,
+        1.17
+      ],
+      "target": [
+        -1.15,
+        0.78,
+        0.64
+      ]
+    },
+    "balcony": {
+      "label": "阳台",
+      "position": [
+        -0.48,
+        1.54,
+        -0.48
+      ],
+      "target": [
+        0.65,
+        1.4,
+        -1.05
+      ]
+    },
+    "reverse": {
+      "label": "朝入口反看",
+      "position": [
+        -0.4,
+        1.57,
+        0.35
+      ],
+      "target": [
+        0.4,
+        1.06,
+        2.5
+      ]
+    },
+    "overview": {
+      "label": "空间总览",
+      "position": [
+        4.8,
+        5.5,
+        6.0
+      ],
+      "target": [
+        0.4,
+        0.5,
+        1.05
+      ]
+    }
+  },
+  "parentRevision": "courtyard43-whitebox03",
+  "videoEvidence": {
+    "file": "V01",
+    "durationSeconds": 11.86,
+    "timecodes": {
+      "0.6": "床长边贴近入口侧墙",
+      "4.2-6.2": "隔断两侧磨砂板，中央横格；白色双门柜",
+      "11.6": "阳台右端转角玻璃，上部横框"
+    }
+  },
+  "widthCorrection": {
+    "source": "V02 前 4 秒及用户截图反馈",
+    "confirmedDirection": "用户确认衣柜所在右侧边界整体向外推",
+    "estimatedShiftMeters": 0.8,
+    "measurementConfirmed": false,
+    "fixedAnchors": [
+      "左墙",
+      "床",
+      "书桌",
+      "阳台隔断与通行口"
+    ],
+    "note": "右墙、衣柜及门整体向 +X 外移；地面、顶面和阳台右边界随之延伸。80 厘米仅是本轮比例估计，待视觉确认。"
+  },
+  "supplementalVideo": {
+    "file": "V02",
+    "durationSeconds": 18.31,
+    "reviewedSeconds": [
+      0,
+      4
+    ],
+    "observations": [
+      "床尾与衣柜侧之间有更宽的通行空地",
+      "门与衣柜侧同处床尾方向",
+      "只校正结构，不引入空置期的小架和窗帘"
+    ]
+  },
+  "seatingCorrection": "用户对照截图揭示 whitebox03 未修正桌椅朝向：桌子长边应沿阳台这面墙，椅子在桌前靠床侧。whitebox04 旋转桌椅关系 90 度，桌子横摆在通行口左边，进门处仍无椅子。",
+  "deskChair": {
+    "centerZ": 0.75,
+    "facing": "-Z，面朝桌面与阳台侧墙；椅背朝床"
+  },
+  "deskCorrection": {
+    "evidence": [
+      "用户本轮实拍与白模对照截图",
+      "P01 空房照",
+      "P03 入住后照片",
+      "V02 前 4 秒"
+    ],
+    "layout": "桌子长边沿 X，背靠阳台入口左侧墙；椅子位于 +Z 靠床侧，面朝 -Z",
+    "openingLeftEstimate": -0.65,
+    "reason": "原左门垛太窄，横放桌面会侵入门洞；按可见桌子完整靠墙及门口在其右侧的关系，左门垛加宽约 0.3 米。",
+    "measurementConfirmed": false,
+    "retained": [
+      "床与床头墙",
+      "衣柜侧已外扩约 0.8 米",
+      "入口无椅",
+      "阳台右侧隔断和罩体"
+    ]
+  }
+}

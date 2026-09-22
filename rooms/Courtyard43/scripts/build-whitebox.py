@@ -13,7 +13,7 @@ import bpy
 
 ROOT = Path(__file__).resolve().parents[3]
 ROOM = ROOT / "rooms/Courtyard43"
-PARAMETERS = json.loads((ROOM / "history/inputs/whitebox-03.json").read_text(encoding="utf-8"))
+PARAMETERS = json.loads((ROOM / "history/inputs/whitebox-04.json").read_text(encoding="utf-8"))
 OUT = ROOT / "room-site/dist/assets/rooms/Courtyard43/scene.json"
 if OUT.exists():
     previous = json.loads(OUT.read_text(encoding="utf-8"))
@@ -142,22 +142,25 @@ for x in [left+.13, left+bed["length"]-.05]:
     for z in [bz-bed["width"]/2+.09, bz+bed["width"]/2-.09]:
         box("bed-leg", (x, .175, z), (.04, .35, .04), furniture)
 desk = p["desk"]
-dx, dz = left+desk["depth"]/2+.025, desk["centerZ"]
-box("desk-top", (dx, desk["height"]-.015, dz), (desk["depth"], .03, desk["width"]), furniture, .01)
-for x in [left+.07, left+desk["depth"]-.02]:
-    for z in [dz-desk["width"]/2+.045, dz+desk["width"]/2-.045]:
-        box("desk-leg", (x, .3525, z), (.032, .705, .032), furniture)
+dx, dz = left+desk["width"]/2+.025, desk["centerZ"]
+# P01, P03 and V02: long edge across the balcony-side wall, not along the
+# bed-head wall. The seated user faces -Z; the chair stays on the bed side.
+assert dx+desk["width"]/2 < opening_l, "Desk must end left of the balcony passage"
+box("desk-top", (dx, desk["height"]-.015, dz), (desk["width"], .03, desk["depth"]), furniture, .01)
+for x in [dx-desk["width"]/2+.045, dx+desk["width"]/2-.045]:
+    for z in [dz-desk["depth"]/2+.045, dz+desk["depth"]/2-.045]:
+        box("desk-leg", (x, (desk["height"]-.03)/2, z), (.032, desk["height"]-.03, .032), furniture)
 
 
 def chair(name, x, z):
     box(name+"-seat", (x, .445, z), (.40, .05, .41), dark, .018)
-    box(name+"-back", (x+.18, .705, z), (.035, .41, .41), furniture, .02)
+    box(name+"-back", (x, .69, z+.18), (.40, .44, .035), furniture, .02)
     for xx in [x-.15, x+.15]:
         for zz in [z-.16, z+.16]:
             box(name+"-leg", (xx, .21, zz), (.024, .42, .024), furniture)
 
 
-chair("desk-chair", -.77, dz)
+chair("desk-chair", dx, p["deskChair"]["centerZ"])
 # User correction: keep the entrance clear; no spare chair by the door.
 wardrobe = p["wardrobe"]
 box("wardrobe-unconfirmed-volume", (right-wardrobe["depth"]/2, wardrobe["height"]/2, wardrobe["centerZ"]),

@@ -46,6 +46,14 @@ assert.equal(hits([1.5,1.5,1.7],[2.3,1.5,1.7]).length,0,'The enlarged aisle must
 assert.ok(hits([right-.1,1.5,1.7],[right+.2,1.5,1.7]).length,'The new right wall must remain solid');
 assert.ok(!manifest.nodes.some(n=>n.name.startsWith('spare-chair')),'User requires the entrance to have no chair');
 assert.equal(hits([1.8,.45,2.4],[1.8,.45,1.55]).length,0,'The former entrance chair position must be clear');
+const bounds=name=>new THREE.Box3().setFromObject(world.getObjectByName(name));
+const desk=bounds('desk-top'),seat=bounds('desk-chair-seat'),back=bounds('desk-chair-back'),bed=bounds('bed-frame');
+assert.ok(desk.max.x-desk.min.x>desk.max.z-desk.min.z,'Desk long edge must follow the balcony wall');
+assert.ok(desk.max.x<manifest.review.balcony.openingLeft,'Desk must stay left of the balcony doorway');
+assert.ok(seat.getCenter(new THREE.Vector3()).z>desk.max.z,'Chair must sit on the bed side of the desk');
+assert.ok(back.getCenter(new THREE.Vector3()).z>seat.getCenter(new THREE.Vector3()).z,'Chair back must face the bed, not the passage');
+assert.ok(back.max.z<bed.min.z&&seat.max.x<manifest.review.balcony.openingLeft,'Chair must clear both bed and doorway');
+assert.equal(hits([-.35,.45,.8],[-.35,.45,-.5]).length,0,'Desk and chair must leave the low balcony passage open');
 assert.ok(refs.ceilings.length&&refs.cutaway.length);
 assert.equal(Object.keys(manifest.review.viewpoints).length,6);
 const room=JSON.parse(fs.readFileSync(new URL('../rooms/Courtyard43/room.json',import.meta.url)));

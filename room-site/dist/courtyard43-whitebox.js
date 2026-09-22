@@ -9,7 +9,7 @@ import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} fr
 const $=id=>document.getElementById(id),canvas=$('world');
 startRoomLoading();
 try {
-  const response=await fetch('./assets/rooms/Courtyard43/scene.json?v=courtyard43-whitebox03');
+  const response=await fetch('./assets/rooms/Courtyard43/scene.json?v=courtyard43-whitebox04');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='whitebox')throw Error('白模资料版本不匹配');
