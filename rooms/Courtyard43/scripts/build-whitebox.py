@@ -13,12 +13,12 @@ import bpy
 
 ROOT = Path(__file__).resolve().parents[3]
 ROOM = ROOT / "rooms/Courtyard43"
-PARAMETERS = json.loads((ROOM / "history/inputs/whitebox-01.json").read_text(encoding="utf-8"))
+PARAMETERS = json.loads((ROOM / "history/inputs/whitebox-02.json").read_text(encoding="utf-8"))
 OUT = ROOT / "room-site/dist/assets/rooms/Courtyard43/scene.json"
 if OUT.exists():
     previous = json.loads(OUT.read_text(encoding="utf-8"))
     assert previous.get("stage") == "whitebox" and not previous.get("structureApproved"), "Do not overwrite an approved/refined room"
-    assert previous["revision"] == PARAMETERS["revision"], "Use an explicit refinement stage for another revision"
+    assert previous["revision"] in {PARAMETERS["revision"], PARAMETERS.get("parentRevision")}, "Unexpected parent revision"
 
 # This runs in a fresh MCP background process, never in the user's active editor.
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -98,14 +98,20 @@ for name, a, c in [("balcony-left-pier", left, opening_l), ("balcony-right-pier"
     box(name, ((a+c)/2, h/2, -.065), (c-a, h, .13), wall)
 box("balcony-opening-lintel", ((opening_l+opening_r)/2, 2.575, -.065), (opening_r-opening_l, .35, .13), wall, ceilings=True)
 box("balcony-threshold", ((opening_l+opening_r)/2, .022, 0), (opening_r-opening_l, .044, .15), dark)
-for x in [left-t/2, right+t/2]:
-    box("balcony-side-unconfirmed", (x, h/2, -b["depth"]/2), (t, h, b["depth"]), unknown, uncertain=True, cutaway=x>0)
+box("balcony-left-unconfirmed", (left-t/2, h/2, -b["depth"]/2), (t, h, b["depth"]), unknown, uncertain=True)
+# V01 11.6 s establishes a glazed right return, not a full-height solid wall.
+box("balcony-right-parapet", (right+.06, b["sill"]/2, -b["depth"]/2), (.12, b["sill"], b["depth"]), furniture, cutaway=True)
+for z in [-b["depth"], -.05]:
+    box("balcony-return-window-post", (right, (b["sill"]+b["windowTop"])/2, z), (.075, b["windowTop"]-b["sill"], .045), furniture)
+for y in [b["sill"], 1.98, b["windowTop"]]:
+    box("balcony-return-window-rail", (right, y, -b["depth"]/2), (.075, .045, b["depth"]), furniture)
+box("balcony-return-glass", (right+.018, (b["sill"]+b["windowTop"])/2, -b["depth"]/2), (.008, b["windowTop"]-b["sill"]-.045, b["depth"]-.045), glass, 0, noCollision=True)
 box("balcony-ceiling-unconfirmed", (0, h+.05, -b["depth"]/2), (w+.24, .1, b["depth"]), unknown, ceilings=True, uncertain=True)
 box("balcony-window-parapet", (0, b["sill"]/2, -b["depth"]-.06), (w, b["sill"], .12), furniture)
 box("balcony-window-header", (0, (h+b["windowTop"])/2, -b["depth"]-.06), (w, h-b["windowTop"], .12), unknown, ceilings=True, uncertain=True)
 for x in [left, left+w/3, left+2*w/3, right]:
     box("outer-window-upright", (x, (b["sill"]+b["windowTop"])/2, -b["depth"]), (.045, b["windowTop"]-b["sill"], .075), furniture)
-for y in [b["sill"], b["windowTop"]]:
+for y in [b["sill"], 1.98, b["windowTop"]]:
     box("outer-window-horizontal", (0, y, -b["depth"]), (w, .045, .075), furniture)
 box("window-glass-provisional", (0, (b["sill"]+b["windowTop"])/2, -b["depth"]-.018), (w-.045, b["windowTop"]-b["sill"]-.045, .008), glass, 0, noCollision=True, uncertain=True)
 box("clothes-rail", (0, 2.27, -.85), (w-.14, .025, .025), dark)
@@ -115,11 +121,12 @@ box("radiator-cover-body", (.84, .48, .08), (1.1, .96, .34), furniture)
 box("radiator-cover-cap", (.84, .99, .08), (1.17, .045, .40), wall)
 for y in [.29, .69]:
     box("radiator-cover-blue-crossbar", (.84, y, .263), (1.1, .12, .025), blue)
-for x in [.31, .82, 1.38]:
+for x in [.31, .62, 1.07, 1.38]:
     box("partition-upright", (x, 1.70, -.075), (.055, 1.42, .065), furniture)
-box("partition-frosted-panel-volume", (.565, 1.70, -.075), (.44, 1.35, .018), soft)
+for x in [.465, 1.225]:
+    box("partition-frosted-panel-volume", (x, 1.70, -.075), (.255, 1.20, .018), soft)
 for y in [1.15, 1.36, 1.57, 1.78, 1.99, 2.20, 2.39]:
-    box("partition-horizontal-bar", (1.1, y, -.075), (.51, .035, .055), dark)
+    box("partition-horizontal-bar", (.845, y, -.075), (.40, .035, .055), dark)
 # Curtain is deliberately parked to expose the structure for review.
 for x in [opening_l+.07, opening_r-.07]:
     box("curtain-parked-mass", (x, 1.20, .17), (.14, 2.34, .13), soft, .025, curtainPanels=True, noCollision=True)
@@ -154,6 +161,12 @@ chair("spare-chair", 1.00, 1.78)
 wardrobe = p["wardrobe"]
 box("wardrobe-unconfirmed-volume", (right-wardrobe["depth"]/2, wardrobe["height"]/2, wardrobe["centerZ"]),
     (wardrobe["depth"], wardrobe["height"], wardrobe["width"]), furniture, .012, uncertain=True)
+# V01 5.2 s shows two white doors; interior and hinge travel remain unknown.
+for z in [wardrobe["centerZ"]-wardrobe["width"]/4, wardrobe["centerZ"]+wardrobe["width"]/4]:
+    box("wardrobe-white-door-volume", (right-wardrobe["depth"]-.014, wardrobe["height"]/2, z),
+        (.028, wardrobe["height"]-.025, wardrobe["width"]/2-.008), wall, .006)
+for z in [wardrobe["centerZ"]-.055, wardrobe["centerZ"]+.055]:
+    box("wardrobe-door-handle-volume", (right-wardrobe["depth"]-.05, 1.00, z), (.025, .28, .02), dark)
 
 exporter = runpy.run_path(str(ROOM / "scripts/export-whitebox.py"))
 result = exporter["export_whitebox"]()

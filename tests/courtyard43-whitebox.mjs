@@ -38,8 +38,8 @@ function hits(from,to){
   return new THREE.Raycaster(start,delta.normalize(),0,distance).intersectObjects(meshes,false);
 }
 assert.equal(hits([-.45,1.5,.5],[-.45,1.5,-.6]).length,0,'Balcony passage must remain open');
-assert.equal(hits([-.7,.20,1.1],[-.7,.20,2.95]).length,0,'The empty gap under the bed must remain traversable');
-assert.ok(hits([-.7,.49,1.1],[-.7,.49,2.95]).length,'The mattress must block movement');
+assert.equal(hits([-.7,.20,1.1],[-.7,.20,2.80]).length,0,'The empty gap under the bed must remain traversable');
+assert.ok(hits([-.7,.49,1.1],[-.7,.49,2.80]).length,'The mattress must block movement');
 assert.ok(hits([1.3,1.2,2.0],[1.3,1.2,.8]).length,'Wardrobe must block movement');
 assert.ok(refs.ceilings.length&&refs.cutaway.length);
 assert.equal(Object.keys(manifest.review.viewpoints).length,6);

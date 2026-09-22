@@ -1,0 +1,139 @@
+{
+  "revision": "courtyard43-whitebox02",
+  "structureApproved": false,
+  "referencePeriod": "入住后；用户已确认",
+  "dimensionSource": "以下全部为照片估计，仅用于可修改白模，不是实测",
+  "geographicOrientation": null,
+  "room": {
+    "width": 3.25,
+    "depth": 2.85,
+    "height": 2.75,
+    "wall": 0.12
+  },
+  "balcony": {
+    "depth": 1.1,
+    "sill": 0.88,
+    "windowTop": 2.45,
+    "openingLeft": -0.95,
+    "openingRight": 1.45
+  },
+  "bed": {
+    "length": 2,
+    "width": 1.5,
+    "top": 0.55,
+    "centerZ": 2.03
+  },
+  "desk": {
+    "width": 0.9,
+    "depth": 0.55,
+    "height": 0.74,
+    "centerZ": 0.65
+  },
+  "wardrobe": {
+    "width": 1.15,
+    "depth": 0.55,
+    "height": 2.05,
+    "centerZ": 0.8
+  },
+  "entry": {
+    "centerX": 0.88,
+    "width": 0.85,
+    "height": 2.1
+  },
+  "unknownBoundaries": [
+    "入口墙右侧完整关系与门洞精确位置",
+    "阳台完整宽深与左端",
+    "窗外建筑距离",
+    "柜内结构"
+  ],
+  "viewpoints": {
+    "entry": {
+      "label": "入口",
+      "position": [
+        0.84,
+        1.56,
+        2.62
+      ],
+      "target": [
+        -0.15,
+        1.08,
+        0.35
+      ]
+    },
+    "bed": {
+      "label": "床边",
+      "position": [
+        0.86,
+        1.32,
+        2.0
+      ],
+      "target": [
+        -0.68,
+        0.58,
+        1.91
+      ]
+    },
+    "desk": {
+      "label": "书桌",
+      "position": [
+        -0.08,
+        1.4,
+        1.17
+      ],
+      "target": [
+        -1.15,
+        0.78,
+        0.64
+      ]
+    },
+    "balcony": {
+      "label": "阳台",
+      "position": [
+        -0.48,
+        1.54,
+        -0.48
+      ],
+      "target": [
+        0.65,
+        1.4,
+        -1.05
+      ]
+    },
+    "reverse": {
+      "label": "朝入口反看",
+      "position": [
+        -0.4,
+        1.57,
+        0.35
+      ],
+      "target": [
+        0.4,
+        1.06,
+        2.5
+      ]
+    },
+    "overview": {
+      "label": "空间总览",
+      "position": [
+        4.2,
+        5.5,
+        6.0
+      ],
+      "target": [
+        0,
+        0.5,
+        1.05
+      ]
+    }
+  },
+  "parentRevision": "courtyard43-whitebox01",
+  "videoEvidence": {
+    "file": "V01",
+    "durationSeconds": 11.86,
+    "timecodes": {
+      "0.6": "床长边贴近入口侧墙",
+      "4.2-6.2": "隔断两侧磨砂板，中央横格；白色双门柜",
+      "11.6": "阳台右端转角玻璃，上部横框"
+    }
+  }
+}
