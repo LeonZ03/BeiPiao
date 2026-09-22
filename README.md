@@ -2,7 +2,7 @@
 
 把在北京住过的出租屋，留成可以重新走进去的记忆。
 
-这是一个个人房间档案：用照片和视频整理空间，在 Blender 中建模，再放进浏览器里自由探索。首页沿居住顺序展开，目前可以进入 **永旺家园**，其他房间保留为“待录入”。
+这是一个个人房间档案：用照片和视频整理空间，在 Blender 中建模，再放进浏览器里自由探索。首页沿居住顺序展开，当前版本可以进入 **永旺家园**和 **Courtyard43**，其余房间保留为“待录入”。Courtyard43 已完成独立精修与首页接入，本轮线上部署仍待核对。
 
 ![北漂居住记录首页](docs/ui-concepts/B-cinematic-timeline.png)
 
@@ -50,13 +50,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File local-access/start-room.
 | 查看整体 | 房间内切换“空间总览”，拖动旋转、滚轮缩放 |
 | 回到初始视点 | 点击坐标形状的复位按钮 |
 | 沉浸看房 | 右上角按钮 / H，收起界面；手机保留移动键 |
-| 操作物品 | 点击窗帘、墙上开关、水龙头、花洒或反锁旋钮，再点可切回 |
+| 操作物品 | 点击房间中已有的窗帘、柜门、墙上开关或反锁旋钮，再点可切回；永旺家园另有水龙头与花洒，Courtyard43 可开合房门 |
 
 手机支持横竖屏。实际帧率由访问设备的 GPU、分辨率和浏览器决定；本地服务和 Cloudflare 只负责传送文件，三维画面在访问者自己的设备上渲染。
 
-每次打开网页默认静音，进入房间后点右上角声音图标开启，再点即可静音。柜门缓慢开合，分别播放提供素材中的开门声与关门声；水龙头使用集中水柱落入陶瓷盆的录音，花洒使用连续喷淋录音，两者分别无缝循环。窗帘、开关和反锁旋钮也有音效。返回首页、切到后台时暂停，沉浸模式仍保留声音开关。水声素材采用 CC0，柜门声音使用提供的录音，仅开启声音后下载，来源与制作方法见 [音效说明](room-site/dist/assets/audio/README.md)。
+每次打开网页默认静音，进入房间后点右上角声音图标开启，再点即可静音。柜门缓慢开合，分别播放提供素材中的开门声与关门声；窗帘、开关和反锁旋钮也有音效。永旺家园的水龙头使用集中水柱落入陶瓷盆的录音，花洒使用连续喷淋录音，两者分别无缝循环。返回首页、切到后台时暂停，沉浸模式仍保留声音开关。水声素材采用 CC0，柜门声音使用提供的录音，仅开启声音后下载，来源与制作方法见 [音效说明](room-site/dist/assets/audio/README.md)。
 
-自由探索中，窗外枝叶随微风轻摆，窗帘下摆、干花和阳光里的微尘有细微动态。关闭窗帘后室内摆动更弱，家具保持静止。返回首页、切换到后台或空间总览时暂停这些动画；开启系统“减少动态效果”时也会停止。
+永旺家园自由探索中，窗外枝叶随微风轻摆，窗帘下摆、干花和阳光里的微尘有细微动态。关闭窗帘后室内摆动更弱，家具保持静止。返回首页、切换到后台或空间总览时暂停这些动画；开启系统“减少动态效果”时也会停止。Courtyard43 保留其参考中的独立室内与阳台关系，当前静止画面按需重绘，未加入持续微风或微尘。
 
 ## 常用命令
 
@@ -98,7 +98,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/test-start-room.ps
 
 Cloudflare Pages 托管网站后，访问不再依赖本机开机或临时隧道。连接 GitHub 仓库 `LeonZ03/BeiPiao`，生产分支选 `main`，框架选 `None`，构建命令填 `npm run build:pages`，输出目录填 `.pages-dist`，项目根目录保留仓库根目录，Node.js 使用 22 或更新版本。
 
-构建只复制 `room-site/dist/` 的网页资源，并将模型二进制拆为最多 8 MiB 的文件，适配 Pages 的单文件限制；网页合并后数据与 Blender 原始导出完全一致。源工程和本地模型包不变，本地启动器仍可使用。`.pages-dist/` 为可重复生成的发布目录，不提交 Git。
+构建只复制 `room-site/dist/` 的网页资源，自动发现永旺家园及 `assets/rooms/` 下各层级的房间模型包，将每个包的原始/gzip 二进制分别拆为最多 8 MiB 的哈希分块，适配 Pages 的单文件限制。Courtyard43 精修包与保留的白模包独立发布；网页合并后的数据与 Blender 原始导出完全一致。源工程和本地模型包不变，本地启动器仍可使用。`.pages-dist/` 为可重复生成的发布目录，不提交 Git。
 
 ```powershell
 npm run build:pages
@@ -125,13 +125,20 @@ rooms/                     按房间分开的建模资料；新增房间从这�
     HISTORY.md             各阶段制作记录与经验
     references/            私人原图/视频，仅本地保存，不入库
     local-history/         旧调查资料、试验脚本与报告，仅本地保留
+  Courtyard43/             第二个已接入房间，保留用户指定的目录大小写
+    assets/full-room/      Courtyard43-interior.blend；保留已批准白模源
+    assets/architecture/   独立建筑、门窗与灰帘组件
+    assets/furniture/      独立床品、桌椅与双门柜组件
+    assets/props/          隔离复用及按参考新建的陈设
+    docs/                  组件来源、厚度/接触与交互约定
+    history/inputs/        approved-layout.json 与历次白模参数
 docs/ui-concepts/          网站共用 UI 方案与 B 方案定稿
 tools/                     共用 Pages 构建、Blender 官方 MCP 客户端及依赖说明
 tests/                     资源完整性、路由/全屏、场景和启动器回归
 AGENTS.md                  AI 建模与维护规范：已确认约束、工作流、踩坑和验收
 ```
 
-这里的 `dist/` 是直接维护的可运行网站，**必须提交**，不要按一般前端项目习惯将其忽略。权威 Blender 工程是 `rooms/yongwang-jiayuan/assets/full-room/永旺家园-完整场景.blend`；网页使用同目录体系导出的 `scene.json`、`geometry.bin` 和压缩版本。Git 中保留实际模型文件，不依赖作者电脑上的路径。
+这里的 `dist/` 是直接维护的可运行网站，**必须提交**，不要按一般前端项目习惯将其忽略。各房间的 `room.json` 指向自己的权威 Blender 工程和网页包：永旺家园保留 `assets/full-room/` 运行路径；Courtyard43 使用独立 `Courtyard43-interior.blend` 与 `assets/rooms/Courtyard43/interior/`。网页包包含同次导出的 `scene.json`、`geometry.bin` 和压缩版本。Git 中保留实际模型文件，不依赖作者电脑上的路径。
 
 原始私人参考已从 `Ref/永旺家园/` 移入该房间的 `references/`，保留原文件；旧调查与试验资料归入 `local-history/`。两者不入 Git，也不发布到网站。`analysis/` 只放可再生成的临时检查结果；`.pages-dist/` 是发布产物，`.runtime/`、`node_modules/` 和 `tools/blender-mcp-env/` 是本机依赖。网站实际使用的展示照片与纹理保留在运行资源中。
 
@@ -143,7 +150,7 @@ AGENTS.md                  AI 建模与维护规范：已确认约束、工作�
 
 先读 [AGENTS.md](AGENTS.md)、[新增房间说明](rooms/README.md)，再读 [建模工具说明](tools/README.md)。所有 Blender 操作使用 [Blender Lab 官方 MCP](https://projects.blender.org/lab/blender_mcp)，不是同名第三方插件。
 
-不要重新运行历史 `build-full-room.py` 覆盖精修后的工程，也不要把全部 `refine-*` 依次执行当作初始化。当前 `.blend` 与网页包已是完成品。新房间建立独立工程和资源目录，从参考约束、结构、重点物件、材质光照到浏览器验收逐步推进。无需复制过去的整串试错补丁。
+不要重新运行历史 `build-full-room.py` 覆盖精修后的工程，也不要把全部 `refine-*` 依次执行当作初始化。Courtyard43 的 `whitebox06` 已获结构批准，后续使用锁定的 `approved-layout.json` 和独立组件/组装链，不再运行白模生成器覆盖已批准版本。床长、房间尺度与隐藏部分仍为照片估计或明确标注的推定；结构批准不等于实测。新房间建立独立工程和资源目录，从参考约束、结构、重点物件、材质光照到浏览器验收逐步推进。
 
 **新房间优先复用已经做好的物件。** 建模前先检查现有资产，相同物件直接使用；有尺寸、颜色或结构差异时，在新房间中复制一份再修改，保留来源与版本记录，避免影响原房间。只有没有合适基础时才从零建模。[房间模板](rooms/ROOM_TEMPLATE.md) 已包含复用清单；确有重复使用需求时，再按 AGENTS.md 约定提取公共资产。
 

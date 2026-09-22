@@ -37,7 +37,9 @@ for (const entry of fs.readdirSync(path.join(root, 'rooms'), {withFileTypes: tru
     assert.ok(!runtimePaths.has(room.runtimeScene), 'Rooms cannot overwrite each other');
     runtimePaths.add(room.runtimeScene);
     const namespace = room.id === 'yongwang-jiayuan' ? 'room-site/dist/assets/full-room/' : `room-site/dist/assets/rooms/${room.id}/`;
-    assert.equal(room.runtimeScene, namespace + 'scene.json');
+    assert.ok(room.runtimeScene.startsWith(namespace), 'Runtime must stay inside its room namespace');
+    assert.ok(!room.runtimeScene.slice(namespace.length).split('/').includes('..'), 'Runtime must not escape its room');
+    assert.equal(path.posix.basename(room.runtimeScene), 'scene.json');
     const scene = JSON.parse(fs.readFileSync(existing(room.runtimeScene)));
     assert.equal(scene.format, 'blender-room-pack-1');
     assert.ok(scene.revision);

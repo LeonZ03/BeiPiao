@@ -1,8 +1,8 @@
 # 房间建模资料
 
-每个真实房间一个稳定的英文目录 ID。当前只有 [永旺家园](yongwang-jiayuan/README.md) 已接入网站；首页其余房间继续显示“待录入”。
+每个真实房间一个稳定的英文目录 ID。当前 [永旺家园](yongwang-jiayuan/README.md) 与 [Courtyard43](Courtyard43/README.md) 已接入网站；首页其余房间继续显示“待录入”。
 
-[Courtyard43](Courtyard43/README.md) 正在结构白模阶段，保留用户指定的目录大小写，当前为 `pending`。已有独立源及网页审阅入口，尚未获用户结构确认，也未接入正式首页。原始照片和补充视频仍在本地忽略目录。
+Courtyard43 保留用户指定的目录大小写，索引状态为 `ready`；已批准 `whitebox06` 布局并完成独立精修 `courtyard43-interior01`、首页入口及适用交互。精修工程为 `assets/full-room/Courtyard43-interior.blend`，网页模型位于 `assets/rooms/Courtyard43/interior/`；原白模源、包及审阅入口继续保留。`ready` 表示当前仓库中的精修房间可进入，本轮最终聚合、手机浏览器与线上部署仍待单独验收。所有尺度仍为照片估计，原始照片和补充视频保持本地忽略。
 
 ## 新增房间
 
@@ -11,7 +11,7 @@
    建模前先盘点现有房间已认可的物件：相同物件直接复用，相似物件复制到新房间后修改，找不到合适基础才新建。在房间 README 的复用清单中记录来源文件、对象、提交/版本和差异；完整场景可能比独立资产源更新，应核对后选择。
 3. 本房间脚本放 `scripts/`。新建简洁的分阶段生成链，不复制永旺家园的一长串历史补丁。所有 Blender 操作仍通过官方 MCP，遵守根目录 AGENTS.md。
 4. 按永旺家园 `room.json` 的字段建立索引，状态先用 `pending`，`sourceBlend`、`runtimeScene`、`scripts`、`history` 尚不存在时用 `null`。所有路径相对仓库根目录；房间 ID 与目录名一致。
-5. 导出到 `room-site/dist/assets/rooms/<room-id>/`，使用独立 revision。确认网页中实际可加载、交互及灯光正确后，再接入首页选择和加载逻辑，状态改为 `ready`。仅新建目录或改索引不会自动增加网页房间。
+5. 导出到 `room-site/dist/assets/rooms/<room-id>/`，使用独立 revision；需要保留白模审阅包时，可将精修包置于该目录的 `interior/`。确认网页中实际可加载、交互及灯光正确后，再接入首页选择和加载逻辑，状态改为 `ready`。`runtimeScene` 指向实际使用的清单，发布构建递归发现各包。仅新建目录或改索引不会自动增加网页房间。
 6. 阶段经验记入 `HISTORY.md`；可复用方法提炼进 AGENTS.md。必要输入放 `history/inputs/`，临时输出放根目录 `analysis/<room-id>/`，不要混放。
 
 复用时通过官方 Blender MCP 导入对象及必要依赖，保留材质、贴图和交互枢轴。目标房间需要改动的数据先制作独立副本，不回写旧房间；只复制对象而仍共享可写网格或材质会连带改坏来源。导入后重新核对尺度、接触、光照和交互，不照搬原房间的灯光或节点 ID。细则见 AGENTS.md 第 4.3 节。

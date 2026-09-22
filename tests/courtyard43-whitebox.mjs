@@ -58,6 +58,13 @@ assert.equal(hits([-.35,.45,.8],[-.35,.45,-.5]).length,0,'Desk and chair must le
 assert.ok(refs.ceilings.length&&refs.cutaway.length);
 assert.equal(Object.keys(manifest.review.viewpoints).length,6);
 const room=JSON.parse(fs.readFileSync(new URL('../rooms/Courtyard43/room.json',import.meta.url)));
-assert.equal(room.status,'pending','A review must not claim final readiness');
+// This preserved pack remains a historical review after its geometry is approved.
+// A ready room must point to the separate refined source and runtime, never here.
+assert.ok(['pending','ready'].includes(room.status));
+if(room.status==='ready'){
+  assert.equal(room.runtimeScene,'room-site/dist/assets/rooms/Courtyard43/interior/scene.json');
+  assert.equal(room.sourceBlend,'rooms/Courtyard43/assets/full-room/Courtyard43-interior.blend');
+  assert.equal(JSON.parse(fs.readFileSync(new URL('../rooms/Courtyard43/history/inputs/approved-layout.json',import.meta.url))).structureApproved,true);
+}
 assert.ok(fs.existsSync(new URL('../'+room.sourceBlend,import.meta.url)));
 console.log(`PASS Courtyard43 whitebox: ${manifest.statistics.meshes} meshes, ${triangles} triangles, normals/UV/index/gzip, open passage, under-bed gap and solid obstacles.`);

@@ -1,11 +1,11 @@
 # 北漂居住记录：AI 工程约定
 
-本文件面向继续维护本仓库的 AI。目标是让新的房间复刻沿用已经验证过的建模、导出和网页运行方式，减少结构反复、穿模、材质失真、性能退化和不可复现修改。它不是历史日志；具体版本变化和用户可见说明写入 `rooms/yongwang-jiayuan/HISTORY.md`。
+本文件面向继续维护本仓库的 AI。目标是让新的房间复刻沿用已经验证过的建模、导出和网页运行方式，减少结构反复、穿模、材质失真、性能退化和不可复现修改。它不是历史日志；具体版本变化和用户可见说明写入对应房间的 `rooms/<room-id>/HISTORY.md`。
 
 ## 1. 基本原则
 
 1. **先证据、后结构、再细节。** 先从照片、视频和用户口述建立平面关系、方向、主要尺寸比例和遮挡关系；结构未确认前，不在小物件上投入精修。
-2. **结构确认后保持稳定。** 当前永旺家园的整体布局已获认可。除非用户明确更正，不移动房间边界、门窗、床、衣柜、桌子、卫生间或窗外主体关系。后续优先改善材质可信度、真实厚度、自然曲面和接触关系。
+2. **结构确认后保持稳定。** 当前永旺家园的整体布局和 Courtyard43 的 `whitebox06` 布局均已获认可。除非用户明确更正，不移动房间边界、门窗、床、衣柜、桌子、已有卫生间或窗外主体关系。Courtyard43 以 `history/inputs/approved-layout.json` 为结构输入，批准布局不等于实测尺寸。后续优先改善材质可信度、真实厚度、自然曲面和接触关系。
 3. **照片推定不是测量。** 没有实测尺寸、多角度照片、扫描或厂商 CAD 时，只能表述为“根据参考图和已知尺度估计”。不得宣称毫米级、测量级、摄影测量级或 1:1 复刻。
 4. **网页最终画面才是最终验收对象。** Blender 视口和离线渲染用于检查模型，不代表 Three.js 实时光照、色调、透明、粒子和后处理的最终效果。
 5. **每项修改都必须可追溯、可恢复、可验证。** 使用 Git 提交保存可恢复的检查点，不再创建备份压缩包；重要几何修改要有可重复脚本或清楚的源文件；不得只改导出成品而丢失 Blender 源。
@@ -23,7 +23,7 @@
   ```
 
 - 优先使用官方 `execute_blender_code_for_cli` 等后台工具。后台工具按需打开 `.blend`，不需要常驻 TCP 控制端口。扩展的自动启动已明确关闭，不得擅自重新开启。
-- 建模脚本可保存在 `rooms/yongwang-jiayuan/scripts/`，但必须经官方 MCP 在 Blender 中执行。不要绕过 MCP 直接调用 Blender 可执行文件运行脚本。
+- 建模脚本保存在对应房间的 `rooms/<room-id>/scripts/`，但必须经官方 MCP 在 Blender 中执行。不要绕过 MCP 直接调用 Blender 可执行文件运行脚本。
 - 开发环境使用的官方 MCP Python 依赖固定到 `ff54e4d8f6b09502f2f466189cca0e52b4a91643#subdirectory=mcp`；升级前先验证工具参数和导出结果。不要改用仓库内未审查的第三方同名实现。
 - `tools/call-blender-mcp.py` 应通过 `BLENDER_PATH` 或 PATH/标准安装位置发现 Blender。MCP 参数、检查输出和临时报告放在未跟踪的 `analysis/`；不要把盘符、用户名、个人虚拟环境或 Blender 安装路径写进长期脚本和文档。脚本内路径应由仓库根目录或脚本目录推导。
 
@@ -31,9 +31,9 @@
 
 ### 主要目录与多房间边界
 
-- `rooms/<room-id>/` 保存各房间独立的 `room.json`、`assets/`（模型与源素材）、`scripts/`（建模/精修）、`docs/`（参考定稿）、`history/inputs/`（不可再生的阶段输入）和 `HISTORY.md`（经验记录）。永旺家园的 ID 为 `yongwang-jiayuan`。新增流程和空白约束模板见 `rooms/README.md`、`rooms/ROOM_TEMPLATE.md`。
-- `room.json` 的路径相对仓库根目录，是给维护者和检查工具用的资料索引，不是网页加载清单。当前网站只接入永旺家园；新增目录不会自动上线，不能把“待录入”误报为已完成。
-- `room-site/dist/` 保持现有可运行网站和 URL；当前模型资源仍在 `assets/full-room/`，不为本次整理改动运行时语义。新房间使用 `room-site/dist/assets/rooms/<room-id>/` 独立导出目录，接入时才增加明确的房间选择/加载映射，并回归既有房间。
+- `rooms/<room-id>/` 保存各房间独立的 `room.json`、`assets/`（模型与源素材）、`scripts/`（建模/精修）、`docs/`（参考定稿）、`history/inputs/`（不可再生的阶段输入）和 `HISTORY.md`（经验记录）。当前房间 ID 为 `yongwang-jiayuan` 与用户指定大小写的 `Courtyard43`。新增流程和空白约束模板见 `rooms/README.md`、`rooms/ROOM_TEMPLATE.md`。
+- `room.json` 的路径相对仓库根目录，是给维护者和检查工具用的资料索引，不是网页加载清单。当前网站已接入永旺家园与 Courtyard43；新增目录不会自动上线，不能把“待录入”误报为已完成。索引 `ready` 不替代对应提交的线上部署验收。
+- `room-site/dist/` 保持可运行网站和既有 URL；永旺家园模型资源仍在 `assets/full-room/`。Courtyard43 成品入口为 `courtyard43.html`，精修包为 `assets/rooms/Courtyard43/interior/`；原 `assets/rooms/Courtyard43/` 包和 `courtyard43-whitebox.html` 是保留的白模审阅资料。新房间使用 `room-site/dist/assets/rooms/<room-id>/` 独立导出目录，必要时按阶段使用子目录；接入时增加明确的房间选择/加载映射，并回归既有房间。
 - `docs/ui-concepts/` 放全站共用 UI 定稿；`tools/` 放共用 MCP/发布工具；`local-access/` 放启动器；`tests/` 放可提交的回归。根目录只保留主要入口、配置和总说明。
 - 私人原图/视频在 `rooms/<room-id>/references/`，早期未整理调查与试验资料在 `local-history/`，均保持忽略，不上传；其中可复用经验应提炼进文档，必要的数值输入应审查后放进 `history/inputs/`。`analysis/` 是临时工作区，不允许正式脚本依赖其中的唯一源数据。
 - 迁移旧资料时一并修正脚本根目录计算、文档链接、源音频出处和 Blender 相对贴图路径。Blender 源路径通过官方 MCP 修改并重新打开检查；纯路径调整不重导模型、不改变场景 revision。运行层模型、材质、音频与代码应保持原内容。
@@ -41,17 +41,22 @@
 
 | 内容 | 权威位置 | 说明 |
 | --- | --- | --- |
-| 当前完整房间 Blender 工程 | `rooms/yongwang-jiayuan/assets/full-room/永旺家园-完整场景.blend` | 当前场景几何、材质、实例、接触关系和交互轴的主要源文件 |
+| 永旺家园完整 Blender 工程 | `rooms/yongwang-jiayuan/assets/full-room/永旺家园-完整场景.blend` | 永旺场景几何、材质、实例、接触关系和交互轴的主要源文件 |
+| Courtyard43 完整 Blender 工程 | `rooms/Courtyard43/assets/full-room/Courtyard43-interior.blend` | 已批准布局上的独立精修场景；保留同目录白模源作为历史结构记录 |
+| Courtyard43 独立组件源 | `rooms/Courtyard43/assets/architecture/`、`furniture/`、`props/` | 建筑、家具和陈设分别保存源、贴图与可重复脚本，主工程集中组装导出 |
 | 独立精修资产源 | `rooms/yongwang-jiayuan/assets/<asset>/` | 例如高达、门饰、头盔、摩托车；应保留 `.blend` 和必要生成记录 |
 | 可重复建模/精修脚本 | `rooms/yongwang-jiayuan/scripts/` | `build-*` 创建资产；`refine-*` 针对特定父版本精修；先读脚本头部和 revision 断言 |
 | 浏览器最终模型包 | `room-site/dist/assets/full-room/` | `scene.json`、`geometry.bin`、`geometry.bin.gz` 是派生成品，不是唯一源 |
+| Courtyard43 浏览器精修包 | `room-site/dist/assets/rooms/Courtyard43/interior/` | 独立 revision、PBR/UV1、形态键、父子关系和交互描述，不覆盖旧白模包 |
 | 浏览器运行时 | `room-site/dist/` | Three.js 场景加载、实时灯光、交互、导航、UI、粒子、水流和后处理 |
 | 本地与公网启动器 | `启动房间.cmd`、`local-access/` | Windows 双击入口、本地服务、Cloudflare 临时隧道和健康检查 |
 | 可提交的回归测试 | `tests/` | 几何、交互、启动器和浏览器回归；新检查应从任意克隆路径运行 |
 | 本地检查报告 | `analysis/` | 未跟踪的临时 MCP 参数和检查输出；报告不是模型源 |
 | 版本历史 | Git commits | 通过提交记录追溯和恢复模型、材质、导出包及网页代码；不创建 ZIP/TAR 等备份压缩包 |
 
-处理现有房间时，先读取 `room-site/dist/assets/full-room/scene.json` 的当前 `revision`，不要把本文件中的示例版本当作永远有效。当前完整生成器 `rooms/yongwang-jiayuan/scripts/build-full-room.py` 会重建并覆盖完整工程。完整工程已经经过多轮 MCP 精修后，**禁止直接运行该生成器覆盖当前 `.blend` 和模型包**。如果确实需要从基础版本重建，先通过 Git 提交保存当前工程，再按父 revision 顺序重放所有必要的 `refine-*` 步骤，并逐步验收。
+处理现有房间时，先按该房间 `room.json` 的 `runtimeScene` 读取当前 `revision`，不要把本文件中的示例版本当作永远有效。永旺家园完整生成器 `rooms/yongwang-jiayuan/scripts/build-full-room.py` 会重建并覆盖完整工程。完整工程已经经过多轮 MCP 精修后，**禁止直接运行该生成器覆盖当前 `.blend` 和模型包**。如果确实需要从基础版本重建，先通过 Git 提交保存当前工程，再按父 revision 顺序重放所有必要的 `refine-*` 步骤，并逐步验收。
+
+Courtyard43 的 `build-whitebox.py` 已在结构批准后锁止，不再用于成品维护。其精修链是 `build-architecture.py`、`build-furniture.py`、`build-props.py` 保存独立组件，再由 `assemble-interior.py` 与 `export-interior.py` 同次保存完整源和网页包。后续修改先核对组件源、文档与当前版本；不得用旧组件重建覆盖已经保存的新精修。详细来源与几何边界见 `rooms/Courtyard43/docs/`。
 
 精修脚本里的输入 revision 断言是保护措施。断言失败时先调查当前父版本和变更链；不得删除断言、强行套用到不匹配的场景。对现有工程做了手工或 MCP 编辑后，必须保存源工程并建立 Git 检查点，不能让旧生成脚本覆盖新成果。
 
@@ -69,7 +74,7 @@
 - 第一阶段只建房间外壳、地面、天花、门洞、窗洞、固定管线，以及床、柜、桌、卫浴等大体块。
 - 用入口、床边、书桌、窗边、卫生间和空间总览至少六个视角核对：动线、遮挡、开门/开窗方向、家具间距和人体尺度。
 - 在结构通过前，使用中性材质和简单光照；不要用强景深、体积光或暖色滤镜掩盖比例错误。
-- 新房间应使用独立的 `.blend`、独立的 `dist/assets/<room-id>/` 和独立 revision，不能覆盖永旺家园资源。
+- 新房间应使用独立的 `.blend`、独立的 `dist/assets/rooms/<room-id>/` 和独立 revision，不能覆盖既有房间资源。
 
 ### 4.3 重点物件
 
@@ -100,7 +105,7 @@
 
 - Blender 负责持久几何、材质、形态键和交互枢轴；浏览器负责实时灯光、微尘、水流、输入、碰撞、UI 和状态动画。不要为了“全部 Blender”把需要实时变化的浏览器效果烘死。
 - 每个可点击物件必须有稳定名称或 refs、正确拾取范围、明确枢轴和往返状态；拖动环顾不能误触点击。
-- 新房间至少复用并回归现有交互契约：墙壁开关、窗帘、花洒、水龙头和反锁旋钮可往返；水流只在开启时更新；复位按钮释放后不得保持高亮。
+- 新房间复用并回归与其证据相符的现有交互契约：墙壁开关、窗帘、柜门和反锁等可往返；有花洒/水龙头时水流只在开启时更新；复位按钮释放后不得保持高亮。Courtyard43 未有厨卫证据，不添加水流设施；它使用独立双柜门、房门、灰帘、开关与反锁交互。
 - 自由探索支持 WASD/方向键，Shift 上升、Ctrl 下降；手机左下方向键、右下竖排升降；沉浸模式保留移动键并隐藏非必要组件。
 - 保持极小碰撞体积的探索体验，同时使用真实表面和局部障碍，允许穿过桌下、床下等真实空隙。不要退回贯穿全高的粗矩形碰撞。
 - 全屏必须测试“进入房间 → 退出到首页 → 再次进入房间”的完整循环；返回后入口按钮必须可点击。首次载入应显示统一的进度条和可恢复错误状态。
@@ -217,7 +222,7 @@
 
 - 当前正式托管为 Cloudflare Pages 项目 `beipiao`，已连接 `LeonZ03/BeiPiao` 的 `main` 分支；推送会自动部署。正式地址为 `https://room.leonz03.dpdns.org`，备用地址为 `https://beipiao-4op.pages.dev`，根域名不绑定网站。自动部署、HTTPS 和线上加载已于 2026-09-20 验证。后续发布须核对 Pages 对应提交部署成功，再验证线上页面；交付时检查工作区及远程同步状态，如有未提交或未推送内容应如实说明，不能仅凭推送成功宣称部署完成。
 
-- Cloudflare Pages 使用 `npm run build:pages` 生成 `.pages-dist/`，只部署该目录。`tools/build-pages.mjs` 保留模型描述符，将原始及 gzip 二进制分别拆为最多 8 MiB、含内容哈希的分块；`room-binary.js` 兼容线上分块和本地单文件。不要降低模型精度来绕过单文件限制，也不要把 `.blend`、参考图或整个仓库发布到网站。运行 `npm run test:pages` 核对合并后字节一致、原始格式回退、下载进度及错误处理；分块使用长期缓存，其余资源重新验证缓存。源场景 revision 不因仅修改传输封装而变化。
+- Cloudflare Pages 使用 `npm run build:pages` 生成 `.pages-dist/`，只部署该目录。`tools/build-pages.mjs` 处理永旺 `assets/full-room/scene.json`，并递归发现 `assets/rooms/**/scene.json` 中的 `blender-room-pack-1` 包；每个包保留模型描述符，在自己的目录生成原始及 gzip 二进制的最多 8 MiB 哈希分块。Courtyard43 白模与精修包可共存，不能合并或覆盖描述符；`room-binary.js` 兼容线上分块和本地单文件。不要降低模型精度来绕过单文件限制，也不要把 `.blend`、参考图或整个仓库发布到网站。运行 `npm run test:pages` 核对所有包合并后字节一致、原始格式回退、下载进度及错误处理；分块使用长期缓存，其余资源重新验证缓存。源场景 revision 不因仅修改传输封装而变化。
 
 - 面向普通用户的首选入口是仓库根目录 `启动房间.cmd`。首次克隆可先运行 `local-access/init-room.ps1`，或使用可选的 `make init`；初始化只准备便携运行时和必要依赖，不修改房间资产。之后双击启动器即可调用 `local-access/start-room.ps1`，启动本地 HTTP 服务、自动打开浏览器，并在可用时创建和验证 Cloudflare 临时链接。
 - 关闭启动器的 PowerShell 窗口，应同时结束它创建的本地服务和 Cloudflare 进程；不要把浏览器纳入该进程组。

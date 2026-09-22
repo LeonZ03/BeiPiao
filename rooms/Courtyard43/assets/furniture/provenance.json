@@ -1,0 +1,68 @@
+{
+  "room": "Courtyard43",
+  "revision": "courtyard43-furniture02",
+  "baselineCommit": "cb6fe56615a53e26810968f6c704c7536ffeba1a",
+  "sourceRoom": "yongwang-jiayuan",
+  "sourceFile": "rooms/yongwang-jiayuan/assets/full-room/永旺家园-完整场景.blend",
+  "sourceSha256": "67765fb8a97bf6b86d9d272f5319ab8aa047f5330438210ccce063a06833e150",
+  "sourceWebRevision": "sunview34",
+  "sources": {
+    "full-cotton-pillow": {
+      "material": "Material 086",
+      "shader": "原理化 BSDF.001",
+      "images": [
+        {
+          "source": "room-site/dist/assets/woven-cloth.jpg",
+          "copy": "woven-cloth.jpg",
+          "sha256": "16d30c55bcf3b89184c5daaaea7c160c0f799dd31c07c8752d8d8c14f48e1eb5"
+        },
+        {
+          "source": "rooms/yongwang-jiayuan/assets/full-room/textures/cotton-thread-relief.png",
+          "copy": "cotton-thread-relief.png",
+          "sha256": "198ae40b62f9c8ee03fc716473b075661ddfcb070d37dfb9dc889c6e92872013"
+        }
+      ]
+    },
+    "duvet-top": {
+      "material": "Material 084",
+      "shader": "原理化 BSDF.001",
+      "images": [
+        {
+          "source": "room-site/dist/assets/quilt-flat-floral-v2.png",
+          "copy": "quilt-flat-floral-v2.png",
+          "sha256": "3afe0bd417d684c32498a39143e8391f095889a678cddb096261b504fa1747d4"
+        },
+        {
+          "source": "rooms/yongwang-jiayuan/assets/full-room/textures/cotton-thread-relief.png",
+          "copy": "cotton-thread-relief.png",
+          "sha256": "198ae40b62f9c8ee03fc716473b075661ddfcb070d37dfb9dc889c6e92872013"
+        }
+      ]
+    }
+  },
+  "pillowMesh": "Copied evaluated final mesh, rigid transform only",
+  "duvetMesh": "New continuous closed thin shell with wide diagonal folds; same accepted flower texture",
+  "newSurfaces": "Maple color and roughness deterministically generated in Blender MCP; white laminate and metals are independent Principled PBR",
+  "layout": "approved-layout.json; no approved major anchor moved",
+  "uncertainty": "All dimensions remain photo estimates. Empty wardrobe shelf and rail are inferred.",
+  "appearanceCalibration": {
+    "reference": "P03 occupied-room photograph; post-browser first QA",
+    "mapleColorSrgb8": [
+      212,
+      199,
+      178
+    ],
+    "edgeBandColorSrgb8": [
+      208,
+      193,
+      167
+    ],
+    "colorEncoding": "PNG RGB bytes are explicit sRGB targets; Principled constant edge color is decoded once to linear; scalar roughness bytes load as Non-Color",
+    "grainContrastSrgb8": "About 2-3 code values; irregular fine longitudinal fibres",
+    "floralPrintScaleRelativeToFurniture01": 0.78,
+    "floralUvRepeatMultiplier": 1.282051282051282,
+    "cottonThreadUv1Unchanged": true,
+    "clothRefinement": "Three broad directional folds, two localized shallow accumulations, selectively lifted hem; fixed support surfaces and major boundaries",
+    "nonTargetEvaluatedGeometry": "88 mesh coordinate digests unchanged from furniture01"
+  }
+}
