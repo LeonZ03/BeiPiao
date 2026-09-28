@@ -1,6 +1,6 @@
 # Courtyard43 精修协作约定
 
-当前发布阶段为 `courtyard43-interior06`：建筑组件 `architecture07`、家具组件 `courtyard43-furniture05`，陈设沿用既有源。后续维护必须从这些当前源继续，不重跑初代 build 脚本覆盖。用户补充事实及本轮推定值见 `history/inputs/foundation-02.json`；它补充朝向/灯/台体要求，不替换批准布局。第二轮床品与灰帘由 `refine-soft-textiles.py` 从上一阶段原位修改；布料透光厚度图使用独立 UV1，网页按窗高调节漫透光，保留原基础色乘法。
+当前发布阶段为 `courtyard43-interior07`：建筑组件 `architecture08`、家具组件 `courtyard43-furniture06`、陈设组件 `courtyard43-props02`。后续维护必须从这些当前源继续，不重跑初代 build 脚本覆盖。用户补充事实及本轮推定值见 `history/inputs/foundation-02.json`；它补充朝向/灯/台体要求，不替换批准布局。第二轮床品与灰帘由 `refine-soft-textiles.py` 从上一阶段原位修改；布料透光厚度图使用独立 UV1，网页按窗高调节漫透光，保留原基础色乘法。
 
 左右窗帘独立交互 ID 为 `curtain-left`、`curtain-right`，各自包含面板及挂环；两侧材质带 `curtainSide`。旧 `curtain` 仅作为网页诊断的同时开合兼容动作，不参与物件拾取。导出保留 Principled Sheen Tint 为 `sheenColor`；显式 `web_map` 图片节点支持 `aoMap`、`lightMap`、`emissiveMap`。局部 AO 使用 UV1，布料透光遮罩使用独立比例映射，不把光照烘进基础色。弱透明容器及灯罩关闭实心投影。
 

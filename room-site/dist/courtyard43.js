@@ -2,11 +2,12 @@
 // this module owns input, sound, live lighting and reversible state animation.
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
+import {createRenderProbe} from './render-probe.js?v=finish07';
 import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';
-import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior06';
-import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior06';
+import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior07';
+import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior07';
 
 const $=id=>document.getElementById(id),canvas=$('world');
 let toastTimer,entered=false,disposed=false,frame=0,renderer=null;
@@ -16,7 +17,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior06');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior07');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -57,12 +58,17 @@ try{
   const pickMeshes=[];world.traverse(o=>{if(o.isMesh)pickMeshes.push(o);});
   const pickRay=new THREE.Raycaster(),pointer=new THREE.Vector2(),tmp=new THREE.Vector3(),bounds=new THREE.Box3();
   const keys=new Set();let mode='walk',yaw=0,pitch=0,drag=null,locked=false,immersive=false,dirty=true,last=performance.now(),lightOn=false,lockOn=false;
+  const renderProbe=createRenderProbe();
   const extraViews={
     wardrobe:{position:[.76,1.28,.86],target:[1.70,1.06,.8]},
     radiator:{position:[.49,1.13,1.18],target:[.84,.82,.14]},
     curtain:{position:[-.08,1.47,1.12],target:[.28,1.35,.07]},
     tabletop:{position:[-.76,1.14,1.13],target:[-1.25,.76,.30]},
     bedding:{position:[.69,1.03,1.98],target:[-1.15,.63,2.04]},
+    accessories:{position:[.77,1.40,.88],target:[.87,1.13,.21]},
+    hats:{position:[-1.22,1.61,.74],target:[-1.46,1.52,.13]},
+    bag:{position:[1.79,1.50,2.12],target:[1.955,1.37,1.45]},
+    floor:{position:[.94,.72,2.30],target:[.5,0,1.20]},
     window:{position:[-.22,1.58,-.37],target:[.28,1.45,-1.12]},
     switch:{position:[2.04,1.48,1.78],target:[(review.room.centerX??0)+review.room.width/2-.019,1.26,2.40]},
     lock:{position:[1.48,1.15,1.71],target:[1.90,1.00,2.07]}
@@ -74,7 +80,7 @@ try{
   function owner(o){for(let n=o;n;n=n.parent){const item=byObject.get(n);if(item)return item;}return null;}
   function pick(clientX,clientY){if(mode!=='walk')return null;const rect=canvas.getBoundingClientRect();pointer.set(locked?0:(clientX-rect.left)/rect.width*2-1,locked?0:1-(clientY-rect.top)/rect.height*2);pickRay.setFromCamera(pointer,camera);pickRay.far=4;world.updateMatrixWorld(true);const hits=pickRay.intersectObjects(pickMeshes.filter(isVisible),false);for(const hit of hits){const mats=Array.isArray(hit.object.material)?hit.object.material:[hit.object.material];if(mats.every(m=>m.transparent&&m.opacity<.25))continue;return owner(hit.object);}return null;}
   function move(dx,dy,dz){let changed=false;for(const [axis,delta]of [['x',dx],['y',dy],['z',dz]]){if(!delta)continue;tmp.copy(camera.position);tmp[axis]+=delta;if(navigation.canTravel(camera.position,tmp)){camera.position.copy(tmp);changed=true;}}return changed;}
-  function go(view){let v=review.viewpoints[view]||extraViews[view];if(!v)throw Error('Unknown viewpoint');if(view==='overview')v=courtyardOverviewView(v);if(view==='lock'){
+  function go(view){renderProbe.update(performance.now(),false);let v=review.viewpoints[view]||extraViews[view];if(!v)throw Error('Unknown viewpoint');if(view==='overview')v=courtyardOverviewView(v);if(view==='lock'){
       // The lock belongs to the moving door. Observe its current room-facing
       // side; rotating the thumbturn itself must not rotate the camera offset.
       v=courtyardLockView(THREE,byId.get('entry-door').node,byId.get('entry-lock').node,review);
@@ -102,7 +108,7 @@ try{
   function tick(now){frame=0;if(disposed||document.hidden)return;const dt=Math.min(Math.max((now-last)/1000,.001),.05);last=now;let keep=false;
     if(mode==='walk'){const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft')),v=Number(keys.has('ShiftLeft')||keys.has('ShiftRight'))-Number(keys.has('ControlLeft')||keys.has('ControlRight'));if(f||s||v){const step=dt/(Math.hypot(f,s)||1);dirty=move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*step,v*dt*.8,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*step)||dirty;keep=true;}camera.rotation.set(pitch,yaw,0,'YXZ');}
     else if(orbit.update()){dirty=true;keep=true;}
-    keep=updateInteractions(dt)||keep;if(dirty){finish.render();dirty=false;}if(keep&&!frame)frame=requestAnimationFrame(tick);
+    keep=updateInteractions(dt)||keep;if(renderProbe.update(now,mode==='walk')){dirty=true;keep=true;}if(dirty){finish.render();dirty=false;}if(keep&&!frame)frame=requestAnimationFrame(tick);
   }
   orbit.addEventListener('change',()=>invalidate());
   canvas.addEventListener('pointerdown',e=>{if(mode!=='walk'||e.button!==0)return;canvas.focus({preventScroll:true});drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,id:e.pointerId,moved:false};canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';last=performance.now();});
@@ -122,15 +128,16 @@ try{
   $('helpBtn').onclick=()=>{clearInput();if(document.pointerLockElement)document.exitPointerLock();$('helpDialog').showModal();};for(const b of document.querySelectorAll('#helpDialog .close,#helpDialog .close-action'))b.onclick=()=>$('helpDialog').close();
   for(const type of ['selectstart','dragstart','contextmenu'])$('app').addEventListener(type,e=>e.preventDefault());
   window.addEventListener('resize',resize);window.visualViewport?.addEventListener('resize',resize);
-  document.addEventListener('visibilitychange',()=>{clearInput();last=performance.now();audio.setActive(entered&&!document.hidden);if(document.hidden){cancelAnimationFrame(frame);frame=0;}else invalidate();});
+  document.addEventListener('visibilitychange',()=>{clearInput();last=performance.now();audio.setActive(entered&&!document.hidden);if(document.hidden){renderProbe.update(performance.now(),false);cancelAnimationFrame(frame);frame=0;}else invalidate();});
   const state=()=>({room:'Courtyard43',revision:manifest.revision,stage:'interior',structureApproved:true,mode,position:camera.position.toArray(),yaw,pitch,immersive,fullscreen:!!document.fullscreenElement,lightOn,lockOn,curtainOpen:curtains.every(item=>item.target===1),curtainAmount:curtainAmount(),curtainAmounts:curtainAmounts(),curtains:Object.fromEntries(curtains.map(item=>[item.id.replace('curtain-',''),{amount:item.amount,target:item.target}])),sound:audio.state,interactions:interactions.map(({id,kind,amount,target,blocked,openAngle,defaultOpen})=>({id,kind,amount,target,blocked,openAngle,defaultOpen:!!defaultOpen})),rendering:{drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderCount:finish.frames,batchedMeshes:batching.removed,batches:batching.created,collisionSurfaces:navigation.surfaces,collisionRadius:navigation.radius},assetStatistics:statistics});
   window.courtyard43Diagnostics={get state(){return state();},canTravel:(a,b)=>navigation.canTravel(new THREE.Vector3(...a),new THREE.Vector3(...b)),navigate:go,interact,comparisonViews:Object.fromEntries(['entry','bed','curtain','tabletop'].map(name=>[name,structuredClone(review.viewpoints[name]||extraViews[name])])),getObjectBounds:name=>landmarks.get(name)?.clone()};
   const lifecycle=new AbortController(),register=t=>{try{Promise.resolve(document.modelContext?.registerTool(t,{signal:lifecycle.signal})).catch(()=>{});}catch{}};
   register({name:'get_courtyard43_view',description:'读取Courtyard43成品房间的视角、材质版本、门帘开关、静音与实际渲染计数。',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute:state});
+  register({name:'measure_courtyard43_rendering',description:'在当前视角缓慢左右转动5.5秒，测量实际帧间隔并恢复视角；用于同设备同视口验收。',inputSchema:{type:'object',properties:{},additionalProperties:false},execute(){if(mode!=='walk')throw Error('Use a walking viewpoint');clearInput();const result=renderProbe.start(camera);invalidate();return result;}});
   register({name:'navigate_courtyard43',description:'切换Courtyard43入口、床边、桌面、阳台、反看、总览及物件近景。',inputSchema:{type:'object',properties:{viewpoint:{type:'string',enum:viewNames}},required:['viewpoint'],additionalProperties:false},execute({viewpoint}){go(viewpoint);return state();}});
   register({name:'walk_courtyard43',description:'沿当前视角小步移动，使用真实实体表面检查阻挡。',inputSchema:{type:'object',properties:{direction:{type:'string',enum:['forward','back','left','right','up','down']},distance:{type:'number',minimum:.01,maximum:2}},required:['direction','distance'],additionalProperties:false},execute({direction,distance}){if(mode!=='walk'||!['forward','back','left','right','up','down'].includes(direction)||!Number.isFinite(distance)||distance<.01||distance>2)throw Error('Invalid movement');const start=camera.position.clone(),f=direction==='forward'?1:direction==='back'?-1:0,s=direction==='right'?1:direction==='left'?-1:0,n=Math.ceil(distance/.02),step=distance/n;for(let i=0;i<n;i++)move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*step,(direction==='up'?1:direction==='down'?-1:0)*step,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*step);invalidate();return{...state(),distanceMoved:start.distanceTo(camera.position)};}});
   register({name:'interact_courtyard43',description:'通过同一状态控制器操作已建模窗帘、双柜门、房门、开关和反锁。',inputSchema:{type:'object',properties:{id:{type:'string',enum:[...new Set([...interactions.map(x=>x.id),'curtain'])]},open:{type:'boolean'}},required:['id'],additionalProperties:false},execute({id,open}){return interact(id,open);}});
-  window.addEventListener('pagehide',e=>{entered=false;audio.setActive(false);clearInput();cancelAnimationFrame(frame);frame=0;if(!e.persisted){disposed=true;lifecycle.abort();audio.dispose();finish.dispose();lighting.dispose();orbit.dispose();renderer.dispose();} });
+  window.addEventListener('pagehide',e=>{renderProbe.update(performance.now(),false);entered=false;audio.setActive(false);clearInput();cancelAnimationFrame(frame);frame=0;if(!e.persisted){disposed=true;lifecycle.abort();audio.dispose();finish.dispose();lighting.dispose();orbit.dispose();renderer.dispose();} });
   window.addEventListener('pageshow',e=>{if(e.persisted){entered=true;void audio.setMuted(true);audio.setActive(!document.hidden);last=performance.now();resize();}});
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(frame);frame=0;audio.setActive(false);failRoomLoading();$('errorDetail').textContent='图形显示暂时中断，请重新打开房间。';});
   go('entry');resize();reportRoomLoading(94,'正在准备光影');await renderer.compileAsync(scene,camera);finish.render();await finishRoomLoading();entered=true;audio.setActive(!document.hidden);last=performance.now();invalidate();

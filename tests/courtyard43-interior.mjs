@@ -204,6 +204,17 @@ assert.equal(manifest.nodes.filter(node=>node.name==='C43_DeskChair').length,1);
 assert.ok(!manifest.nodes.some(node=>/spare.?chair/i.test(node.name)),'Keep the entrance free of a spare chair');
 for(const name of [...names].filter(name=>/^C43_(BedFootCap|DeskFoot|ChairRubberFoot)/.test(name)))near(bounds(name).min.y,0,'Ground contact '+name);
 const pillow=bounds('C43_CottonPillow'),sheet=bounds('C43_DrapedWhiteSheet'),duvet=bounds('C43_FloralDuvet');
+// Small objects must share actual world-space support after source transforms.
+const bottle=bounds('C43_Ribbed_water_bottle'),bottleCap=bounds('C43_Bottle_cap'),cup=bounds('C43_Plastic_cup'),packet=bounds('C43_Tissue_packet');
+for(const [name,box] of [['bottle',bottle],['cup',cup],['tissue packet',packet]])near(box.min.y,fullCap.max.y,name+' rests on the counter',.0005);
+near(bottle.getCenter(new THREE.Vector3()).x,bottleCap.getCenter(new THREE.Vector3()).x,'Bottle cap remains concentric after relocation',.001);
+assert.ok(bottleCap.min.y<bottle.max.y&&bottleCap.max.y>bottle.max.y,'Cap physically overlaps the bottle neck');
+assert.ok(bottle.max.x<cup.min.x&&cup.max.x<packet.min.x,'Photo-supported bottle, cup, packet order');
+for(const name of ['C43_Tissue_0','C43_Tissue_1'])near(bounds(name).min.y,packet.max.y,'Paper emerges from packet opening',.001);
+assert.ok(byName('C43_Plastic_cup').material.opacity<.25&&!byName('C43_Plastic_cup').material.depthWrite,'Cup retains weak translucent hollow wall');
+assert.ok(byName('C43_Floor_RedBrown_Boards').material.roughnessMap,'Timber finish has restrained spatial roughness');
+assert.ok(byName('C43_Floor_RedBrown_Boards').geometry.attributes.uv1,'Floor contact bake UV1 survives finish changes');
+assert.ok(!names.has('C43_Bottle_label_band'),'Label colours share one surface, without near-coplanar overlay');
 assert.ok(pillow.min.y>=sheet.max.y-.001&&pillow.min.y-sheet.max.y<.003,'Pillow rests on the sheet');
 assert.ok(sheet.min.y>0&&duvet.min.y>0,'Bed linen remains above the floor');
 // Local quilt accumulations may be as high as the pillow; judge the pillow's

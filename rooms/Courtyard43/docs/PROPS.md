@@ -1,6 +1,15 @@
 # Courtyard43 陈设来源
 
-入住后 P03/P04 为主。原图不进入网页资源，文字、商标和不可辨认标签不猜造。通过官方 Blender Lab MCP 执行 `scripts/build-props.py`，保存 `assets/props/Courtyard43-props.blend`，由完整源组装阶段追加。
+入住后 P03/P04 为主。原图不进入网页资源，文字、商标和不可辨认标签不猜造。当前源 `assets/props/Courtyard43-props.blend` 为 `courtyard43-props02`，通过官方 Blender Lab MCP 从 props01 执行 `scripts/refine-furnishings.py`；不重跑旧 `build-props.py` 覆盖现有精修。
+
+## 第三轮：props02 / interior07
+
+- 帽子保留已隔离的帽冠、帽檐、缝线与位置；新建深炭色斜纹、细线材质和克制织物 sheen。帽钩替换为小弯钩，从墙面伸到已有内沿，近景不再只见黑色剪影。
+- 挂袋为宽正面、有侧褶和两道斜向塌陷的软袋，深蓝上部、浅色下部；提带改成实体薄织带，两端接袋口、顶端挂在白钩上。袋口和底部在形变中固定。未知文字留空，内部形态属于推定。
+- 杯瓶保留原类型；PET 瓶肩过渡更圆滑，杯口有内外壁、圆唇及底厚，透明材质不投实心影。瓶标签仅还原可见红白色块，使用同一实体网格分色，避免近共面贴层；不写品牌或营养信息。按 P03/P04 调整散放物从左到右为瓶、杯、纸巾，建筑台面位置不动。
+- 纸品直接追加永旺家园完整源 `shelf36`（Git `cbbf843`）的 `heart-print-soft-tissue-package`、`softpack-gingham-rounded-sides`、`raised-folded-tissue-0/1` 网格，合并为独立较小变体；使用新的无字白包装及弱绿色封边，不带入旧房间心形印花。源 SHA256 为 `d1659edad574ee6d11ad27f594cdecb28001a3014c044a280274c0a0441a3a16`，原工程未改。
+
+`check-furnishings.py` 在官方 MCP 中检查求值后的实体网格、帽钩/袋带连接与承托面；新增回归检查瓶盖同心、杯瓶纸巾落台和抽纸从包顶露出，避免局部坐标与世界坐标混用。9 个重点网格闭合、正体积且无零面积面；源重开无缺失贴图。尺寸、织纹及不可见细节均为照片估计。
 
 ## 复制变体
 

@@ -1,8 +1,12 @@
 # Courtyard43 家具组件
 
-组件源：`assets/furniture/Courtyard43-furniture.blend`；基础生成脚本：`scripts/build-furniture.py`，后续原位精修：`scripts/refine-desk-outline.py`、`scripts/refine-desk-front-curve.py`；只读检查/可选检查渲染：`scripts/furniture-check.py`。全部建模、材料生成、源检查及渲染均经 Blender Lab 官方 MCP 后台执行。根集合为 `C43_Furniture`，当前组件版本 `courtyard43-furniture05`。旧生成器不能覆盖当前源；主工程及网页由整合脚本另行创建，不覆盖白模。
+组件源：`assets/furniture/Courtyard43-furniture.blend`；基础生成脚本：`scripts/build-furniture.py`，后续原位精修：`scripts/refine-desk-outline.py`、`scripts/refine-desk-front-curve.py`；只读检查/可选检查渲染：`scripts/furniture-check.py`。全部建模、材料生成、源检查及渲染均经 Blender Lab 官方 MCP 后台执行。根集合为 `C43_Furniture`，当前组件版本 `courtyard43-furniture06`。旧生成器不能覆盖当前源；主工程及网页由整合脚本另行创建，不覆盖白模。
 
-## 当前床品：furniture05
+## 第三轮表面：furniture06
+
+`refine-furnishings.py` 只细化 22 个家具对象的独立材质：白色层压板增加低幅粗糙度变化和克制清漆；白漆钢件为非金属漆层，保留微弱细腻表面起伏；椅背独立为缎面塑料。白家具已有厚度、倒角、柜门枢轴和桌前内凹轮廓保持，不增加没有参考支持的污渍。床品几何与材质不变，其他 74 个家具对象摘要相同。
+
+## 已保留床品：furniture05
 
 第二轮 `refine-soft-textiles.py` 从 furniture04 原位精修六个床品对象：连续床单、9 mm 实体被层、枕头及各自细缝边。被面为宽缓非对称斜褶与有限短褶，头部略翻卷，床沿受重力垂落；缝边改为细双线，避免粗绳观感。枕头与包边共用压缩场，底面紧贴床单。原花纹及其尺度保留，素棉换成无烘死褶皱/光照的中性纱纹。其他 90 个家具对象不变。
 
