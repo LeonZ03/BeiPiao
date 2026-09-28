@@ -19,7 +19,7 @@ scene.unit_settings.system = 'METRIC'
 scene.unit_settings.scale_length = 1
 scene['room_id'] = 'Courtyard43'
 scene['stage'] = 'interior'
-scene['web_revision'] = 'courtyard43-interior01'
+scene['web_revision'] = 'courtyard43-interior02'
 scene['structure_approved'] = True
 scene['source_layout'] = P['parentRevision']
 scene['review_parameters'] = json.dumps(P, ensure_ascii=False)
@@ -61,6 +61,10 @@ for obj in scene.objects:
                 uv.data[li].uv = (vertex[axes[0]],vertex[axes[1]])
 scene.world = bpy.data.worlds.new('C43_Neutral_authoring_world')
 scene.world.color = (.18,.18,.18)
+contact_script = ROOM / 'scripts/bake-foundation-contact.py'
+contact_scope = {'__file__': str(contact_script), '__name__': 'foundation_contact'}
+exec(compile(contact_script.read_text(encoding='utf-8'), str(contact_script), 'exec'), contact_scope)
+scene['contact_bake'] = json.dumps(contact_scope['result'])
 blend = ROOM / 'assets/full-room/Courtyard43-interior.blend'
 bpy.ops.wm.save_as_mainfile(filepath=str(blend))
 for image in bpy.data.images:

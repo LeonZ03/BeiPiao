@@ -1,5 +1,9 @@
 # Courtyard43 精修协作约定
 
+当前发布阶段为 `courtyard43-interior02`：建筑组件 `architecture03`、家具组件 `courtyard43-furniture03`，陈设沿用既有源。后续维护必须从这些当前源继续，不重跑初代 build 脚本覆盖。用户补充事实及本轮推定值见 `history/inputs/foundation-02.json`；它补充朝向/灯/台体要求，不替换批准布局。
+
+左右窗帘独立交互 ID 为 `curtain-left`、`curtain-right`，各自包含面板及挂环；两侧材质带 `curtainSide`。旧 `curtain` 仅作为网页诊断的同时开合兼容动作，不参与物件拾取。导出保留 Principled Sheen Tint 为 `sheenColor`；显式 `web_map` 图片节点支持 `aoMap`、`lightMap`、`emissiveMap`。局部 AO 使用 UV1，布料透光遮罩使用独立比例映射，不把光照烘进基础色。弱透明容器及灯罩关闭实心投影。
+
 用户已确认 `whitebox06`（Git `cb6fe56`）布局。唯一结构输入为 `history/inputs/approved-layout.json`。新完整源为 `assets/full-room/Courtyard43-interior.blend`，与白模源分离。精修期间不覆盖已发布白模；主智能体最终集中导出并接入网站。
 
 ## 组件与坐标

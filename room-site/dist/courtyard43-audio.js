@@ -22,10 +22,12 @@ export function createCourtyardAudio({createContext=()=>{const C=globalThis.Audi
   function setActive(value){value=!!value;if(value===active)return;active=value;sync();}
   function setListener(position,yaw=0){listener={x:position.x,y:position.y,z:position.z,yaw};}
   function interaction(kind,position){if(!audible())return;if(shots.size>=8){const v=shots.values().next().value;stop(v,true);shots.delete(v);}const v=voice('click');v.source.loop=false;v.filter.type='bandpass';v.filter.frequency.value=kind==='lock'?1300:1800;shots.add(v);const now=context.currentTime,level=(kind==='lock'?.40:.16)*spatial(v,position);v.gain.gain.setValueAtTime(0,now);v.gain.gain.linearRampToValueAtTime(level,now+.008);v.gain.gain.exponentialRampToValueAtTime(.0001,now+.065);v.source.stop(now+.095);}
-  function update(dt,{doors=[],curtainSpeed=0,curtainPosition=[.4,1.5,.07],position,yaw=0}){
+  function update(dt,{doors=[],curtains,curtainSpeed=0,curtainPosition=[.4,1.5,.07],position,yaw=0}){
     if(!audible())return;setListener(position,yaw);
-    let cloth=voices.get('cloth');
-    if(curtainSpeed>.001){if(!cloth){cloth=voice('cloth');cloth.id='cloth';voices.set('cloth',cloth);}ramp(cloth.gain.gain,.32*Math.min(1,curtainSpeed)*spatial(cloth,curtainPosition),.055);}else if(cloth){stop(cloth);voices.delete('cloth');}
+    // One bounded cloth source per moving panel, with independent release.
+    const panels=curtains??[{id:'legacy',speed:curtainSpeed,position:curtainPosition}],live=new Set();
+    for(const panel of panels){const id=panel.id==='legacy'?'cloth':`cloth:${panel.id}`;if(!(panel.speed>.001))continue;live.add(id);let cloth=voices.get(id);if(!cloth){cloth=voice('cloth');cloth.id=id;voices.set(id,cloth);}ramp(cloth.gain.gain,.32*Math.min(1,panel.speed)*spatial(cloth,panel.position),.055);}
+    for(const [id,v] of voices)if(v.kind==='cloth'&&!live.has(id)){stop(v);voices.delete(id);}
     for(const door of doors){let v=voices.get(door.id),motion=motions.get(door.id);if(door.blocked){if(v)stop(v);voices.delete(door.id);motions.delete(door.id);continue;}if(v)ramp(v.gain.gain,.85*spatial(v,door.position),.055);if(!door.moving)continue;const direction=Math.sign(door.target-door.amount);if(!direction)continue;if(motion?.serial!==door.serial||motion?.direction!==direction){if(v)stop(v);voices.delete(door.id);motion={serial:door.serial,direction,played:false};motions.set(door.id,motion);}if(motion.played||(direction<0&&door.amount>.18))continue;const kind=direction>0?'open':'close';if(!samples.has(kind))continue;motion.played=true;v=voice(kind);v.id=door.id;voices.set(door.id,v);ramp(v.gain.gain,.85*spatial(v,door.position),.008);}
   }
   function dispose(){disposed=true;serial++;muted=true;silence();void context?.close().catch(()=>{});notify();}

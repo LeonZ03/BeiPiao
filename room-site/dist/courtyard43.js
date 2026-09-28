@@ -5,8 +5,8 @@ import {OrbitControls} from './vendor/OrbitControls.js';
 import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';
-import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior01';
-import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior01';
+import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior02';
+import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior02';
 
 const $=id=>document.getElementById(id),canvas=$('world');
 let toastTimer,entered=false,disposed=false,frame=0,renderer=null;
@@ -16,7 +16,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior01');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior02');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -44,11 +44,13 @@ try{
     node.traverse(o=>{if(o.isMesh){record.meshes.push(o);o.userData.interactive=true;}});return record;
   });
   const byId=new Map(interactions.map(x=>[x.id,x])),byObject=new Map(interactions.map(x=>[x.node,x]));
-  const curtain=byId.get('curtain');
+  const curtains=interactions.filter(x=>x.kind==='curtain');
+  const curtainAmounts=()=>({left:byId.get('curtain-left')?.amount??0,right:byId.get('curtain-right')?.amount??0});
+  const curtainAmount=()=>curtains.reduce((sum,item)=>sum+item.amount,0)/Math.max(1,curtains.length);
   const hinges=interactions.filter(x=>x.kind==='hinge');
   for(const o of refs.lightFixture||[])o.traverse(n=>{if(!n.name.includes('Diffuser'))return;for(const m of n.isMesh?(Array.isArray(n.material)?n.material:[n.material]):[])m.userData.lightFixture=true;});
   for(const o of refs.glass||[])o.castShadow=false;
-  const landmarks=new Map();world.updateMatrixWorld(true);world.traverse(o=>{if(o.isMesh)landmarks.set(o.name,new THREE.Box3().setFromObject(o));});
+  const landmarks=new Map();world.updateMatrixWorld(true);for(const item of curtains)new THREE.Box3().setFromObject(item.node).getCenter(item.position);world.traverse(o=>{if(o.isMesh)landmarks.set(o.name,new THREE.Box3().setFromObject(o));});
   const batching=batchCourtyardGeometry(THREE,world,interactions.map(x=>x.node));
   const navigation=createCourtyardNavigation(THREE,world,review,hinges.map(x=>x.node));
   const lighting=createCourtyardLighting(THREE,scene,renderer,materials),finish=createCourtyardFinish(THREE,renderer,scene,camera);
@@ -82,13 +84,18 @@ try{
   function activate(item,value){if(!item)return false;if(item.id==='entry-door'&&lockOn&&item.target<.5){toast('门已反锁');return false;}audio.setListener(camera.position,yaw);item.blocked=false;item.serial++;const target=value===undefined?oppositeEndpoint(item.target,item.amount):Number(!!value);item.target=target;
     if(item.kind==='switch'){lightOn=!!target;audio.interaction('switch',item.node.getWorldPosition(tmp).toArray());toast(lightOn?'灯已打开':'灯已关闭');}
     else if(item.kind==='lock'){if(target&&byId.get('entry-door')?.amount>.04){item.target=0;toast('先关上房门再反锁');return false;}lockOn=!!target;audio.interaction('lock',item.node.getWorldPosition(tmp).toArray());toast(lockOn?'门已反锁':'反锁已解除');}
-    else if(item.kind==='curtain')toast(target?'窗帘正在拉开':'窗帘正在合上');
+    else if(item.kind==='curtain')toast(`${item.id==='curtain-left'?'左侧':item.id==='curtain-right'?'右侧':''}窗帘正在${target?'拉开':'合上'}`);
     else toast(target?'门正在打开':'门正在合上');
     invalidate(true);return true;
   }
-  function updateInteractions(dt){let active=false,changed=false,curtainSpeed=0;for(const item of interactions){item.moving=false;if(item.amount===item.target)continue;active=true;const old=item.amount;item.amount=easedAmount(old,item.target,dt,item.kind==='hinge'?3.1:item.kind==='curtain'?2.7:9);apply(item);if(item.kind==='hinge'&&blocksViewer(item)){item.amount=old;item.target=old;item.blocked=true;apply(item);toast('请稍微离开门边');}else{item.moving=Math.abs(item.amount-old)>1e-7;changed=changed||item.moving;}if(item.kind==='curtain')curtainSpeed=Math.abs(item.amount-old)/Math.max(.001,dt);}
-    if(changed){navigation.updateDynamic();lighting.update(curtain?.amount||0,lightOn);dirty=true;}
-    audio.update(dt,{curtainSpeed,doors:hinges.map(item=>({...item,position:item.node.getWorldPosition(item.position).toArray()})),position:camera.position,yaw});return active;
+  function interact(id,value){
+    // Kept for old review tools; actual mesh picking always owns one panel.
+    if(id==='curtain'){const target=value===undefined?Number(!curtains.every(item=>item.target===1)):Number(!!value);for(const item of curtains)activate(item,target);return state();}
+    const item=byId.get(id);if(!item)throw Error('Unknown object');activate(item,value);return state();
+  }
+  function updateInteractions(dt){let active=false,changed=false;for(const item of interactions){item.moving=false;item.speed=0;if(item.amount===item.target)continue;active=true;const old=item.amount;item.amount=easedAmount(old,item.target,dt,item.kind==='hinge'?3.1:item.kind==='curtain'?2.7:9);apply(item);if(item.kind==='hinge'&&blocksViewer(item)){item.amount=old;item.target=old;item.blocked=true;apply(item);toast('请稍微离开门边');}else{item.moving=Math.abs(item.amount-old)>1e-7;changed=changed||item.moving;}if(item.kind==='curtain')item.speed=Math.abs(item.amount-old)/Math.max(.001,dt);}
+    if(changed){navigation.updateDynamic();lighting.update(curtainAmount(),lightOn,curtainAmounts());dirty=true;}
+    audio.update(dt,{curtains:curtains.map(item=>({id:item.id,speed:item.speed,position:item.position.toArray()})),doors:hinges.map(item=>({...item,position:item.node.getWorldPosition(item.position).toArray()})),position:camera.position,yaw});return active;
   }
   function resize(){const width=$('app').clientWidth,height=$('app').clientHeight;if(!width||!height)return;camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);finish.resize();$('app').classList.toggle('touch-device',matchMedia('(pointer: coarse)').matches||innerWidth<=900);invalidate(true);}
   function toggleImmersive(){immersive=!immersive;$('app').classList.toggle('immersive',immersive);$('immersiveBtn').textContent=immersive?'退出沉浸':'沉浸看房';$('immersiveBtn').setAttribute('aria-pressed',String(immersive));invalidate();}
@@ -116,13 +123,13 @@ try{
   for(const type of ['selectstart','dragstart','contextmenu'])$('app').addEventListener(type,e=>e.preventDefault());
   window.addEventListener('resize',resize);window.visualViewport?.addEventListener('resize',resize);
   document.addEventListener('visibilitychange',()=>{clearInput();last=performance.now();audio.setActive(entered&&!document.hidden);if(document.hidden){cancelAnimationFrame(frame);frame=0;}else invalidate();});
-  const state=()=>({room:'Courtyard43',revision:manifest.revision,stage:'interior',structureApproved:true,mode,position:camera.position.toArray(),yaw,pitch,immersive,fullscreen:!!document.fullscreenElement,lightOn,lockOn,curtainOpen:curtain?.target===1,curtainAmount:curtain?.amount??0,sound:audio.state,interactions:interactions.map(({id,kind,amount,target,blocked,openAngle,defaultOpen})=>({id,kind,amount,target,blocked,openAngle,defaultOpen:!!defaultOpen})),rendering:{drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderCount:finish.frames,batchedMeshes:batching.removed,batches:batching.created,collisionSurfaces:navigation.surfaces,collisionRadius:navigation.radius},assetStatistics:statistics});
-  window.courtyard43Diagnostics={get state(){return state();},canTravel:(a,b)=>navigation.canTravel(new THREE.Vector3(...a),new THREE.Vector3(...b)),navigate:go,interact:(id,value)=>{const item=byId.get(id);if(!item)throw Error('Unknown object');activate(item,value);return state();},getObjectBounds:name=>landmarks.get(name)?.clone()};
+  const state=()=>({room:'Courtyard43',revision:manifest.revision,stage:'interior',structureApproved:true,mode,position:camera.position.toArray(),yaw,pitch,immersive,fullscreen:!!document.fullscreenElement,lightOn,lockOn,curtainOpen:curtains.every(item=>item.target===1),curtainAmount:curtainAmount(),curtainAmounts:curtainAmounts(),curtains:Object.fromEntries(curtains.map(item=>[item.id.replace('curtain-',''),{amount:item.amount,target:item.target}])),sound:audio.state,interactions:interactions.map(({id,kind,amount,target,blocked,openAngle,defaultOpen})=>({id,kind,amount,target,blocked,openAngle,defaultOpen:!!defaultOpen})),rendering:{drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderCount:finish.frames,batchedMeshes:batching.removed,batches:batching.created,collisionSurfaces:navigation.surfaces,collisionRadius:navigation.radius},assetStatistics:statistics});
+  window.courtyard43Diagnostics={get state(){return state();},canTravel:(a,b)=>navigation.canTravel(new THREE.Vector3(...a),new THREE.Vector3(...b)),navigate:go,interact,comparisonViews:Object.fromEntries(['entry','bed','curtain','tabletop'].map(name=>[name,structuredClone(review.viewpoints[name]||extraViews[name])])),getObjectBounds:name=>landmarks.get(name)?.clone()};
   const lifecycle=new AbortController(),register=t=>{try{Promise.resolve(document.modelContext?.registerTool(t,{signal:lifecycle.signal})).catch(()=>{});}catch{}};
   register({name:'get_courtyard43_view',description:'读取Courtyard43成品房间的视角、材质版本、门帘开关、静音与实际渲染计数。',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute:state});
   register({name:'navigate_courtyard43',description:'切换Courtyard43入口、床边、桌面、阳台、反看、总览及物件近景。',inputSchema:{type:'object',properties:{viewpoint:{type:'string',enum:viewNames}},required:['viewpoint'],additionalProperties:false},execute({viewpoint}){go(viewpoint);return state();}});
   register({name:'walk_courtyard43',description:'沿当前视角小步移动，使用真实实体表面检查阻挡。',inputSchema:{type:'object',properties:{direction:{type:'string',enum:['forward','back','left','right','up','down']},distance:{type:'number',minimum:.01,maximum:2}},required:['direction','distance'],additionalProperties:false},execute({direction,distance}){if(mode!=='walk'||!['forward','back','left','right','up','down'].includes(direction)||!Number.isFinite(distance)||distance<.01||distance>2)throw Error('Invalid movement');const start=camera.position.clone(),f=direction==='forward'?1:direction==='back'?-1:0,s=direction==='right'?1:direction==='left'?-1:0,n=Math.ceil(distance/.02),step=distance/n;for(let i=0;i<n;i++)move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*step,(direction==='up'?1:direction==='down'?-1:0)*step,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*step);invalidate();return{...state(),distanceMoved:start.distanceTo(camera.position)};}});
-  register({name:'interact_courtyard43',description:'通过同一状态控制器操作已建模窗帘、双柜门、房门、开关和反锁。',inputSchema:{type:'object',properties:{id:{type:'string',enum:interactions.map(x=>x.id)},open:{type:'boolean'}},required:['id'],additionalProperties:false},execute({id,open}){const item=byId.get(id);if(!item)throw Error('Unknown object');activate(item,open);return state();}});
+  register({name:'interact_courtyard43',description:'通过同一状态控制器操作已建模窗帘、双柜门、房门、开关和反锁。',inputSchema:{type:'object',properties:{id:{type:'string',enum:[...new Set([...interactions.map(x=>x.id),'curtain'])]},open:{type:'boolean'}},required:['id'],additionalProperties:false},execute({id,open}){return interact(id,open);}});
   window.addEventListener('pagehide',e=>{entered=false;audio.setActive(false);clearInput();cancelAnimationFrame(frame);frame=0;if(!e.persisted){disposed=true;lifecycle.abort();audio.dispose();finish.dispose();lighting.dispose();orbit.dispose();renderer.dispose();} });
   window.addEventListener('pageshow',e=>{if(e.persisted){entered=true;void audio.setMuted(true);audio.setActive(!document.hidden);last=performance.now();resize();}});
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(frame);frame=0;audio.setActive(false);failRoomLoading();$('errorDetail').textContent='图形显示暂时中断，请重新打开房间。';});

@@ -1,0 +1,21 @@
+{
+  "parentRevision": "courtyard43-interior01",
+  "revision": "courtyard43-interior02",
+  "confirmedByUser": "2026-09-28",
+  "balconyDirection": "north",
+  "naturalLight": "weak",
+  "ceilingLightCount": 1,
+  "curtainControl": "left and right independently",
+  "counter": "continuous top from room-facing grille to internal partition, closed exposed end",
+  "desktop": "subtly curved front edge, photograph-based shape",
+  "photoInterpretation": "P03/P04 show the right curtain ending at the counter and the left curtain reaching the floor",
+  "estimatedDetails": ["plain round ceiling lamp shape and size", "desktop arc depth and corner radii", "counter construction thickness", "curtain seam and hem clearance"],
+  "comparison": {
+    "viewpoints": ["entry", "bed", "curtain", "tabletop"],
+    "viewport": [1280, 720],
+    "fieldOfView": 64,
+    "exposure": 1.02,
+    "baseline": "both curtains closed, ceiling lamp off",
+    "additionalStates": ["left only open", "right only open", "both open", "both closed with ceiling lamp on"]
+  }
+}

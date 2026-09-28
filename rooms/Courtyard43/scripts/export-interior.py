@@ -100,6 +100,11 @@ def export_interior():
                      sheenRoughness=float(value('Sheen Roughness', .5)), clearcoat=float(value('Coat Weight', 0)),
                      clearcoatRoughness=float(value('Coat Roughness', .03)))
         colors = dict(color=list(value('Base Color', mat.diffuse_color))[:3])
+        # Blender 4+ Sheen Tint is a linear color. Three defaults to black,
+        # so exporting only the weight silently disables the cloth response.
+        if props['sheen'] > 0:
+            tint = value('Sheen Tint', (1, 1, 1, 1))
+            colors['sheenColor'] = list(tint)[:3] if hasattr(tint, '__len__') else [float(tint)] * 3
         maps, vectors = {}, {}
         for socket_name, web_name, color in [('Base Color', 'map', True), ('Roughness', 'roughnessMap', False),
                                               ('Metallic', 'metalnessMap', False), ('Alpha', 'alphaMap', False)]:
@@ -131,6 +136,10 @@ def export_interior():
         if max(emission[:3]) > 0 and strength:
             colors['emissive'] = list(emission)[:3]
             props['emissiveIntensity'] = strength
+        for node in mat.node_tree.nodes:
+            if node.type == 'TEX_IMAGE' and node.get('web_map') in ('aoMap', 'lightMap', 'emissiveMap'):
+                role = node['web_map']
+                maps[role] = texture(node, role == 'emissiveMap')
         props.update(meta(mat, 'web_props'))
         # Color/vector overrides belong in their own serialized sections.
         for key in ['color', 'emissive', 'attenuationColor', 'sheenColor']:
@@ -167,7 +176,7 @@ def export_interior():
         matrix = obj.parent.matrix_world.inverted() @ obj.matrix_world if parent else obj.matrix_world
         node = dict(id=ids[obj.name], name=obj.name, type='Group' if obj.type == 'EMPTY' else 'Mesh', parent=parent,
                     matrix=matrix_array(TO_WEB @ matrix @ TO_WEB.inverted()), visible=True,
-                    castShadow=not tags.get('glass', False), receiveShadow=True, renderOrder=0, frustumCulled=True,
+                    castShadow=not (tags.get('glass', False) or meta(obj, 'web_userData').get('noShadow', False)), receiveShadow=True, renderOrder=0, frustumCulled=True,
                     userData=dict(authoring='Blender', **meta(obj, 'web_userData'), **tags))
         for key in refs:
             if key != 'world' and tags.get(key):
@@ -188,6 +197,11 @@ def export_interior():
             assert obj.data.materials and all(obj.data.materials), f'Missing material {obj.name}'
             mid = [material(mat) for mat in obj.data.materials]
             node['material'] = mid[0] if len(mid) == 1 else mid
+            # Thin alpha glass/plastic must not cast an opaque silhouette.
+            # This follows source material alpha, including cups and bottles
+            # which were missing the window-specific glass tag.
+            if all(materials[i]['props'].get('transparent') and materials[i]['props'].get('opacity', 1) < .3 for i in mid):
+                node['castShadow'] = False
             uv = mesh.uv_layers.active
             uv1 = next((layer for layer in mesh.uv_layers if layer != uv), None)
             positions, normals, uvs, uv1s, indices, groups, loop_order = [], [], [], [], [], [], []

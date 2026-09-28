@@ -124,12 +124,27 @@ for(const interaction of manifest.interactions){
   assert.ok(['x','y','z'].includes(interaction.axis));
   if(interaction.kind==='hinge')assert.ok(Number.isFinite(interaction.openAngle)&&Math.abs(interaction.openAngle)>0&&Math.abs(interaction.openAngle)<=Math.PI);
 }
-for(const id of ['wardrobeFar','wardrobeNear','curtain','entry-door','entry-lock','ceiling-switch'])assert.ok(interactionIds.has(id),`Missing ${id}`);
+for(const id of ['wardrobeFar','wardrobeNear','curtain-left','curtain-right','entry-door','entry-lock','ceiling-switch'])assert.ok(interactionIds.has(id),`Missing ${id}`);
+assert.ok(!interactionIds.has('curtain'),'Actual curtain picking must have separate owners');
+for(const m of manifest.materials.filter(m=>m.props.sheen>0))assert.ok(m.colors.sheenColor?.some(v=>v>0),'Nonzero cloth sheen must export a nonblack tint: '+m.name);
+assert.equal(manifest.nodes.filter(n=>n.name==='C43_CeilingLamp_Diffuser').length,1,'Exactly one ceiling light');
+assert.ok(!manifest.nodes.some(n=>n.name.startsWith('C43_Downlight_')),'No assumed perimeter lights');
+for(const m of manifest.materials.filter(m=>m.textures.aoMap!==undefined))assert.equal(manifest.textures[m.textures.aoMap].channel,1,'Static contact map keeps a separate UV channel');
+assert.ok(manifest.materials.filter(m=>m.textures.aoMap!==undefined).length>=3,'Large room surfaces have local occlusion');
 
 const textures=manifest.textures.map(()=>new THREE.Texture());
 const {world,refs}=parseBlenderRoom(THREE,manifest,buffer,textures);
 const byName=name=>{const object=world.getObjectByName(name);assert.ok(object,'Missing '+name);return object;};
 const bounds=name=>new THREE.Box3().setFromObject(byName(name),true);
+const fullCap=bounds('C43_Radiator_Cap_Front'),endPanel=bounds('C43_Radiator_Left_End_Panel');
+assert.ok(fullCap.max.z-fullCap.min.z>.39,'Counter bridges the internal partition depth');
+assert.ok(Math.abs(endPanel.min.y)<.0001&&Math.abs(endPanel.max.y-fullCap.min.y)<.0001,'End panel joins floor and counter');
+for(const side of ['Left','Right']){
+  const root=byName(`C43_Curtain_${side}_Pivot`);
+  for(const suffix of ['','_Rings'])assert.equal(byName(`C43_Curtain_${side}${suffix}`).parent,root,'Panel and rings have independent correct owner');
+}
+assert.ok(bounds('C43_Curtain_Right').min.y>=fullCap.max.y,'Right hem clears complete counter');
+assert.ok(bounds('C43_Curtain_Left').max.x<endPanel.min.x,'Long left panel clears counter side');
 const near=(actual,expected,label,tolerance=.00002)=>assert.ok(Math.abs(actual-expected)<=tolerance,`${label}: ${actual} != ${expected}`);
 const left=(approved.room.centerX??0)-approved.room.width/2,right=(approved.room.centerX??0)+approved.room.width/2;
 const bed=bounds('C43_BedPlatform'),mattress=bounds('C43_Mattress'),desk=bounds('C43_DeskTop');

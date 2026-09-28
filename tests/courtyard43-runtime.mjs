@@ -2,6 +2,7 @@
 // Browser/WebGL and perceptual QA remain separate, explicit release checks.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import vm from 'node:vm';
 import * as THREE from '../room-site/dist/vendor/three.module.js';
 import {parseBlenderRoom} from '../room-site/dist/blender-room.js';
 import {batchCourtyardGeometry,createCourtyardNavigation,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from '../room-site/dist/courtyard43-effects.js';
@@ -14,7 +15,11 @@ const bytes=fs.readFileSync(new URL('geometry.bin',base)),buffer=bytes.buffer.sl
 const textures=manifest.textures.map(t=>{assert.ok(fs.existsSync(new URL('../room-site/dist/'+t.webPath,import.meta.url)));return new THREE.Texture();});
 const {world,refs}=parseBlenderRoom(THREE,manifest,buffer,textures);
 const interactions=manifest.interactions.map(d=>({...d,object:world.getObjectByName(manifest.nodes[d.node].name)}));
-assert.deepEqual(new Set(interactions.map(d=>d.id)),new Set(['curtain','entry-door','entry-lock','ceiling-switch','wardrobeFar','wardrobeNear']));
+assert.deepEqual(new Set(interactions.filter(d=>d.kind!=='curtain').map(d=>d.id)),new Set(['entry-door','entry-lock','ceiling-switch','wardrobeFar','wardrobeNear']));
+const curtainRoots=interactions.filter(d=>d.kind==='curtain');
+assert.ok(curtainRoots.length===1||curtainRoots.length===2,'Recognized legacy or independent curtain pack');
+assert.deepEqual(new Set(curtainRoots.map(d=>d.id)),new Set(curtainRoots.length===1?['curtain']:['curtain-left','curtain-right']));
+if(curtainRoots.length===2)for(const root of curtainRoots){const expected=root.id.endsWith('left')?'Left':'Right';let meshes=0;root.object.traverse(o=>{if(o.isMesh){meshes++;assert.ok(o.name.includes(expected),'Each pivot owns only its corresponding curtain panel and rings');assert.ok(o.morphTargetInfluences,'Both cloth and rings retain their shape keys');}});assert.equal(meshes,2);}
 for(const i of interactions)assert.ok(i.object,'Every interactive pivot exists');
 for(const id of ['entry-door','ceiling-switch'])assert.ok(refs.cutaway.includes(interactions.find(i=>i.id===id).object),`Overview hides the complete ${id} interaction root`);
 assert.ok(refs.cutaway.some(o=>o.name==='C43_Switch_Backplate'),'Switch plate follows its hidden wall');
@@ -70,6 +75,24 @@ for(const partial of [.02,.17,.49,.5,.61,.88,.99]){
 }
 assert.equal(oppositeEndpoint(1,.12),0,'An opening door can reverse before crossing halfway');assert.equal(oppositeEndpoint(0,.88),1,'A closing door can reverse before crossing halfway');assert.equal(oppositeEndpoint(undefined,.61),0);
 
+// Execute the production controller with two independent roots. This remains
+// useful during pack migration and tests the same movement/picking functions.
+const viewerSource=fs.readFileSync(new URL('../room-site/dist/courtyard43.js',import.meta.url),'utf8');
+const controllerFunction=(name,next)=>viewerSource.slice(viewerSource.indexOf(`  function ${name}(`),viewerSource.indexOf(`  function ${next}(`));
+const panelItems=['left','right'].map(side=>{const node=new THREE.Group(),mesh=new THREE.Mesh(new THREE.BoxGeometry(.2,1,.02),new THREE.MeshBasicMaterial());mesh.morphTargetInfluences=[0];node.add(mesh);return{id:`curtain-${side}`,kind:'curtain',node,meshes:[mesh],amount:0,target:0,speed:0,serial:0,position:new THREE.Vector3()};});
+const controllerLighting=[],controllerAudio=[];
+const controller={THREE,curtains:panelItems,interactions:panelItems,byId:new Map(panelItems.map(p=>[p.id,p])),byObject:new Map(panelItems.map(p=>[p.node,p])),easedAmount,oppositeEndpoint,tmp:new THREE.Vector3(),camera:{position:new THREE.Vector3()},yaw:0,lockOn:false,lightOn:false,hinges:[],dirty:false,toast(){},invalidate(){},state(){return panelItems.map(p=>({amount:p.amount,target:p.target}));},navigation:{updateDynamic(){}},lighting:{update(...args){controllerLighting.push(args);}},audio:{setListener(){},update(dt,args){controllerAudio.push(args);}},curtainAmount:()=>panelItems.reduce((sum,p)=>sum+p.amount,0)/2,curtainAmounts:()=>({left:panelItems[0].amount,right:panelItems[1].amount})};
+vm.runInNewContext([controllerFunction('owner','pick'),controllerFunction('apply','blocksViewer'),controllerFunction('activate','interact'),controllerFunction('interact','updateInteractions'),controllerFunction('updateInteractions','resize')].join('\n'),controller);
+assert.equal(controller.owner(panelItems[0].meshes[0]).id,'curtain-left');assert.equal(controller.owner(panelItems[1].meshes[0]).id,'curtain-right');
+controller.interact('curtain-left',true);for(let i=0;i<200;i++)controller.updateInteractions(.025);
+assert.equal(panelItems[0].amount,1);assert.equal(panelItems[1].amount,0,'Left movement leaves the right side closed');assert.equal(panelItems[1].meshes[0].morphTargetInfluences[0],0);
+assert.equal(controllerLighting.at(-1)[0],.5);assert.equal(controllerLighting.at(-1)[2].left,1);assert.equal(controllerLighting.at(-1)[2].right,0);
+controller.interact('curtain-right',true);controller.updateInteractions(.05);const rightAtReverse=panelItems[1].amount;
+controller.interact('curtain-right',false);controller.updateInteractions(.05);assert.ok(panelItems[1].amount<rightAtReverse);assert.equal(panelItems[0].amount,1,'Reversing the right panel leaves left state unchanged');
+controller.interact('curtain',false);for(let i=0;i<200;i++)controller.updateInteractions(.025);assert.ok(panelItems.every(p=>p.amount===0),'Legacy aggregate action closes both panels');
+assert.ok(controllerAudio.every(args=>args.curtains.length===2));assert.ok(controllerAudio.at(-1).curtains.every(p=>p.speed===0),'Stationary panels release their cloth sounds');
+assert.match(viewerSource,/\['entry','bed','curtain','tabletop'\]/,'Four stable comparison views remain available without new UI controls');
+
 class Param{value=0;setTargetAtTime(v){this.value=v;}setValueAtTime(v){this.value=v;}linearRampToValueAtTime(v){this.value=v;this.peak=v;}exponentialRampToValueAtTime(v){this.value=v;}cancelScheduledValues(){}}
 class Node{gain=new Param();frequency=new Param();Q=new Param();pan=new Param();playbackRate={value:1};connect(){}disconnect(){}start(){this.started=true;}stop(t){this.stopAt=t;}}
 class Context{state='suspended';currentTime=0;sampleRate=8000;destination=new Node();sources=[];gains=[];createBuffer(channels,length){const data=new Float32Array(length);return{getChannelData:()=>data};}createGain(){const n=new Node();this.gains.push(n);return n;}createBiquadFilter(){return new Node();}createStereoPanner(){return new Node();}createBufferSource(){const n=new Node();this.sources.push(n);return n;}async resume(){this.state='running';}async suspend(){this.state='suspended';}async close(){this.state='closed';}}
@@ -84,10 +107,16 @@ Object.assign(cabinet,{amount:.6,target:0,serial:2});step();assert.equal(context
 Object.assign(cabinet,{amount:.02,target:1,serial:3,moving:true});step();const reopened=context.sources.at(-1);assert.equal(reopened.buffer.kind,'open');Object.assign(cabinet,{amount:.01,target:0,serial:4});step();assert.notEqual(reopened.stopAt,undefined,'Reversing motion stops the old recording');
 cabinet.blocked=true;step();assert.ok(!audio.state.voices.includes(cabinet.id));
 astate.curtainSpeed=.2;step();assert.ok(audio.state.voices.includes('cloth'));astate.curtainSpeed=0;step();assert.ok(!audio.state.voices.includes('cloth'));
+astate.curtains=[{id:'curtain-left',speed:.2,position:[-.4,1.5,0]},{id:'curtain-right',speed:.3,position:[1.2,1.5,0]}];step();assert.deepEqual(audio.state.voices.sort(),['cloth:curtain-left','cloth:curtain-right']);
+const clothSourceCount=context.sources.length;for(let i=0;i<10;i++)step();assert.equal(context.sources.length,clothSourceCount,'Moving panels reuse a single source each');
+astate.curtains[0].speed=0;step();assert.deepEqual(audio.state.voices,['cloth:curtain-right'],'Stopping one panel preserves the other sound');
+astate.curtains[0].speed=.25;step();assert.equal(audio.state.voices.length,2);astate.curtains[1].speed=0;step();assert.deepEqual(audio.state.voices,['cloth:curtain-left']);
+astate.curtains=[];step();assert.deepEqual(audio.state.voices,[],'Removing or stopping panels clears their sounds');
 audio.interaction('switch',[0,1.5,0]);const normal=context.gains.at(-1).gain.peak;audio.interaction('lock',[0,1.5,0]);assert.equal(context.gains.at(-1).gain.peak,normal*2.5);
 for(let i=0;i<25;i++)audio.interaction('switch',[0,1.5,0]);assert.ok(audio.state.transients<=8);
-audio.setActive(false);assert.equal(context.state,'suspended');assert.deepEqual(audio.state.voices,[]);assert.equal(audio.state.transients,0);
+astate.curtains=[{id:'curtain-right',speed:.4,position:[1.2,1.5,0]}];step();const pausedCloth=context.sources.at(-1);
+audio.setActive(false);assert.equal(context.state,'suspended');assert.deepEqual(audio.state.voices,[]);assert.equal(audio.state.transients,0);assert.equal(pausedCloth.stopAt,context.currentTime,'Background pause immediately stops a moving panel source');
 audio.setActive(true);await Promise.resolve();await audio.setMuted(true);assert.equal(audio.muted,true);assert.equal(context.state,'suspended');audio.dispose();assert.equal(context.state,'closed');
 let failed=true;const retry=createCourtyardAudio({createContext:()=>new Context(),loadSample:async()=>{if(failed)throw Error('offline');return{};}});retry.setActive(true);assert.equal(await retry.setMuted(false),false);failed=false;assert.equal(await retry.setMuted(false),true);retry.dispose();
 const html=fs.readFileSync(new URL('../room-site/dist/courtyard43.html',import.meta.url),'utf8');assert.match(html,/<!-- beipiao-room-app:v1 -->/);assert.doesNotMatch(html,/结构白模|待确认|review-note/);assert.match(html,/soundBtn" aria-label="开启声音"/);
-console.log(`PASS Courtyard43 runtime: ${batch.removed} static meshes merged, geometry/ray parity, real-surface navigation, protected morphs/cutaways, default-open door, partial-target recovery, unobstructed switch and moving-lock close-ups, 3.1 easing, opt-in audio, closing lead-in, reversal, pause and retry.`);
+console.log(`PASS Courtyard43 runtime: ${batch.removed} static meshes merged, geometry/ray parity, real-surface navigation, protected morphs/cutaways, default-open door, partial-target recovery, unobstructed switch and moving-lock close-ups, 3.1 easing, independent panel picking/morphs/reversal, mean and per-side lighting inputs, four comparison views, independent opt-in cloth voices, closing lead-in, pause and retry.`);
