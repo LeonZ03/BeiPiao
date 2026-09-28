@@ -1,5 +1,7 @@
 # 第一轮基础表现：interior02
 
+本页保留第一轮验收记录。后续 interior03 已按用户实物标注将桌面微凸改为中部内凹，并修复台体底座外露共面闪烁；当前源及验收见 [HISTORY.md](../HISTORY.md) 最新记录，勿将本页的旧桌面曲线当作当前定稿。
+
 父提交 `6622aad`，父包 `courtyard43-interior01`；本轮输出 `courtyard43-interior02`。保留 whitebox06 已批准布局，未扩大房间、移动家具或重建永旺家园。所有模型编辑、贴图生成、AO 烘焙和导出均通过 Blender Lab 官方 MCP。
 
 ## 证据和修改

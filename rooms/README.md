@@ -2,7 +2,7 @@
 
 每个真实房间一个稳定的英文目录 ID。当前 [永旺家园](yongwang-jiayuan/README.md) 与 [Courtyard43](Courtyard43/README.md) 已接入网站；首页其余房间继续显示“待录入”。
 
-Courtyard43 保留用户指定的目录大小写，索引状态为 `ready`；已批准 `whitebox06` 布局并完成第一轮基础表现修正 `courtyard43-interior02`、首页入口及适用交互。精修工程为 `assets/full-room/Courtyard43-interior.blend`，网页模型位于 `assets/rooms/Courtyard43/interior/`；原白模源、包及审阅入口继续保留。`ready` 表示当前仓库中的精修房间可进入，本轮最终聚合、手机浏览器与线上部署仍待单独验收。所有尺度仍为照片估计，原始照片和补充视频保持本地忽略。
+Courtyard43 保留用户指定的目录大小写，索引状态为 `ready`；已批准 `whitebox06` 布局并完成基础表现修正 `courtyard43-interior03`、首页入口及适用交互。精修工程为 `assets/full-room/Courtyard43-interior.blend`，网页模型位于 `assets/rooms/Courtyard43/interior/`；原白模源、包及审阅入口继续保留。`ready` 表示当前仓库中的精修房间可进入，本轮最终聚合、手机浏览器与线上部署仍待单独验收。所有尺度仍为照片估计，原始照片和补充视频保持本地忽略。
 
 ## 新增房间
 

@@ -154,6 +154,25 @@ near(mattress.min.y,bed.max.y,'Mattress contacts supporting platform');
 near(desk.min.x,left+.025,'Desk left anchor');near(desk.max.x,left+.025+approved.desk.width,'Desk right anchor');
 near(desk.max.y,approved.desk.height,'Desk top height');near(desk.max.z-desk.min.z,approved.desk.depth,'Desk depth');
 assert.ok(desk.max.x<approved.balcony.openingLeft,'Desk stays clear of balcony passage');
+// User-marked working edge is concave at the chair, not a convex board.
+const deskObject=byName('C43_DeskTop'),deskPosition=deskObject.geometry.attributes.position;
+const deskPoints=Array.from({length:deskPosition.count},(_,i)=>new THREE.Vector3().fromBufferAttribute(deskPosition,i).applyMatrix4(deskObject.matrixWorld));
+const frontAt=x=>Math.max(...deskPoints.filter(p=>Math.abs(p.x-x)<.004&&p.y>.735).map(p=>p.z));
+near(frontAt(-1.35),.50,'Concave working edge at seated center',.003);
+near(frontAt(-1.965),.58,'Left shoulder retains desk depth',.003);
+near(frontAt(-.735),.58,'Right shoulder retains desk depth',.003);
+// Dark plinth caps must be enclosed by the white returns. Previously both
+// colours occupied x=.29 and z=.262, producing camera-dependent flicker.
+const grille=byName('C43_Radiator_White_Vertical_Grille'),gg=grille.geometry;
+const grilleNode=manifest.nodes.find(n=>n.name===grille.name);
+const darkSlots=grilleNode.material.map((id,i)=>manifest.materials[id].name.includes('Dark_red_brown_skirt')?i:-1).filter(i=>i>=0);
+assert.equal(darkSlots.length,1,'The grille keeps its original dark plinth material');
+const plinthPoints=[];
+for(const group of gg.groups.filter(g=>darkSlots.includes(g.materialIndex)))for(let i=group.start;i<group.start+group.count;i++)plinthPoints.push(new THREE.Vector3().fromBufferAttribute(gg.attributes.position,gg.index.getX(i)).applyMatrix4(grille.matrixWorld));
+assert.ok(plinthPoints.length>0,'Audited plinth geometry exists');
+const plinthBounds=new THREE.Box3().setFromPoints(plinthPoints);
+assert.ok(plinthBounds.min.x>.311&&plinthBounds.max.x<1.369,'Plinth end faces lie inside both side boards');
+assert.ok(plinthBounds.max.z<.257,'Plinth front has a real reveal from the white return');
 const nearSide=bounds('C43_WardrobeNearSide'),farSide=bounds('C43_WardrobeFarSide');
 near(nearSide.max.x,right,'Wardrobe right anchor');near(nearSide.min.x,right-approved.wardrobe.depth,'Wardrobe front anchor');
 near(nearSide.max.z,approved.wardrobe.centerZ+approved.wardrobe.width/2,'Wardrobe near end');

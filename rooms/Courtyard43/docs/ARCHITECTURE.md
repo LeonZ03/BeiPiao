@@ -1,6 +1,12 @@
 # Courtyard43 建筑组件
 
-组件源为 `assets/architecture/Courtyard43-architecture.blend`，当前版本 `architecture03`。基础通过 Blender Lab 官方 MCP 生成，之后依次执行 `scripts/refine-radiator-depth.py`（architecture01 → architecture02-radiator）、`scripts/refine-foundation.py`（→ architecture03）；禁止重新运行旧生成器覆盖当前源。所有尺度仍为照片估计，不是实测。
+组件源为 `assets/architecture/Courtyard43-architecture.blend`，当前版本 `architecture04`。基础通过 Blender Lab 官方 MCP 生成，之后依次执行 `scripts/refine-radiator-depth.py`（architecture01 → architecture02-radiator）、`scripts/refine-foundation.py`（→ architecture03）、`scripts/refine-radiator-base.py`（→ architecture04）；禁止重新运行旧生成器覆盖当前源。所有尺度仍为照片估计，不是实测。
+
+## 当前修正：architecture04
+
+用户反馈底部移动闪烁。检查发现深色前/后底座仍延伸至 X=.29…1.39，端面和侧板共面，前底座 Z=.262 又与白色侧板前沿共面。网页低机位移动可见黑白碎边跳变。现在仅将两个底座端部收至 X=.3115…1.3685，隐入侧板约 0.5 mm，前底座再内退 6 mm；保留真实接缝而非使用渲染偏移遮盖重叠。台面、端板、格栅条、窗帘均未改动。81 个非目标建筑对象摘要一致，原材质槽和实体倒角保留。
+
+完整工程通过 `integrate-contour-fixes.py` 从父 interior02 原位替换格栅网格，输出 interior03；未重新组装覆盖 UV1 遮蔽材质。回归按导出底座的实际材质分组验证内缩和前沿间距，防止合批后重新引入共面。
 
 ## 当前修正：architecture03
 
