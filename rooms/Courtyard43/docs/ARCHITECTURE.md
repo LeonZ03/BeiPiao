@@ -1,14 +1,22 @@
 # Courtyard43 建筑组件
 
-组件源为 `assets/architecture/Courtyard43-architecture.blend`，当前版本 `architecture04`。基础通过 Blender Lab 官方 MCP 生成，之后依次执行 `scripts/refine-radiator-depth.py`（architecture01 → architecture02-radiator）、`scripts/refine-foundation.py`（→ architecture03）、`scripts/refine-radiator-base.py`（→ architecture04）；禁止重新运行旧生成器覆盖当前源。所有尺度仍为照片估计，不是实测。
+组件源为 `assets/architecture/Courtyard43-architecture.blend`，当前版本 `architecture05`。基础与后续修改均通过 Blender Lab 官方 MCP 完成；禁止重新运行旧生成器覆盖当前源。所有尺度仍为照片估计，不是实测。
 
-## 当前修正：architecture04
+## 当前定稿：architecture05
+
+用户明确隔断下的台体为完整实心长方体，阳台侧不应中空。`scripts/refine-solid-counter.py` 分别从 architecture04 和 interior03 原位修正，输出 architecture05 / interior04，不重新组装旧组件。
+
+`C43_Radiator_Solid_Body` 从地面连续封闭至台面底，网页包围盒 X=.29…1.39、Y=0….9675、Z=-.12….246，使用原浅象牙漆材质和柔和倒角。移除黑色内腔代理、旧右端薄板及背面底座；房间侧竖纹、青蓝横条和内缩前底座保留。前装饰横框端面再内收，避免暴露共面接缝。实体闭合且体积为正，前后两面 18 条采样射线均命中完整表面。79 个非目标建筑对象、380 个非目标完整场景对象摘要一致。
+
+以下为历史过程；其中旧薄端板、敞开背面及背面底座描述不代表当前实物结构。
+
+## 历史修正：architecture04
 
 用户反馈底部移动闪烁。检查发现深色前/后底座仍延伸至 X=.29…1.39，端面和侧板共面，前底座 Z=.262 又与白色侧板前沿共面。网页低机位移动可见黑白碎边跳变。现在仅将两个底座端部收至 X=.3115…1.3685，隐入侧板约 0.5 mm，前底座再内退 6 mm；保留真实接缝而非使用渲染偏移遮盖重叠。台面、端板、格栅条、窗帘均未改动。81 个非目标建筑对象摘要一致，原材质槽和实体倒角保留。
 
 完整工程通过 `integrate-contour-fixes.py` 从父 interior02 原位替换格栅网格，输出 interior03；未重新组装覆盖 UV1 遮蔽材质。回归按导出底座的实际材质分组验证内缩和前沿间距，防止合批后重新引入共面。
 
-## 当前修正：architecture03
+## 历史修正：architecture03
 
 用户确认阳台朝北、采光差且只有一个顶灯。已删除一圈嵌灯，建立单个普通圆形顶灯；圆形、直径约 0.41 米为最小推定，不是确认型号。灯具网格不投自身实心阴影，实时照明由网页控制。
 

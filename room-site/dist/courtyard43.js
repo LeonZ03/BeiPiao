@@ -5,8 +5,8 @@ import {OrbitControls} from './vendor/OrbitControls.js';
 import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';
-import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior03';
-import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior03';
+import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior04';
+import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior04';
 
 const $=id=>document.getElementById(id),canvas=$('world');
 let toastTimer,entered=false,disposed=false,frame=0,renderer=null;
@@ -16,7 +16,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior03');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior04');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');

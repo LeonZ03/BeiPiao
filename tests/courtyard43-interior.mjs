@@ -136,9 +136,17 @@ const textures=manifest.textures.map(()=>new THREE.Texture());
 const {world,refs}=parseBlenderRoom(THREE,manifest,buffer,textures);
 const byName=name=>{const object=world.getObjectByName(name);assert.ok(object,'Missing '+name);return object;};
 const bounds=name=>new THREE.Box3().setFromObject(byName(name),true);
-const fullCap=bounds('C43_Radiator_Cap_Front'),endPanel=bounds('C43_Radiator_Left_End_Panel');
+const fullCap=bounds('C43_Radiator_Cap_Front'),endPanel=bounds('C43_Radiator_Solid_Body');
 assert.ok(fullCap.max.z-fullCap.min.z>.39,'Counter bridges the internal partition depth');
-assert.ok(Math.abs(endPanel.min.y)<.0001&&Math.abs(endPanel.max.y-fullCap.min.y)<.0001,'End panel joins floor and counter');
+assert.ok(Math.abs(endPanel.min.y)<.0001&&Math.abs(endPanel.max.y-fullCap.min.y)<.0001,'Solid body joins floor and counter');
+assert.ok(endPanel.max.x-endPanel.min.x>1.09&&endPanel.max.z-endPanel.min.z>.365,'Full-width, full-depth solid counter');
+assert.ok(!world.getObjectByName('C43_Radiator_Inner_Shadow'),'No inferred black interior proxy');
+const counterBody=byName('C43_Radiator_Solid_Body'),bodyRay=new THREE.Raycaster();
+for(const x of [.34,.84,1.34])for(const y of [.06,.45,.90])for(const [z,direction,expected] of [[-.6,1,-.12],[.6,-1,.246]]){
+  bodyRay.set(new THREE.Vector3(x,y,z),new THREE.Vector3(0,0,direction));
+  const hits=bodyRay.intersectObject(counterBody,false);
+  assert.ok(hits.length&&Math.abs(hits[0].point.z-expected)<.0002,'Solid counter has continuous front and balcony faces');
+}
 for(const side of ['Left','Right']){
   const root=byName(`C43_Curtain_${side}_Pivot`);
   for(const suffix of ['','_Rings'])assert.equal(byName(`C43_Curtain_${side}${suffix}`).parent,root,'Panel and rings have independent correct owner');

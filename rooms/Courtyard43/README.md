@@ -1,6 +1,6 @@
 # Courtyard43 · 房间复刻
 
-状态：`ready`。用户已确认 `whitebox06` 的结构，当前为基础表现后续修正 `courtyard43-interior03`，已接入首页。材质导出、北向弱采光、单顶灯、独立双帘、完整台体和内凹桌面见 [本轮验收记录](docs/FOUNDATION_REVIEW.md)。房间 ID 保留用户指定的 `Courtyard43`；展示中文名与居住日期待补充。
+状态：`ready`。用户已确认 `whitebox06` 的结构，当前为基础表现后续修正 `courtyard43-interior04`，已接入首页。材质导出、北向弱采光、单顶灯、独立双帘、完整台体和内凹桌面见 [本轮验收记录](docs/FOUNDATION_REVIEW.md)。房间 ID 保留用户指定的 `Courtyard43`；展示中文名与居住日期待补充。
 
 ## 参考与结构约束
 
