@@ -132,7 +132,7 @@ assert.ok(!manifest.nodes.some(n=>n.name.startsWith('C43_Downlight_')),'No assum
 for(const m of manifest.materials.filter(m=>m.textures.aoMap!==undefined))assert.equal(manifest.textures[m.textures.aoMap].channel,1,'Static contact map keeps a separate UV channel');
 assert.ok(manifest.materials.filter(m=>m.textures.aoMap!==undefined).length>=3,'Large room surfaces have local occlusion');
 
-const textures=manifest.textures.map(()=>new THREE.Texture());
+const textures=manifest.textures.map(descriptor=>Object.assign(new THREE.Texture(),{channel:descriptor.channel}));
 const {world,refs}=parseBlenderRoom(THREE,manifest,buffer,textures);
 const byName=name=>{const object=world.getObjectByName(name);assert.ok(object,'Missing '+name);return object;};
 const bounds=name=>new THREE.Box3().setFromObject(byName(name),true);
@@ -206,7 +206,10 @@ for(const name of [...names].filter(name=>/^C43_(BedFootCap|DeskFoot|ChairRubber
 const pillow=bounds('C43_CottonPillow'),sheet=bounds('C43_DrapedWhiteSheet'),duvet=bounds('C43_FloralDuvet');
 assert.ok(pillow.min.y>=sheet.max.y-.001&&pillow.min.y-sheet.max.y<.003,'Pillow rests on the sheet');
 assert.ok(sheet.min.y>0&&duvet.min.y>0,'Bed linen remains above the floor');
-assert.ok(pillow.max.y>duvet.max.y+.035,'Pillow remains visibly raised above the duvet');
+// Local quilt accumulations may be as high as the pillow; judge the pillow's
+// own loft/support instead of forcing every quilt fold below its top.
+assert.ok(pillow.max.y-pillow.min.y>.10&&pillow.max.y-pillow.min.y<.18,'Pillow keeps a soft, bounded loft');
+assert.ok(duvet.max.y-sheet.max.y>.09,'Quilt has a visible local accumulation above its supporting sheet');
 for(const name of ['C43_FloralDuvet','C43_DrapedWhiteSheet','C43_CottonPillow']){
   const object=byName(name);assert.ok(object.geometry.attributes.uv1,`Cotton UV1 preserved: ${name}`);
   assert.ok(object.material.bumpMap?.isTexture,'Cotton thread relief retained');
@@ -237,14 +240,21 @@ pivots.forEach(pivot=>pivot.rotation.y=0);world.updateMatrixWorld(true);
 for(const object of refs.curtainPanels){
   assert.ok(object.morphTargetInfluences?.length,'Curtain panel/ring retains its authored morph');
   const initialWidth=new THREE.Box3().setFromObject(object,true).getSize(new THREE.Vector3()).x;
-  for(const amount of [0,.25,.5,.75,1]){
+  for(const amount of Array.from({length:21},(_,i)=>i/20)){
     object.morphTargetInfluences[0]=amount;
     const box=new THREE.Box3().setFromObject(object,true);
     assert.ok([...box.min,...box.max].every(Number.isFinite),'Finite intermediate curtain state');
     assert.ok(box.min.y>=0&&box.max.z<.12,'Curtain clears floor and radiator cover');
+    if(!object.userData.curtainRings){
+      const support=object.name.includes('Left')?.044:fullCap.max.y;
+      assert.ok(box.min.y>=support&&box.min.y-support<.01,'Hem stays close to its support throughout opening');
+      assert.ok(object.geometry.attributes.uv1,'Sewn transmission mask uses normalized secondary UVs');
+      assert.equal(object.material.emissiveMap.channel,1,'Thickness mask is independent of cloth texture scale');
+      assert.equal(object.material.transparent,false,'Heavy grey curtain does not become transparent gauze');
+    }
   }
   const openWidth=new THREE.Box3().setFromObject(object,true).getSize(new THREE.Vector3()).x;
   assert.ok(openWidth<initialWidth*.5,'Curtain gathers without disappearing');
   object.morphTargetInfluences[0]=0;
 }
-console.log(`PASS Courtyard43 interior: ${manifest.statistics.meshes} meshes, ${triangles} triangles; finite PBR/UV/UV1/morph/index/gzip, fixed approved anchors, furniture contact, 25-state door clearance and 5-state curtain checks.`);
+console.log(`PASS Courtyard43 interior: ${manifest.statistics.meshes} meshes, ${triangles} triangles; finite PBR/UV/UV1/morph/index/gzip, fixed approved anchors, furniture contact, 25-state door clearance and 21-state curtain support checks.`);

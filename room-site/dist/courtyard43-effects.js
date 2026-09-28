@@ -43,6 +43,24 @@ export function createCourtyardNavigation(THREE,world,review,movingRoots=[]){
   return{canTravel,updateDynamic,radius,surfaces:surfaces.length,dynamicSurfaces:dynamic.length};
 }
 
+// Weak diffuse transmission through opaque grey cloth. The normalized Blender
+// mask describes sewn thickness; this height term describes the north window
+// lighting, keeping the lower wall/threshold area from glowing like a screen.
+export function installCourtyardCurtainTransmission(material){
+  if(!material.userData?.curtainDiffuseTransmission)return;
+  const previous=material.onBeforeCompile,cache=material.customProgramCacheKey;
+  material.onBeforeCompile=function(shader,...args){
+    previous?.call(this,shader,...args);
+    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying float vC43ClothHeight;').replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvC43ClothHeight=(modelMatrix*vec4(transformed,1.0)).y;');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vC43ClothHeight;').replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
+      float c43WindowTransmission=smoothstep(0.74,1.24,vC43ClothHeight)*(1.0-0.65*smoothstep(2.25,2.41,vC43ClothHeight));
+      totalEmissiveRadiance*=0.18+0.82*c43WindowTransmission;
+    `);
+  };
+  material.customProgramCacheKey=function(){return (cache?.call(this)??'')+':c43-north-cloth-v2';};
+  material.needsUpdate=true;
+}
+
 export function createCourtyardLighting(THREE,scene,renderer,materials){
   installSoftSunShadows(THREE);renderer.shadowMap.type=THREE.PCFShadowMap;
   const studio=new THREE.Scene();studio.background=new THREE.Color('#b7c3ca');
@@ -58,6 +76,7 @@ export function createCourtyardLighting(THREE,scene,renderer,materials){
   const bounce=new THREE.PointLight('#e9e0d5',.18,6,1);bounce.position.set(-.7,1.2,1.3);scene.add(bounce);
   const ceiling=new THREE.PointLight('#fff4e6',0,7,2);ceiling.position.set(.1,2.62,1.425);ceiling.castShadow=true;ceiling.shadow.mapSize.set(1024,1024);ceiling.shadow.normalBias=.012;ceiling.shadow.bias=-.0015;ceiling.shadow.radius=2;ceiling.shadow.camera.near=.08;ceiling.shadow.camera.far=7;scene.add(ceiling);
   const fixtureMaterials=materials.filter(m=>m.name?.includes('Downlight')||m.userData?.lightFixture),clothMaterials=materials.filter(m=>m.userData.curtainBacklight);
+  for(const material of clothMaterials)installCourtyardCurtainTransmission(material);
   function update(curtainOpen,lightOn,sides={left:curtainOpen,right:curtainOpen}){const a=Math.max(0,Math.min(1,curtainOpen));scene.environmentIntensity=.16+.09*a+(lightOn?.035:0);sky.intensity=.25+.09*a;daylight.intensity=.07+.31*a;windowFills[0].intensity=.16+.58*sides.left;windowFills[1].intensity=.16+.58*sides.right;bounce.intensity=.16+.1*a;ceiling.intensity=lightOn?5.6:0;for(const m of fixtureMaterials)m.emissiveIntensity=lightOn?1.15:0;for(const m of clothMaterials){const openness=sides[m.userData.curtainSide]??a;m.emissiveIntensity=.045*(1-openness);}renderer.shadowMap.needsUpdate=true;}
   update(0,false);return{update,daylight,dispose(){environment.dispose();}};
 }

@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import * as THREE from '../room-site/dist/vendor/three.module.js';
 import {parseBlenderRoom} from '../room-site/dist/blender-room.js';
-import {batchCourtyardGeometry,createCourtyardNavigation,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from '../room-site/dist/courtyard43-effects.js';
+import {batchCourtyardGeometry,createCourtyardNavigation,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView,installCourtyardCurtainTransmission} from '../room-site/dist/courtyard43-effects.js';
 import {createCourtyardAudio} from '../room-site/dist/courtyard43-audio.js';
 
 const base=new URL('../room-site/dist/assets/rooms/Courtyard43/interior/',import.meta.url);
@@ -29,6 +29,15 @@ const cameraDistance=v=>new THREE.Vector3(...v.position).distanceTo(new THREE.Ve
 assert.ok(Math.abs(cameraDistance(closerOverview)/cameraDistance(manifest.review.viewpoints.overview)-.85)<1e-10);
 assert.equal(JSON.stringify(manifest.review.viewpoints.overview),approvedOverview,'Overview zoom must not mutate approved layout data');
 const curtains=refs.curtainPanels.slice();assert.equal(curtains.length,4);
+for(const curtain of curtains.filter(o=>!o.userData.curtainRings)){
+  const material=curtain.material;
+  installCourtyardCurtainTransmission(material);
+  const shader={vertexShader:'#include <common>\n#include <worldpos_vertex>',fragmentShader:'#include <common>\n#include <emissivemap_fragment>'};
+  material.onBeforeCompile(shader);
+  assert.ok(shader.fragmentShader.includes('texture2D(map,vMapUv)'),'North transmission retains existing cloth-albedo modulation');
+  assert.ok(shader.fragmentShader.includes('c43WindowTransmission')&&shader.vertexShader.includes('modelMatrix*vec4(transformed,1.0)'),'Diffuse window falloff follows authored cloth height');
+  assert.ok(material.customProgramCacheKey().includes('c43-north-cloth-v2'),'Transmission change invalidates shader cache');
+}
 for(const curtain of curtains){assert.equal(curtain.geometry.morphAttributes.position.length,1);assert.equal(curtain.morphTargetInfluences[0],0);assert.equal(curtain.geometry.attributes.position.count,curtain.geometry.morphAttributes.position[0].count);}
 const capture=()=>{const meshes=[];world.traverse(o=>{if(o.isMesh&&!o.userData.noCollision)meshes.push(o);});return meshes;};
 const samples=[[[1.1,1.5,1.7],[2.5,1.5,1.7]],[[-.45,1.5,.5],[-.45,1.5,-.6]],[[-.7,.2,1.1],[-.7,.2,2.70]],[[-.7,.49,1.1],[-.7,.49,2.80]],[[1.8,1.2,1.8],[1.8,1.2,.8]],[[0,.2,.6],[0,-.1,.6]],[[0,1.5,-.4],[0,1.5,-1.4]]];

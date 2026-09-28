@@ -1,8 +1,14 @@
 # Courtyard43 建筑组件
 
-组件源为 `assets/architecture/Courtyard43-architecture.blend`，当前版本 `architecture06`。基础与后续修改均通过 Blender Lab 官方 MCP 完成；禁止重新运行旧生成器覆盖当前源。所有尺度仍为照片估计，不是实测。
+组件源为 `assets/architecture/Courtyard43-architecture.blend`，当前版本 `architecture07`。基础与后续修改均通过 Blender Lab 官方 MCP 完成；禁止重新运行旧生成器覆盖当前源。所有尺度仍为照片估计，不是实测。
 
-## 当前定稿：architecture06
+## 当前灰帘：architecture07
+
+第二轮 `refine-soft-textiles.py` 只修改左右帘与挂环四个对象。帘面为有厚度的连续网格，重做不等距重力褶、加厚缝边及独立开合形态键，帘顶褶峰对应 11 个挂环，中心错层搭接避免漏缝。左帘落到门槛附近，右帘止于台面；全过程最小支撑间隙约 1.17 mm、挂环最大连接间隙约 1.30 mm，均为模型工程值而非实测。
+
+灰布保持不透明厚布，粗糙度 .79、sheen .38、法线强度 .19；透光图按归一化 UV1 表达边缝厚度，网页降低窗下和帘头漫透光，不改变北向弱光与单顶灯。`check-soft-textiles.py` 经 MCP 检查各侧 21 态、两帘 441 种独立组合，无帘间/台面穿插。其余 77 个建筑对象保持不变。
+
+## 已保留台体：architecture06
 
 仅修改台体的五个既有对象，依据用户近照和无遮挡 P01 重做正面。`refine-counter-facade.py` 从 architecture05 / interior04 输出 architecture06 / interior05。67 根密集竖条改为每段约 41 根、9 mm 宽的独立细条，分成三段；截面深度在网页斜视检查后减至 12 mm，避免细条侧面遮满槽缝。蓝色面板宽度收进两侧边框，正面比白框后退 2 mm，竖向高度约 16–17 cm。中段格栅缩短，底座增至约 11 cm，台面厚度从 45 mm 减至 25 mm、边缘倒角从 7 mm 收至 2 mm，顶高及承托物位置不变。
 
