@@ -20,6 +20,8 @@ foreach ($folder in @('room-site/dist','local-access','tests')) {
 }
 & $node (Join-Path $PSScriptRoot 'assets.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Asset checks failed.' }
+& $node (Join-Path $PSScriptRoot 'shelf-details.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Shelf detail checks failed.' }
 & $node --experimental-vm-modules (Join-Path $PSScriptRoot 'viewer-lifecycle.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Viewer lifecycle checks failed.' }
 & $node (Join-Path $PSScriptRoot 'breeze.mjs')
