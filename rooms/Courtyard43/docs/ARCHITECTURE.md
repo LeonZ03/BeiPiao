@@ -1,8 +1,16 @@
 # Courtyard43 建筑组件
 
-组件源为 `assets/architecture/Courtyard43-architecture.blend`，当前版本 `architecture05`。基础与后续修改均通过 Blender Lab 官方 MCP 完成；禁止重新运行旧生成器覆盖当前源。所有尺度仍为照片估计，不是实测。
+组件源为 `assets/architecture/Courtyard43-architecture.blend`，当前版本 `architecture06`。基础与后续修改均通过 Blender Lab 官方 MCP 完成；禁止重新运行旧生成器覆盖当前源。所有尺度仍为照片估计，不是实测。
 
-## 当前定稿：architecture05
+## 当前定稿：architecture06
+
+仅修改台体的五个既有对象，依据用户近照和无遮挡 P01 重做正面。`refine-counter-facade.py` 从 architecture05 / interior04 输出 architecture06 / interior05。67 根密集竖条改为每段约 41 根、9 mm 宽的独立细条，分成三段；截面深度在网页斜视检查后减至 12 mm，避免细条侧面遮满槽缝。蓝色面板宽度收进两侧边框，正面比白框后退 2 mm，竖向高度约 16–17 cm。中段格栅缩短，底座增至约 11 cm，台面厚度从 45 mm 减至 25 mm、边缘倒角从 7 mm 收至 2 mm，顶高及承托物位置不变。
+
+主体仍是闭合实心体，只在房间侧开出 25 mm 浅凹区；竖条与槽底约 46 mm 前后差，背面保持完整。槽底采用低饱和棕灰底色是隐藏饰面推定，不将其称为实测结构。台体漆面、蓝漆、槽底和红棕底座均复制为独立材质，不改隔断、窗框或房间踢脚材质。主体下部也使用红棕色，避免侧面落地处露出白边。
+
+复刻优先看三段比例、槽与条的间距、嵌入关系及斜视轮廓；不是提高条数就更精细。76 个非目标建筑对象、377 个非目标完整场景对象及原有材质参数不变。所有条数、槽深、制造厚度均为照片估计；主体完整实心是用户确认事实。
+
+## 历史定稿：architecture05
 
 用户明确隔断下的台体为完整实心长方体，阳台侧不应中空。`scripts/refine-solid-counter.py` 分别从 architecture04 和 interior03 原位修正，输出 architecture05 / interior04，不重新组装旧组件。
 

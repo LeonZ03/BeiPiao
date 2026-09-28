@@ -142,10 +142,21 @@ assert.ok(Math.abs(endPanel.min.y)<.0001&&Math.abs(endPanel.max.y-fullCap.min.y)
 assert.ok(endPanel.max.x-endPanel.min.x>1.09&&endPanel.max.z-endPanel.min.z>.365,'Full-width, full-depth solid counter');
 assert.ok(!world.getObjectByName('C43_Radiator_Inner_Shadow'),'No inferred black interior proxy');
 const counterBody=byName('C43_Radiator_Solid_Body'),bodyRay=new THREE.Raycaster();
-for(const x of [.34,.84,1.34])for(const y of [.06,.45,.90])for(const [z,direction,expected] of [[-.6,1,-.12],[.6,-1,.246]]){
+for(const x of [.34,.84,1.34])for(const y of [.06,.45,.90])for(const [z,direction,expected] of [[-.6,1,-.12],[.6,-1,y<.125?.246:.221]]){
   bodyRay.set(new THREE.Vector3(x,y,z),new THREE.Vector3(0,0,direction));
   const hits=bodyRay.intersectObject(counterBody,false);
   assert.ok(hits.length&&Math.abs(hits[0].point.z-expected)<.0002,'Solid counter has continuous front and balcony faces');
+}
+assert.ok(fullCap.max.y-fullCap.min.y<.027,'Counter cap has a thin manufactured edge');
+const facadeTargets=['C43_Radiator_Solid_Body','C43_Radiator_White_Vertical_Grille'].map(byName);
+for(const y of [.20,.56,.91]){
+  const frontAt=x=>{bodyRay.set(new THREE.Vector3(x,y,.6),new THREE.Vector3(0,0,-1));return bodyRay.intersectObjects(facadeTargets,false)[0]?.point.z;};
+  assert.ok(frontAt(.84)-frontAt(.852925)>.04,'Each grille field has real recessed slots between distinct ribs');
+}
+for(const id of [0,1]){
+  const band=bounds(`C43_Radiator_Teal_Crossbar_${id}`);
+  assert.ok(band.min.x>endPanel.min.x+.02&&band.max.x<endPanel.max.x-.02,'Blue band sits within side frame');
+  assert.ok(band.max.z<.268&&band.max.y-band.min.y>.15,'Wide blue panel is inset, not a projecting bar');
 }
 for(const side of ['Left','Right']){
   const root=byName(`C43_Curtain_${side}_Pivot`);
