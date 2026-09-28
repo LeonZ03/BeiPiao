@@ -45,3 +45,9 @@
 建筑当前链：architecture01 → `refine-radiator-depth.py` → architecture02-radiator → `refine-foundation.py` → architecture03。家具通过 `refine-desk-outline.py` 输出 courtyard43-furniture03。当前三个组件由 `assemble-interior.py` 追加到完整工程，调用 `bake-foundation-contact.py` 后同次保存源并由 `export-interior.py` 导出。不要重跑初代 build 脚本覆盖当前组件；父 revision 断言不得移除。导出修订必须同步网页入口和专用模块版本。
 
 本轮实际委派两个子智能体，显式配置 `gpt-6-sol / high`（台体与桌面）、`gpt-6-sol / medium`（独立窗帘交互）；主智能体完成材质/光照、MCP 集成与网页验收。
+
+## 部署核对
+
+实现提交 `39678a87b8667ec0990670385be54a90d3a8e187` 已推送 main，Cloudflare Pages 对该提交返回 completed/success。正式站 `https://room.leonz03.dpdns.org/courtyard43.html` 的 HTML、脚本和模型清单均引用 interior02；按线上清单 compressedBinaryParts 下载的 5,413,733 字节模型压缩分片与提交文件 SHA-256 一致：`c3f532825d27555e6be0c4ebda1dcee64bf6ea9d65c92f0b2f42a60a5ec6952b`。Pages 使用清单中的分片 URL，不能用已被构建排除的 geometry.bin.gz 直链作验证。
+
+正式站浏览器预览超时，因此线上结论限定为提交部署成功和资源一致；实际画面、手机与交互验收来自上述本地 HTTP 浏览器，不把线上 HTTP 成功冒充线上画面验收。
