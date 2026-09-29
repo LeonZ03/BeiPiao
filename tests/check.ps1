@@ -24,6 +24,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Asset checks failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Shelf detail checks failed.' }
 & $node --experimental-vm-modules (Join-Path $PSScriptRoot 'viewer-lifecycle.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Viewer lifecycle checks failed.' }
+& $node (Join-Path $PSScriptRoot 'room-session.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Room session checks failed.' }
 & $node (Join-Path $PSScriptRoot 'breeze.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Breeze checks failed.' }
 & $node (Join-Path $PSScriptRoot 'daylight-cache.mjs')

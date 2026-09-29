@@ -111,8 +111,9 @@ for(const name of ['wardrobe-left-handle','wardrobe-middle-handle','wardrobe-rig
  const pull=renderedScene.getObjectByName(name);pull.geometry.computeBoundingBox();
  assert.equal(pull.geometry.userData.blenderGeometry,426,'Restore the original rounded handle geometry, changing color only');
  assert.ok(Math.abs(pull.geometry.boundingBox.max.y-pull.geometry.boundingBox.min.y-.18)<.00001,'Original handle length remains unchanged');
- assert.equal(pull.material.roughness,.28);assert.equal(pull.material.metalness,.78);
- assert.ok(pull.material.color.r>pull.material.color.g&&pull.material.color.g>pull.material.color.b,'Pull finish should be warm brown');
+ assert.equal(pull.material.roughness,.48);assert.equal(pull.material.metalness,.25);
+ const c=pull.material.color;
+ assert.ok(Math.min(c.r,c.g,c.b)>.4&&Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b)<.06,'Photo handle finish is pale neutral grey, not dark brown');
 }
 const jambBounds=new THREE.Box3().setFromObject(renderedScene.getObjectByName('continuous-timber-head-jamb'),true);
 assert.ok(jambBounds.min.y<2.15&&jambBounds.max.y>2.24,'Timber head must overlap door top and header');

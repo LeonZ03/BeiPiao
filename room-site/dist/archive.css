@@ -98,3 +98,5 @@ html,body{margin:0;width:100%;height:100%;background:var(--archive-dark)}
 }
 @media(prefers-reduced-motion:reduce){#archive *{transition:none!important}}
 @media(max-width:360px) and (orientation:portrait){.archive-header,.archive-title{left:68px}.archive-title{right:14px}#archive .archive-title h1{font-size:36px}.archive-entry{gap:16px;font-size:15px}.archive-entry #enterRoomBtn{min-width:128px}.archive-timeline{padding-left:18px;padding-right:18px}.archive-timeline li a,.archive-timeline li button{font-size:13px}}
+
+.room-frame{position:fixed;inset:0;width:100%;height:100%;height:100dvh;border:0;background:#211f1b;z-index:10}.room-frame[hidden]{display:none}

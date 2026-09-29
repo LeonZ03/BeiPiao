@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "Courtyard43",
-  "name": "Courtyard43",
+  "name": "43号院",
   "status": "ready",
   "sourceBlend": "rooms/Courtyard43/assets/full-room/Courtyard43-interior.blend",
   "scripts": "rooms/Courtyard43/scripts",

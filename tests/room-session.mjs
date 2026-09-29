@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {createRoomSession} from '../room-site/dist/room-session.js';
+const events=new Map(),links=[{},{}],sent=[],parent={postMessage:(...v)=>sent.push(v)};
+const win={parent,frameElement:{hidden:true},location:{origin:'https://room.example'},addEventListener:(n,f)=>events.set(n,f)};
+const doc={querySelectorAll:()=>links.map(link=>({addEventListener:(n,f)=>link[n]=f}))};
+const session=createRoomSession({window:win,document:doc}),states=[];session.subscribe(v=>states.push(v));
+assert.deepEqual(states,[false],'Room finishing its first load while hidden stays paused');
+const message=(active,origin=win.location.origin,source=parent)=>events.get('message')({origin,source,data:{type:'beipiao-room-active',active}});
+message(true,'https://other.example');message(true,win.location.origin,{});assert.equal(session.active,false);
+message(true);assert.equal(session.active,true);message(false);message(true);assert.deepEqual(states,[false,true,false,true]);
+let prevented=0;links[0].click({preventDefault(){prevented++;}});assert.equal(session.active,false);assert.equal(sent[0][0].type,'beipiao-room-home');assert.equal(prevented,1);
+message(true);links[1].click({preventDefault(){prevented++;}});assert.equal(session.active,false);assert.equal(prevented,2,'Loading cancel and ordinary home use the same cached route');
+console.log('PASS cached room lifecycle: trusted host activation, loading cancellation, pause/resume and home links.');
