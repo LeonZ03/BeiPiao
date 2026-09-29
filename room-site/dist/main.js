@@ -6,10 +6,10 @@ import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=sun
 import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=wardrobe29b';
 import {createInteractions} from './interactions.js?v=feedback1';
 import {createRoomAudio} from './room-audio.js?v=audio5';
-import {loadBlenderRoom} from './blender-room.js?v=window37';
+import {loadBlenderRoom} from './blender-room.js?v=window38';
 import {reportRoomLoading,finishRoomLoading,nextPaint} from './room-loading.js?v=viewer26';
 import {createCurtainController} from './curtain.js?v=curtain23d';
-import {createRoomBreeze} from './room-breeze.js?v=window37';
+import {createRoomBreeze} from './room-breeze.js?v=window38';
 import {createWardrobe} from './wardrobe.js?v=audio2';
 import {createRenderProbe} from './render-probe.js?v=sunlight33';
 

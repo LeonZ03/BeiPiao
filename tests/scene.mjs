@@ -98,7 +98,7 @@ assert.ok(minGrilleGap>.02,'Moving sash must remain on the room side of the rods
 const sleeve=renderedScene.getObjectByName('air-conditioner-wall-sleeve');
 const sleevePosition=sleeve.getWorldPosition(new THREE.Vector3());
 const sleeveNormal=new THREE.Vector3(0,1,0).transformDirection(sleeve.matrixWorld);
-assert.ok(Math.abs(sleevePosition.z+1.790)<.0001&&sleevePosition.x>.9&&sleevePosition.x<1.34,'AC penetration belongs on the window wall, left of the room corner');
+assert.ok(Math.abs(sleevePosition.z+1.790)<.0001&&Math.abs(sleevePosition.x-1.30)<.0001,'AC penetration belongs on the window wall, close to the room corner');
 assert.ok(sleeveNormal.z>.999,'Sleeve axis must face out of the window wall, not the desk wall');
 const pipe=renderedScene.getObjectByName('connected-insulated-ac-pipe');
 const pipeEnd=new THREE.Vector3(...pipe.userData.endpoints.at(-1));
@@ -109,7 +109,9 @@ const curtainPanel=renderedScene.getObjectByName('ivory-jacquard-curtain');
 assert.ok(1.4-curtainPanel.userData.fixedRight>.5,'Photo reference has a broad strip of pink wall to the right of the curtain');
 for(const name of ['wardrobe-left-handle','wardrobe-middle-handle','wardrobe-right-handle']){
  const pull=renderedScene.getObjectByName(name);pull.geometry.computeBoundingBox();
- assert.ok(pull.geometry.boundingBox.max.x-pull.geometry.boundingBox.min.x>.034,'Raised pull retains depth and mounting ends');
+ assert.equal(pull.geometry.userData.blenderGeometry,426,'Restore the original rounded handle geometry, changing color only');
+ assert.ok(Math.abs(pull.geometry.boundingBox.max.y-pull.geometry.boundingBox.min.y-.18)<.00001,'Original handle length remains unchanged');
+ assert.equal(pull.material.roughness,.28);assert.equal(pull.material.metalness,.78);
  assert.ok(pull.material.color.r>pull.material.color.g&&pull.material.color.g>pull.material.color.b,'Pull finish should be warm brown');
 }
 const jambBounds=new THREE.Box3().setFromObject(renderedScene.getObjectByName('continuous-timber-head-jamb'),true);
