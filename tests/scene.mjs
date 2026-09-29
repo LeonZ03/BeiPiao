@@ -58,7 +58,9 @@ assert.equal(sockets.length,0,'No protruding rod sockets');
 assert.equal(grille.children.length,6,'No extra posts or mounting hardware');
 for(const bar of crossbars){
  const bounds=new THREE.Box3().setFromObject(bar,true),center=bounds.getCenter(new THREE.Vector3());
- assert.ok(bounds.min.x>.14&&bounds.min.x<.16&&bounds.max.x>1.045&&bounds.max.x<1.075,'Rods must terminate inside the upper-right opening jambs, not cross the left glazing');
+ const opening=renderedScene.getObjectByName('photo-guided-recessed-bay-window').userData;
+ const mapX=x=>opening.apertureLeft+(x+.86)*(opening.apertureRight-opening.apertureLeft)/1.94;
+ assert.ok(Math.abs(bounds.min.x-mapX(.148))<.002&&Math.abs(bounds.max.x-mapX(1.057))<.002,'Rods must terminate inside the upper-right opening jambs, not cross the left glazing');
  assert.ok(bounds.min.y>1.30&&bounds.max.y<2.15);
 }
 const baySill=new THREE.Box3().setFromObject(renderedScene.getObjectByName('deep-rounded-stone-bay-sill'));
@@ -93,6 +95,23 @@ for(let step=0;step<=12;step++){
 sash.rotation.y=openAngle;renderedScene.updateMatrixWorld(true);
 assert.ok(minRailGap>.05,'Entire sash, including handle, must clear the drying rail throughout its opening');
 assert.ok(minGrilleGap>.02,'Moving sash must remain on the room side of the rods');
+const sleeve=renderedScene.getObjectByName('air-conditioner-wall-sleeve');
+const sleevePosition=sleeve.getWorldPosition(new THREE.Vector3());
+const sleeveNormal=new THREE.Vector3(0,1,0).transformDirection(sleeve.matrixWorld);
+assert.ok(Math.abs(sleevePosition.z+1.790)<.0001&&sleevePosition.x>.9&&sleevePosition.x<1.34,'AC penetration belongs on the window wall, left of the room corner');
+assert.ok(sleeveNormal.z>.999,'Sleeve axis must face out of the window wall, not the desk wall');
+const pipe=renderedScene.getObjectByName('connected-insulated-ac-pipe');
+const pipeEnd=new THREE.Vector3(...pipe.userData.endpoints.at(-1));
+assert.ok(pipeEnd.z< -1.8&&Math.hypot(pipeEnd.x-sleevePosition.x,pipeEnd.y-sleevePosition.y)<.001,'Insulation must continue through its sleeve');
+const pipeBounds=new THREE.Box3().setFromObject(pipe,true);
+assert.ok(pipeBounds.max.x<1.4,'Insulated pipe must not penetrate the desk wall');
+const curtainPanel=renderedScene.getObjectByName('ivory-jacquard-curtain');
+assert.ok(1.4-curtainPanel.userData.fixedRight>.5,'Photo reference has a broad strip of pink wall to the right of the curtain');
+for(const name of ['wardrobe-left-handle','wardrobe-middle-handle','wardrobe-right-handle']){
+ const pull=renderedScene.getObjectByName(name);pull.geometry.computeBoundingBox();
+ assert.ok(pull.geometry.boundingBox.max.x-pull.geometry.boundingBox.min.x>.034,'Raised pull retains depth and mounting ends');
+ assert.ok(pull.material.color.r>pull.material.color.g&&pull.material.color.g>pull.material.color.b,'Pull finish should be warm brown');
+}
 const jambBounds=new THREE.Box3().setFromObject(renderedScene.getObjectByName('continuous-timber-head-jamb'),true);
 assert.ok(jambBounds.min.y<2.15&&jambBounds.max.y>2.24,'Timber head must overlap door top and header');
 const mug=renderedScene.getObjectByName('photo-matched-monster-mug');assert.ok(mug);
@@ -129,7 +148,9 @@ events.get('keydown')({code:'ShiftLeft',preventDefault:noop});for(let i=0;i<10;i
 events.get('keydown')({code:'ControlLeft',preventDefault:noop});for(let i=0;i<10;i++)frame(now+=50);events.get('keyup')({code:'ControlLeft'});assert.ok(Math.abs(diagnostics.state.position[1]-y)<.002);
 const sunlight=renderedScene.getObjectByName('warm-afternoon-sun');const toSun=sunlight.position.clone().sub(sunlight.target.position).normalize(),casters=[];renderedScene.traverse(o=>{if(o.isMesh&&o.castShadow&&!o.material.transparent)casters.push(o);});
 let sunlitFloor=0,sunlitBed=0;
-for(const x of [.23,.38,.55,.68])for(const z of [-.1,.3,.7,1.1])if(new THREE.Raycaster(new THREE.Vector3(x,.04,z),toSun,.01,20).intersectObjects(casters,false).length===0)sunlitFloor++;
+// Sample the visible floor toward the bay as well: the photo-corrected right
+// reveal naturally clips the former wide opening's far-right patch.
+for(let x=-.15;x<=.8;x+=.05)for(let z=-1.5;z<=1.1;z+=.10)if(new THREE.Raycaster(new THREE.Vector3(x,.04,z),toSun,.01,20).intersectObjects(casters,false).length===0)sunlitFloor++;
 for(const x of [-1.05,-.8,-.55,-.3,0])for(const z of [-.15,.2,.55,.9])if(new THREE.Raycaster(new THREE.Vector3(x,.67,z),toSun,.01,20).intersectObjects(casters,false).length===0)sunlitBed++;
 assert.ok(sunlitFloor>0&&sunlitBed>0,'Sunlight must reach floor and bed');
 // Exercise the real canvas pointer handlers and raycasting after the asset swap.

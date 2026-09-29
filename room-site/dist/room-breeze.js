@@ -3,6 +3,7 @@
 const common=`
 uniform float breezeTime,breezePower,breezePhase,breezeOpen;
 uniform vec3 breezeDirection;
+uniform vec3 breezeCurtainBounds;
 vec3 breezeTree(vec3 p){
   float tip=smoothstep(2.8,12.8,p.y)*smoothstep(.15,2.5,length(p.xz));
   float wave=sin(breezeTime*.57+breezePhase+p.y*.16)*.72
@@ -41,8 +42,8 @@ const deformation={
   flower:`vec3 p=(instanceMatrix*vec4(transformed,1.)).xyz;
     transformed+=breezeInstanceLocal(breezeFlower(p));`,
   curtain:`
-    float left=mix(-.7935000062,1.13-.345,breezeOpen);
-    float sides=smoothstep(0.,.085,transformed.x-left)*smoothstep(0.,.085,1.13-transformed.x);
+    float left=mix(breezeCurtainBounds.x,breezeCurtainBounds.y-breezeCurtainBounds.z,breezeOpen);
+    float sides=smoothstep(0.,.085,transformed.x-left)*smoothstep(0.,.085,breezeCurtainBounds.y-transformed.x);
     float lower=smoothstep(.04,1.35,2.36-transformed.y);
     float phase=breezeTime*.82+transformed.x*2.1-transformed.y*.4;
     float wave=.5+.5*sin(phase);
@@ -65,6 +66,7 @@ export function createRoomBreeze({THREE,world,camera,media=matchMedia}){
     const original=mesh.material,material=original.clone();
     const direction=worldWind.clone().applyQuaternion(mesh.getWorldQuaternion(q).invert());
     const uniforms={breezeTime:clock,breezeOpen:open,breezePower:{value:0},breezePhase:{value:phase},breezeDirection:{value:direction}};
+    uniforms.breezeCurtainBounds={value:new THREE.Vector3(mesh.userData.closedLeft??0,mesh.userData.fixedRight??0,mesh.userData.openWidth??0)};
     const prior=original.onBeforeCompile,priorKey=original.customProgramCacheKey();
     material.onBeforeCompile=(shader,renderer)=>{
       prior.call(original,shader,renderer);
@@ -74,7 +76,7 @@ export function createRoomBreeze({THREE,world,camera,media=matchMedia}){
       shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',deformation[kind]+'\n#include <project_vertex>');
       if(kind==='leaf')shader.vertexShader=shader.vertexShader.replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nobjectNormal=breezeLeafRotation()*objectNormal;');
     };
-    material.customProgramCacheKey=()=>priorKey+'-breeze28-'+kind;
+    material.customProgramCacheKey=()=>priorKey+'-breeze-window37-'+kind;
     mesh.material=material;mesh.layers.enable(1);mesh.userData.dynamic=true;mesh.userData.breezeKind=kind;
     const bounds=new THREE.Box3().setFromObject(mesh).expandByScalar(kind==='branch'||kind==='leaf'?.17:.10);
     const center=kind==='flower'?new THREE.Vector3().setFromMatrixPosition(mesh.parent.matrixWorld):bounds.getCenter(new THREE.Vector3());

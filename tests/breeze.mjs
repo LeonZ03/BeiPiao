@@ -26,6 +26,7 @@ const compiled=breeze.objects.map(object=>{
   object.material.onBeforeCompile(shader);
   assert.ok(shader.vertexShader.includes('breezeTime'));
   if(object.userData.curtainShapeKey){
+    assert.deepEqual(shader.uniforms.breezeCurtainBounds.value.toArray(),[object.userData.closedLeft,object.userData.fixedRight,object.userData.openWidth],'Wind pins follow the actual authored curtain width');
     assert.ok(shader.fragmentShader.includes('totalEmissiveRadiance *= texture2D(map,vMapUv).rgb'),'Preserve photo-matched curtain emission');
     assert.ok(shader.vertexShader.indexOf('#include <morphtarget_vertex>')<shader.vertexShader.indexOf('float left=mix('),'Apply wind after the authored curtain morph');
   }
