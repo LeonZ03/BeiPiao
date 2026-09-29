@@ -211,7 +211,7 @@ near(bottle.getCenter(new THREE.Vector3()).x,bottleCap.getCenter(new THREE.Vecto
 assert.ok(bottleCap.min.y<bottle.max.y&&bottleCap.max.y>bottle.max.y,'Cap physically overlaps the bottle neck');
 assert.ok(bottle.max.x<cup.min.x&&cup.max.x<packet.min.x,'Photo-supported bottle, cup, packet order');
 for(const name of ['C43_Tissue_0','C43_Tissue_1'])near(bounds(name).min.y,packet.max.y,'Paper emerges from packet opening',.001);
-assert.ok(byName('C43_Plastic_cup').material.opacity<.25&&!byName('C43_Plastic_cup').material.depthWrite,'Cup retains weak translucent hollow wall');
+assert.ok(byName('C43_Plastic_cup').material.opacity>=.15&&byName('C43_Plastic_cup').material.opacity<.35&&!byName('C43_Plastic_cup').material.depthWrite,'Cup has readable translucent walls without opaque depth occlusion');
 assert.ok(byName('C43_Floor_RedBrown_Boards').material.roughnessMap,'Timber finish has restrained spatial roughness');
 assert.ok(byName('C43_Floor_RedBrown_Boards').geometry.attributes.uv1,'Floor contact bake UV1 survives finish changes');
 assert.ok(!names.has('C43_Bottle_label_band'),'Label colours share one surface, without near-coplanar overlay');

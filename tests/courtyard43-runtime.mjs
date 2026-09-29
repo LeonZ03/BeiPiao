@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import * as THREE from '../room-site/dist/vendor/three.module.js';
 import {parseBlenderRoom} from '../room-site/dist/blender-room.js';
-import {batchCourtyardGeometry,createCourtyardNavigation,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView,installCourtyardCurtainTransmission} from '../room-site/dist/courtyard43-effects.js';
+import {batchCourtyardGeometry,createCourtyardNavigation,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView,installCourtyardCurtainTransmission,createCourtyardLighting} from '../room-site/dist/courtyard43-effects.js';
 import {createCourtyardAudio} from '../room-site/dist/courtyard43-audio.js';
 
 const base=new URL('../room-site/dist/assets/rooms/Courtyard43/interior/',import.meta.url);
@@ -39,6 +39,36 @@ for(const curtain of curtains.filter(o=>!o.userData.curtainRings)){
   assert.ok(material.customProgramCacheKey().includes('c43-north-cloth-v2'),'Transmission change invalidates shader cache');
 }
 for(const curtain of curtains){assert.equal(curtain.geometry.morphAttributes.position.length,1);assert.equal(curtain.morphTargetInfluences[0],0);assert.equal(curtain.geometry.attributes.position.count,curtain.geometry.morphAttributes.position[0].count);}
+
+// Exercise the real lighting state update with only the GPU probe generation
+// injected. This checks source/shadow budget and independent panel responses;
+// perceived exposure and shadow softness still require the actual browser.
+let probeMeshes=0,probeDisposed=false;
+class ProbeGenerator{fromScene(probe){probe.traverse(o=>{if(o.isMesh)probeMeshes++;});return{texture:new THREE.Texture(),dispose(){probeDisposed=true;}};}dispose(){}}
+const lightingScene=new THREE.Scene(),lightingRenderer={shadowMap:{}},originalShadowChunk=THREE.ShaderChunk.shadowmap_pars_fragment;
+const fixture=new THREE.MeshStandardMaterial();fixture.userData.lightFixture=true;
+const clothSides=['left','right'].map(side=>{const m=new THREE.MeshStandardMaterial();m.userData={curtainBacklight:true,curtainSide:side};return m;});
+const lights=createCourtyardLighting({...THREE,PMREMGenerator:ProbeGenerator},lightingScene,lightingRenderer,[fixture,...clothSides]);
+THREE.ShaderChunk.shadowmap_pars_fragment=originalShadowChunk;
+const lightingSources=lightingScene.children.filter(o=>o.isLight),ceiling=lightingScene.getObjectByName('C43_Ceiling_Light'),leftFill=lightingScene.getObjectByName('C43_Window_Fill_Left'),rightFill=lightingScene.getObjectByName('C43_Window_Fill_Right');
+assert.equal(lightingSources.length,6,'Calibration keeps the existing light budget');
+assert.equal(lightingSources.filter(o=>o.castShadow).length,2,'Only north daylight and one ceiling emitter cast shadows');
+assert.ok(probeMeshes<=3,'Reflection probe has no unsupported side studio emitter');
+assert.equal(ceiling.intensity,0);assert.equal(fixture.emissiveIntensity,0,'The ceiling fixture starts switched off');
+assert.ok(ceiling.shadow.intensity>0&&ceiling.shadow.intensity<1,'Diffuse ceiling shadows retain occlusion at reduced contrast');
+assert.ok(ceiling.shadow.radius>2,'Native point PCF has a wider softening footprint');
+const closedEnvironment=lightingScene.environmentIntensity;
+lights.update(.5,false,{left:1,right:0});
+assert.ok(leftFill.intensity>rightFill.intensity,'Only the opened side admits stronger local daylight');
+assert.equal(clothSides[0].emissiveIntensity,0);assert.ok(clothSides[1].emissiveIntensity>0,'The opposite closed cloth retains transmission');
+const independentFills=[leftFill.intensity,rightFill.intensity],dayIntensity=lights.daylight.intensity;
+lights.update(.5,true,{left:1,right:0});
+assert.deepEqual([leftFill.intensity,rightFill.intensity],independentFills,'The ceiling switch does not alter individual window inputs');
+assert.equal(lights.daylight.intensity,dayIntensity);assert.ok(ceiling.intensity>0&&fixture.emissiveIntensity>0);
+assert.ok(lightingScene.environmentIntensity>closedEnvironment,'Switched light includes a modest indirect response');
+lights.update(0,false);assert.equal(ceiling.intensity,0);assert.equal(fixture.emissiveIntensity,0);assert.equal(leftFill.intensity,rightFill.intensity);
+lights.dispose();assert.equal(probeDisposed,true,'Lighting disposal releases its generated environment');
+
 const capture=()=>{const meshes=[];world.traverse(o=>{if(o.isMesh&&!o.userData.noCollision)meshes.push(o);});return meshes;};
 const samples=[[[1.1,1.5,1.7],[2.5,1.5,1.7]],[[-.45,1.5,.5],[-.45,1.5,-.6]],[[-.7,.2,1.1],[-.7,.2,2.70]],[[-.7,.49,1.1],[-.7,.49,2.80]],[[1.8,1.2,1.8],[1.8,1.2,.8]],[[0,.2,.6],[0,-.1,.6]],[[0,1.5,-.4],[0,1.5,-1.4]]];
 const distances=meshes=>samples.map(([a,b])=>{const start=new THREE.Vector3(...a),delta=new THREE.Vector3(...b).sub(start),length=delta.length();return new THREE.Raycaster(start,delta.normalize(),0,length).intersectObjects(meshes,false).map(h=>h.distance).sort((a,b)=>a-b);});

@@ -64,20 +64,26 @@ export function installCourtyardCurtainTransmission(material){
 export function createCourtyardLighting(THREE,scene,renderer,materials){
   installSoftSunShadows(THREE);renderer.shadowMap.type=THREE.PCFShadowMap;
   const studio=new THREE.Scene();studio.background=new THREE.Color('#b7c3ca');
-  const enclosure=new THREE.Mesh(new THREE.BoxGeometry(12,9,12),new THREE.MeshBasicMaterial({color:'#d4d0c9',side:THREE.BackSide}));studio.add(enclosure);
-  function panel(w,h,pos,target,strength){const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color('#fff9ef').multiplyScalar(strength),side:THREE.DoubleSide}));mesh.position.fromArray(pos);mesh.lookAt(...target);studio.add(mesh);}
-  panel(5,3,[.2,1.7,-5.8],[0,1.2,0],1.5);panel(6,5,[0,4.4,0],[0,0,0],.45);panel(4,4,[-5.8,1,0],[0,1,0],.25);
+  // Approximate the broad north opening and ceiling bounce in the reflection
+  // probe. The side studio panel has no corresponding source in this room.
+  const enclosure=new THREE.Mesh(new THREE.BoxGeometry(12,9,12),new THREE.MeshBasicMaterial({color:'#c6c5c1',side:THREE.BackSide}));studio.add(enclosure);
+  function panel(w,h,pos,target,strength,color){const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(color).multiplyScalar(strength),side:THREE.DoubleSide}));mesh.position.fromArray(pos);mesh.lookAt(...target);studio.add(mesh);}
+  panel(4,2.6,[.2,1.7,-5.8],[0,1.2,0],1.6,'#edf1f5');panel(6,5,[0,4.4,0],[0,0,0],.3,'#f3efea');
   const pmrem=new THREE.PMREMGenerator(renderer),environment=pmrem.fromScene(studio,.04,.1,25);scene.environment=environment.texture;pmrem.dispose();studio.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});
-  const sky=new THREE.HemisphereLight('#e9eff4','#66584c',.28);scene.add(sky);
+  const sky=new THREE.HemisphereLight('#eef1f4','#776756',.29);sky.name='C43_Diffuse_Sky';scene.add(sky);
   // User-confirmed north balcony, weak diffuse sky. No direct solar light or
   // sun position is inferred from the bright camera exposure in the photos.
-  const daylight=new THREE.DirectionalLight('#e6edf5',.3);daylight.position.set(-.4,4.8,-4);daylight.target.position.set(.25,.4,1.3);daylight.castShadow=true;daylight.shadow.mapSize.set(2048,2048);Object.assign(daylight.shadow.camera,{left:-3.5,right:3.5,top:3.6,bottom:-3.4,near:.1,far:14});daylight.shadow.normalBias=.002;daylight.shadow.bias=-.00006;daylight.shadow.camera.updateProjectionMatrix();scene.add(daylight,daylight.target);
-  const windowFills=[-.22,.91].map(x=>{const light=new THREE.PointLight('#e5edf5',.3,6,2);light.position.set(x,1.88,-.25);scene.add(light);return light;});
-  const bounce=new THREE.PointLight('#e9e0d5',.18,6,1);bounce.position.set(-.7,1.2,1.3);scene.add(bounce);
-  const ceiling=new THREE.PointLight('#fff4e6',0,7,2);ceiling.position.set(.1,2.62,1.425);ceiling.castShadow=true;ceiling.shadow.mapSize.set(1024,1024);ceiling.shadow.normalBias=.012;ceiling.shadow.bias=-.0015;ceiling.shadow.radius=2;ceiling.shadow.camera.near=.08;ceiling.shadow.camera.far=7;scene.add(ceiling);
+  const daylight=new THREE.DirectionalLight('#e6edf5',.3);daylight.name='C43_North_Daylight';daylight.position.set(-.4,4.8,-4);daylight.target.position.set(.25,.4,1.3);daylight.castShadow=true;daylight.shadow.mapSize.set(2048,2048);Object.assign(daylight.shadow.camera,{left:-3.5,right:3.5,top:3.6,bottom:-3.4,near:.1,far:14});daylight.shadow.normalBias=.002;daylight.shadow.bias=-.00006;daylight.shadow.camera.updateProjectionMatrix();scene.add(daylight,daylight.target);
+  const windowFills=[-.22,.91].map((x,i)=>{const light=new THREE.PointLight('#e5edf5',.3,6,2);light.name=`C43_Window_Fill_${i===0?'Left':'Right'}`;light.position.set(x,1.88,-.25);scene.add(light);return light;});
+  const bounce=new THREE.PointLight('#eee6dc',.18,6,1);bounce.name='C43_Interior_Bounce';bounce.position.set(-.7,1.2,1.3);scene.add(bounce);
+  // One switched ceiling emitter remains the only artificial shadow source.
+  // Native point PCF keeps the same nine taps; a wider radius and weaker shadow
+  // contrast approximate the diffuse fixture and wall interreflection visible
+  // in P03/P04 without adding shadow lamps or changing the shared shader.
+  const ceiling=new THREE.PointLight('#fff4e6',0,7,2);ceiling.name='C43_Ceiling_Light';ceiling.position.set(.1,2.62,1.425);ceiling.castShadow=true;ceiling.shadow.mapSize.set(1024,1024);ceiling.shadow.normalBias=.012;ceiling.shadow.bias=-.0015;ceiling.shadow.radius=12;ceiling.shadow.intensity=.6;ceiling.shadow.camera.near=.08;ceiling.shadow.camera.far=7;scene.add(ceiling);
   const fixtureMaterials=materials.filter(m=>m.name?.includes('Downlight')||m.userData?.lightFixture),clothMaterials=materials.filter(m=>m.userData.curtainBacklight);
   for(const material of clothMaterials)installCourtyardCurtainTransmission(material);
-  function update(curtainOpen,lightOn,sides={left:curtainOpen,right:curtainOpen}){const a=Math.max(0,Math.min(1,curtainOpen));scene.environmentIntensity=.16+.09*a+(lightOn?.035:0);sky.intensity=.25+.09*a;daylight.intensity=.07+.31*a;windowFills[0].intensity=.16+.58*sides.left;windowFills[1].intensity=.16+.58*sides.right;bounce.intensity=.16+.1*a;ceiling.intensity=lightOn?5.6:0;for(const m of fixtureMaterials)m.emissiveIntensity=lightOn?1.15:0;for(const m of clothMaterials){const openness=sides[m.userData.curtainSide]??a;m.emissiveIntensity=.045*(1-openness);}renderer.shadowMap.needsUpdate=true;}
+  function update(curtainOpen,lightOn,sides={left:curtainOpen,right:curtainOpen}){const clamp=value=>Math.max(0,Math.min(1,value)),a=clamp(curtainOpen),left=clamp(sides.left??a),right=clamp(sides.right??a);scene.environmentIntensity=.22+.09*a+(lightOn?.06:0);sky.intensity=.29+.08*a;daylight.intensity=.05+.29*a;windowFills[0].intensity=.14+.52*left;windowFills[1].intensity=.14+.52*right;bounce.intensity=.18+.08*a+(lightOn?.13:0);ceiling.intensity=lightOn?4.8:0;for(const m of fixtureMaterials)m.emissiveIntensity=lightOn?1.15:0;for(const m of clothMaterials){const openness=m.userData.curtainSide==='left'?left:m.userData.curtainSide==='right'?right:a;m.emissiveIntensity=.045*(1-openness);}renderer.shadowMap.needsUpdate=true;}
   update(0,false);return{update,daylight,dispose(){environment.dispose();}};
 }
 
