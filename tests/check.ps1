@@ -12,6 +12,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 whitebox checks failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 interior checks failed.' }
 & $node (Join-Path $PSScriptRoot 'courtyard43-memory.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 memory revision checks failed.' }
+& $node (Join-Path $PSScriptRoot 'courtyard43-desktop.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 desktop kit checks failed.' }
 & $node (Join-Path $PSScriptRoot 'courtyard43-runtime.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 runtime checks failed.' }
 & $node (Join-Path $PSScriptRoot 'courtyard43-exterior.mjs')

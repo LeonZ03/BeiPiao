@@ -3,12 +3,12 @@
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {createRenderProbe} from './render-probe.js?v=finish07';
-import {createCourtyardSnow,courtyardSnowShouldRun} from './courtyard43-snow.js?v=memory12';
+import {createCourtyardSnow,courtyardSnowShouldRun} from './courtyard43-snow.js?v=desktop13';
 import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';
-import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior12';
-import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior12';
+import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior13';
+import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior13';
 
 import {createRoomSession} from './room-session.js?v=session39';
 const session=createRoomSession();
@@ -20,7 +20,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior12');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior13');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -68,6 +68,8 @@ try{
     radiator:{position:[.49,1.13,1.18],target:[.84,.82,.14]},
     curtain:{position:[-.08,1.47,1.12],target:[.28,1.35,.07]},
     tabletop:{position:[-.76,1.14,1.13],target:[-1.25,.76,.30]},
+    electronics:{position:[-1.045,1.005,.56],target:[-1.045,.80,.29]},
+    electronicsSide:{position:[-.66,1.04,.52],target:[-1.045,.80,.28]},
     bedding:{position:[.69,1.03,1.98],target:[-1.15,.63,2.04]},
     accessories:{position:[.77,1.40,.88],target:[.87,1.13,.21]},
     hats:{position:[-1.22,1.61,.74],target:[-1.46,1.52,.13]},
