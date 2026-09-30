@@ -1,5 +1,9 @@
 # Courtyard43 · 制作记录
 
+## 2026-09-30：按手绘纠正门外布局（sketch02）
+
+用户明确横向走廊、下方卧室、上方左厕右厨及左右次卧关闭门。保存结构输入 `history/inputs/corridor-topology-sketch02.json`，通过官方 Blender Lab MCP 创建独立 `assets/layout-studies/corridor-sketch02.blend` 和正/斜俯视图。两间次卧只建关闭门，无内部空间及可探索交互。原 hypothesis01 保留为被取代的历史假设，不再用作当前布局依据。手绘原图留在忽略的 references，当前室内工程和网站未改。
+
 ## 2026-09-30：门外布局理解稿 A（未确认）
 
 用户要求用多个偏俯瞰三维角度核对门外关系。通过官方 Blender Lab MCP 创建独立 `assets/layout-studies/corridor-hypothesis01.blend`，脚本为 `build-corridor-study.py`；输出三个斜俯视和一个正上方视角至 `docs/reviews/corridor-hypothesis01/`。明确标注 A 卧室门口、B 贴红饰的门、C 桌边区域、D 卫生间、E 厨房；橙色门洞与蓝色路线表达暂定连接，不是确定户型或尺寸。保留源与可重复脚本，未修改或接入正式室内模型和网页，等待用户纠正。

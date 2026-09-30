@@ -1,0 +1,19 @@
+{
+  "version": "corridor-topology-sketch02",
+  "source": "User hand-drawn plan and explicit instruction, 2026-09-30",
+  "privateReference": "rooms/Courtyard43/references/corridor-user-sketch02.jpg",
+  "orientation": "Drawing-relative only; no geographic direction inferred",
+  "relations": {
+    "bedroom": "below horizontal corridor; doorway near drawing-left end",
+    "bathroom": "above corridor, drawing-left",
+    "kitchen": "above corridor, drawing-right",
+    "secondaryBedrooms": "one closed door at each lateral end of corridor"
+  },
+  "secondaryBedroomPolicy": {
+    "count": 2,
+    "openable": false,
+    "explorable": false,
+    "modelInteriors": false
+  },
+  "unconfirmed": ["metric dimensions", "exact door widths and offsets", "door swing directions", "corridor table position", "fixture positions within bathroom and kitchen"]
+}

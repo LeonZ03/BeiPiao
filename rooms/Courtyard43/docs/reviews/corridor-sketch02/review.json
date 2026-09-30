@@ -1,0 +1,16 @@
+{
+  "revision": "corridor-sketch02-unapproved",
+  "topologySource": "user hand-drawn plan, 2026-09-30",
+  "metricApproved": false,
+  "source": "assets\\layout-studies\\corridor-sketch02.blend",
+  "views": [
+    "01-top.png",
+    "02-oblique.png"
+  ],
+  "secondaryBedrooms": {
+    "count": 2,
+    "closed": true,
+    "interactive": false,
+    "interiorsModeled": false
+  }
+}
