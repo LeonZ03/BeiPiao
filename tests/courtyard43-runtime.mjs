@@ -32,11 +32,12 @@ const curtains=refs.curtainPanels.slice();assert.equal(curtains.length,4);
 for(const curtain of curtains.filter(o=>!o.userData.curtainRings)){
   const material=curtain.material;
   installCourtyardCurtainTransmission(material);
-  const shader={vertexShader:'#include <common>\n#include <worldpos_vertex>',fragmentShader:'#include <common>\n#include <emissivemap_fragment>'};
-  material.onBeforeCompile(shader);
-  assert.ok(shader.fragmentShader.includes('texture2D(map,vMapUv)'),'North transmission retains existing cloth-albedo modulation');
-  assert.ok(shader.fragmentShader.includes('c43WindowTransmission')&&shader.vertexShader.includes('modelMatrix*vec4(transformed,1.0)'),'Diffuse window falloff follows authored cloth height');
-  assert.ok(material.customProgramCacheKey().includes('c43-north-cloth-v2'),'Transmission change invalidates shader cache');
+  assert.equal(material.userData.blackoutCurtain,true);
+  assert.equal(material.transparent,false);assert.equal(material.opacity,1);
+  assert.ok(material.roughness>=.9&&material.sheen<=.1,'Thick cloth stays matte');
+  assert.equal(material.emissiveIntensity,0);assert.ok(!material.emissiveMap,'Blackout cloth has no transmission mask');
+  const shader={vertexShader:'#include <common>',fragmentShader:'#include <common>'};material.onBeforeCompile(shader);
+  assert.ok(!shader.fragmentShader.includes('c43WindowTransmission'),'Legacy transmission is not installed on blackout cloth');
 }
 for(const curtain of curtains){assert.equal(curtain.geometry.morphAttributes.position.length,1);assert.equal(curtain.morphTargetInfluences[0],0);assert.equal(curtain.geometry.attributes.position.count,curtain.geometry.morphAttributes.position[0].count);}
 
@@ -47,7 +48,7 @@ let probeMeshes=0,probeDisposed=false;
 class ProbeGenerator{fromScene(probe){probe.traverse(o=>{if(o.isMesh)probeMeshes++;});return{texture:new THREE.Texture(),dispose(){probeDisposed=true;}};}dispose(){}}
 const lightingScene=new THREE.Scene(),lightingRenderer={shadowMap:{}},originalShadowChunk=THREE.ShaderChunk.shadowmap_pars_fragment;
 const fixture=new THREE.MeshStandardMaterial();fixture.userData.lightFixture=true;
-const clothSides=['left','right'].map(side=>{const m=new THREE.MeshStandardMaterial();m.userData={curtainBacklight:true,curtainSide:side};return m;});
+const clothSides=['left','right'].map(side=>{const m=new THREE.MeshStandardMaterial();m.emissiveIntensity=0;m.userData={blackoutCurtain:true,curtainSide:side};return m;});
 const lights=createCourtyardLighting({...THREE,PMREMGenerator:ProbeGenerator},lightingScene,lightingRenderer,[fixture,...clothSides]);
 THREE.ShaderChunk.shadowmap_pars_fragment=originalShadowChunk;
 const lightingSources=lightingScene.children.filter(o=>o.isLight),ceiling=lightingScene.getObjectByName('C43_Ceiling_Light'),leftFill=lightingScene.getObjectByName('C43_Window_Fill_Left'),rightFill=lightingScene.getObjectByName('C43_Window_Fill_Right');
@@ -60,7 +61,7 @@ assert.ok(ceiling.shadow.radius>2,'Native point PCF has a wider softening footpr
 const closedEnvironment=lightingScene.environmentIntensity;
 lights.update(.5,false,{left:1,right:0});
 assert.ok(leftFill.intensity>rightFill.intensity,'Only the opened side admits stronger local daylight');
-assert.equal(clothSides[0].emissiveIntensity,0);assert.ok(clothSides[1].emissiveIntensity>0,'The opposite closed cloth retains transmission');
+assert.equal(clothSides[0].emissiveIntensity,0);assert.equal(clothSides[1].emissiveIntensity,0,'Closed blackout cloth never emits window light');
 const independentFills=[leftFill.intensity,rightFill.intensity],dayIntensity=lights.daylight.intensity;
 lights.update(.5,true,{left:1,right:0});
 assert.deepEqual([leftFill.intensity,rightFill.intensity],independentFills,'The ceiling switch does not alter individual window inputs');
@@ -89,15 +90,15 @@ assert.equal(travel([1.9,1.5,1.7],[2.35,1.5,1.7]),false,'Room boundary remains s
 assert.equal(travel([1.8,1.2,1.8],[1.8,1.2,.8]),false,'Wardrobe surfaces stop a viewpoint');
 assert.equal(travel([-.7,.49,1.1],[-.7,.49,2.8]),false,'Mattress has a real collision surface');
 assert.equal(travel([-.7,.2,1.1],[-.7,.2,2.7]),true,'Low, empty under-bed space is usable');
-const door=interactions.find(i=>i.id==='entry-door');assert.equal(door.defaultOpen,true);
-const initial=door.object.quaternion.clone(),axis=new THREE.Vector3(0,1,0),closed=initial.clone().multiply(new THREE.Quaternion().setFromAxisAngle(axis,-door.openAngle));
-const restored=closed.clone().multiply(new THREE.Quaternion().setFromAxisAngle(axis,door.openAngle));assert.ok(initial.angleTo(restored)<1e-7,'Default-open orientation is not applied twice');
+const door=interactions.find(i=>i.id==='entry-door');assert.equal(door.defaultOpen,false);for(const c of curtainRoots)assert.equal(c.defaultOpen,true);
+const initial=door.object.quaternion.clone(),axis=new THREE.Vector3(0,1,0),closed=initial.clone();
+const restored=closed.clone().multiply(new THREE.Quaternion().setFromAxisAngle(axis,door.openAngle));assert.ok(Math.abs(initial.angleTo(restored)-Math.abs(door.openAngle))<1e-7,'Open rotation is applied once from the closed authored baseline');
 assert.ok(closed.angleTo(new THREE.Quaternion())<1e-6,'Entry door closed baseline matches the authored doorway');
 const lock=interactions.find(i=>i.id==='entry-lock');
 const allMeshes=[];world.traverse(o=>{if(o.isMesh)allMeshes.push(o);});
 function aimedMesh(position,target){const p=new THREE.Vector3(...position),delta=new THREE.Vector3(...target).sub(p),distance=delta.length();return new THREE.Raycaster(p,delta.normalize(),0,distance+.05).intersectObjects(allMeshes,false)[0]?.object;}
 const switchAim=aimedMesh([2.04,1.48,1.78],[(manifest.review.room.centerX??0)+manifest.review.room.width/2-.019,1.26,2.40]);
-assert.equal(switchAim?.name,'C43_Switch_Rocker','Open door must not occlude the switch close-up');
+assert.equal(switchAim?.name,'C43_Switch_Rocker','Door must not occlude the switch close-up');
 const lockTargets=[];
 for(const a of [0,.25,.5,.75,1]){
   door.object.quaternion.copy(closed).multiply(new THREE.Quaternion().setFromAxisAngle(axis,door.openAngle*a));world.updateMatrixWorld(true);
@@ -158,4 +159,4 @@ audio.setActive(false);assert.equal(context.state,'suspended');assert.deepEqual(
 audio.setActive(true);await Promise.resolve();await audio.setMuted(true);assert.equal(audio.muted,true);assert.equal(context.state,'suspended');audio.dispose();assert.equal(context.state,'closed');
 let failed=true;const retry=createCourtyardAudio({createContext:()=>new Context(),loadSample:async()=>{if(failed)throw Error('offline');return{};}});retry.setActive(true);assert.equal(await retry.setMuted(false),false);failed=false;assert.equal(await retry.setMuted(false),true);retry.dispose();
 const html=fs.readFileSync(new URL('../room-site/dist/courtyard43.html',import.meta.url),'utf8');assert.match(html,/<!-- beipiao-room-app:v1 -->/);assert.doesNotMatch(html,/结构白模|待确认|review-note/);assert.match(html,/soundBtn" aria-label="开启声音"/);
-console.log(`PASS Courtyard43 runtime: ${batch.removed} static meshes merged, geometry/ray parity, real-surface navigation, protected morphs/cutaways, default-open door, partial-target recovery, unobstructed switch and moving-lock close-ups, 3.1 easing, independent panel picking/morphs/reversal, mean and per-side lighting inputs, four comparison views, independent opt-in cloth voices, closing lead-in, pause and retry.`);
+console.log(`PASS Courtyard43 runtime: ${batch.removed} static meshes merged, geometry/ray parity, real-surface navigation, protected morphs/cutaways, default-open curtains and closed door, partial-target recovery, unobstructed switch and moving-lock close-ups, 3.1 easing, independent panel picking/morphs/reversal, mean and per-side lighting inputs, four comparison views, independent opt-in cloth voices, closing lead-in, pause and retry.`);

@@ -280,7 +280,7 @@ for(const object of refs.curtainPanels){
       const support=object.name.includes('Left')?.044:fullCap.max.y;
       assert.ok(box.min.y>=support&&box.min.y-support<.01,'Hem stays close to its support throughout opening');
       assert.ok(object.geometry.attributes.uv1,'Sewn transmission mask uses normalized secondary UVs');
-      assert.equal(object.material.emissiveMap.channel,1,'Thickness mask is independent of cloth texture scale');
+      assert.ok(!object.material.emissiveMap,'Blackout cloth does not use a transmission mask');assert.equal(object.material.emissiveIntensity,0);
       assert.equal(object.material.transparent,false,'Heavy grey curtain does not become transparent gauze');
     }
   }

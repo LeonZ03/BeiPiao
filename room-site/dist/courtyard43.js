@@ -3,12 +3,12 @@
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {createRenderProbe} from './render-probe.js?v=finish07';
-import {createCourtyardSnow,courtyardSnowShouldRun} from './courtyard43-snow.js?v=winter10';
+import {createCourtyardSnow,courtyardSnowShouldRun} from './courtyard43-snow.js?v=afternoon11';
 import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';
-import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior10';
-import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior10';
+import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior11';
+import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior11';
 
 import {createRoomSession} from './room-session.js?v=session39';
 const session=createRoomSession();
@@ -20,7 +20,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior10');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior11');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -119,7 +119,7 @@ try{
     if(mode==='walk'){const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft')),v=Number(keys.has('ShiftLeft')||keys.has('ShiftRight'))-Number(keys.has('ControlLeft')||keys.has('ControlRight'));if(f||s||v){const step=dt/(Math.hypot(f,s)||1);dirty=move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*step,v*dt*.8,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*step)||dirty;keep=true;}camera.rotation.set(pitch,yaw,0,'YXZ');}
     else if(orbit.update()){dirty=true;keep=true;}
     keep=updateInteractions(dt)||keep;if(renderProbe.update(now,mode==='walk')){dirty=true;keep=true;}
-    camera.getWorldDirection(tmp);const shouldSnow=courtyardSnowShouldRun({active:entered&&!document.hidden,overview:mode==='overview',reducedMotion:reducedMotion.matches,cameraPosition:camera.position,forward:tmp});
+    camera.getWorldDirection(tmp);const shouldSnow=courtyardSnowShouldRun({active:entered&&!document.hidden,overview:mode==='overview',reducedMotion:reducedMotion.matches,cameraPosition:camera.position,forward:tmp,curtainAmounts:curtainAmounts()});
     if(shouldSnow!==snow.active){snow.setEnabled(shouldSnow);dirty=true;}
     if(shouldSnow){snow.update(dt,renderer.getPixelRatio());if(now>=snowNextAt){snowNextAt=now+42;dirty=true;}keep=true;}
     if(dirty){finish.render();dirty=false;}if(keep&&!frame)frame=requestAnimationFrame(tick);
@@ -156,5 +156,6 @@ try{
   window.addEventListener('pageshow',e=>{if(e.persisted){entered=session.active;void audio.setMuted(true);audio.setActive(entered&&!document.hidden);last=performance.now();resize();}});
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(frame);frame=0;audio.setActive(false);failRoomLoading();$('errorDetail').textContent='图形显示暂时中断，请重新打开房间。';});
   session.subscribe(active=>{entered=active;clearInput();last=performance.now();audio.setActive(active&&!document.hidden);if(!active){snow.setEnabled(false);renderProbe.update(performance.now(),false);cancelAnimationFrame(frame);frame=0;document.querySelectorAll('dialog[open]').forEach(d=>d.close());if(document.pointerLockElement)document.exitPointerLock();}else{resize();canvas.focus({preventScroll:true});invalidate();}});
+  for(const item of interactions)apply(item);navigation.updateDynamic();lighting.update(curtainAmount(),lightOn,curtainAmounts());
   go('entry');resize();reportRoomLoading(94,'正在准备光影');await renderer.compileAsync(scene,camera);finish.render();await finishRoomLoading();entered=session.active;audio.setActive(entered&&!document.hidden);last=performance.now();invalidate();
 }catch(error){console.error('Courtyard43 failed',error);audio.setActive(false);failRoomLoading();$('errorDetail').textContent=error.message||'请检查连接，或使用支持 WebGL 的浏览器。';}

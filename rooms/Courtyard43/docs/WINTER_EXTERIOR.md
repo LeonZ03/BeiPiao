@@ -1,5 +1,7 @@
 # 43号院 · 冬季窗外 winter01
 
+本文记录 interior10 的外景制作基线；当前 interior11 的降雪范围、默认开合及光照以 [下午雪景与遮光帘](AFTERNOON_BLACKOUT.md) 为准，外景几何保持。
+
 ## 依据与范围
 
 用户已批准四向雪景方案并要求实施。依据 V01 10.30/11.50 秒、补充的实际雪景照片，以及 `references/exterior-winter-review/window-winter02-four-views.png`。参考图和视频保持私人本地资料，不发布。四向生成图用于确认构图和氛围，不能作为测量或一致三维投影的证据。
