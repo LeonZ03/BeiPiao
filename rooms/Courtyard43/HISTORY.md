@@ -1,5 +1,11 @@
 # Courtyard43 · 制作记录
 
+## 2026-09-30：窗外与门外视频关键帧整理
+
+按用户要求从 V01/V02 提取 23 张原尺寸关键帧及两张精选联系表，保存于忽略目录 `references/exterior-corridor-review/`；可重复提取脚本为 `extract-exterior-references.py`。原始视频和截图保持私人本地资料。固定空间观察、时间索引、未确认关系与后续边界见 `docs/EXTERIOR_CORRIDOR_EVIDENCE.md`。本阶段未修改模型、网页或 interior08 revision。
+
+确认窗外可见近处栏杆/金属杆件、较低波纹屋面及多个住宅立面；门外视频可见窄过道、浅色贴红饰的门、玻璃门、卫生间和厨房方向。镜头路径不等于完整户型，门洞连接、长度和外楼距离尚无测量依据。厨卫新证据位于门外，本轮不扩大为完整厨卫建模或交互。
+
 ## 2026-09-29：按入住照校准形态与光照（interior07 → interior08）
 
 父提交 `3196e24`。官方 Blender Lab MCP 分别维护 architecture09、furniture07、props03 与完整 interior08，再从完整源导出。可重复阶段为 `refine-photo-fidelity.py` → `tune-photo-fidelity.py`，后者只用于本候选版的一次网页对照修正，带防重复标记。保持 whitebox06 建筑/家具锚点、台体和桌面结构，不重跑历史生成器，不写永旺家园源或模型包。
