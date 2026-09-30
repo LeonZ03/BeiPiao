@@ -7,27 +7,27 @@
   <meta name="description" content="记录北漂时期的出租屋，走进永旺家园与 43号院，重访真实生活里的房间。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232e3b36'/%3E%3Cpath d='M8 25V8h16v17M16 8v17M8 17h16' stroke='%23ead6bd' stroke-width='2' fill='none'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./style.css?v=feedback1">
-  <link rel="stylesheet" href="./archive.css?v=session39">
+  <link rel="stylesheet" href="./archive.css?v=memory12">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
 <main id="archive" aria-label="北漂居住记录">
   <section class="archive-hero" aria-labelledby="roomTitle">
-    <img class="archive-cover" src="./assets/archive-hero.png" alt="永旺家园的房间展示图，依据定稿中的衣柜、窗帘、床铺与书桌构图" fetchpriority="high">
+    <img id="archiveCover" class="archive-cover" src="./assets/archive-hero.png" alt="永旺家园的房间展示图，依据定稿中的衣柜、窗帘、床铺与书桌构图" fetchpriority="high">
     <div class="archive-shade" aria-hidden="true"></div>
     <aside class="archive-rail"><a class="archive-wordmark" href="#" aria-label="北漂，居住记录首页">北漂</a><span class="rail-rule" aria-hidden="true"></span><span class="rail-caption">居住时间线</span></aside>
     <header class="archive-header"><span>居住记录</span><button id="directoryBtn" aria-haspopup="dialog">目录 <svg viewBox="0 0 28 22" width="28" height="22" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M0 3h28M0 11h28M0 19h28"/></svg></button></header>
-    <div class="archive-title"><p>ROOM 01</p><h1 id="roomTitle">永旺家园</h1><div class="archive-entry"><a href="#room" id="enterRoomBtn">进入房间 <span aria-hidden="true">↗</span></a></div></div>
+    <div class="archive-title"><p id="roomNumber">ROOM 01</p><h1 id="roomTitle">永旺家园</h1><div class="archive-entry"><a href="#room" id="enterRoomBtn">进入房间 <span aria-hidden="true">↗</span></a></div></div>
   </section>
   <section class="archive-timeline" aria-label="房间序列">
     <h2>房间序列</h2><ol>
-      <li class="current"><a href="#room" aria-label="进入房间 01 永旺家园"><span class="timeline-dot" aria-hidden="true"></span><img src="./assets/archive-hero.png" alt="" width="116" height="72"><span><b>01</b> 永旺家园</span></a></li>
-      <li><a href="#courtyard43" aria-label="进入房间 02 43号院"><span class="timeline-dot" aria-hidden="true"></span><span class="empty-room" aria-hidden="true"><svg viewBox="0 0 36 28" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 24V3h30v21M3 17h30M13 3v14M23 3v14M7 20h22M7 23h22"/></svg></span><span><b>02</b> 43号院</span></a></li>
+      <li class="current"><button type="button" data-room-select="yongwang-jiayuan" aria-label="选择房间 01 永旺家园" aria-pressed="true"><span class="timeline-dot" aria-hidden="true"></span><img src="./assets/archive-hero.png" alt="" width="116" height="72"><span><b>01</b> 永旺家园</span></button></li>
+      <li><button type="button" data-room-select="Courtyard43" aria-label="选择房间 02 43号院" aria-pressed="false"><span class="timeline-dot" aria-hidden="true"></span><img src="./assets/archive-courtyard43.jpg" alt="" width="116" height="72"><span><b>02</b> 43号院</span></button></li>
       <li><button disabled aria-label="房间 03，待录入"><span class="timeline-dot" aria-hidden="true"></span><span class="empty-room" aria-hidden="true"><svg viewBox="0 0 36 28" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 2h32v24H2zM3 22l9-10 8 8 5-5 9 10"/><circle cx="24" cy="9" r="2"/></svg></span><span><b>03</b> 待录入</span></button></li>
     </ol><p class="archive-footnote">按居住顺序整理</p>
   </section>
 </main>
-<dialog id="directoryDialog" class="archive-directory"><button class="close" id="closeDirectoryBtn" aria-label="关闭目录">×</button><p class="eyebrow">北漂 · 居住记录</p><h2>房间目录</h2><a href="#room"><span>01</span> 永旺家园 <span aria-hidden="true">↗</span></a><a href="#courtyard43"><span>02</span> 43号院 <span aria-hidden="true">↗</span></a><p><span>03</span> 待录入</p></dialog>
+<dialog id="directoryDialog" class="archive-directory"><button class="close" id="closeDirectoryBtn" aria-label="关闭目录">×</button><p class="eyebrow">北漂 · 居住记录</p><h2>房间目录</h2><button type="button" data-room-select="yongwang-jiayuan" aria-pressed="true"><span>01</span> 永旺家园 <span aria-hidden="true">↗</span></button><button type="button" data-room-select="Courtyard43" aria-pressed="false"><span>02</span> 43号院 <span aria-hidden="true">↗</span></button><p><span>03</span> 待录入</p></dialog>
 <main id="app" hidden aria-label="永旺家园三维漫游">
   <canvas id="world" tabindex="0" aria-label="房间三维视图，拖动环顾，WASD 或方向键移动，Shift 上升，Ctrl 下降"></canvas>
   <header class="topbar">
@@ -52,5 +52,5 @@
   <dialog id="helpDialog"><button class="close" aria-label="关闭">×</button><p class="eyebrow">EXPLORE THE ROOM</p><h2>像回家一样，走进来。</h2><div class="help-items"><p><kbd>拖动</kbd><span>环顾四周</span></p><p><kbd>W A S D</kbd><span>前后左右移动，也可用方向键</span></p><p><kbd>Shift / Ctrl</kbd><span>按住上升 / 下降，可近看物件和低处细节</span></p><p><kbd>点击物品</kbd><span>墙上开关、窗帘、花洒和水龙头可以直接操作</span></p><p><kbd>右上角声音</kbd><span>默认静音；点击开启柜门、窗帘与水流音效</span></p><p><kbd>双击画面</kbd><span>锁定鼠标环顾，Esc 退出</span></p><p><kbd>空间总览</kbd><span>旋转、缩放，查看房间布局</span></p></div><p class="note">手机：可竖屏或横屏浏览；左下方向键移动，右下竖排按键上升／下降，滑动画面环顾。沉浸看房时仍保留移动键。视点约 2 毫米，可从家具上方、下方和间隙穿行；实体表面会阻挡移动。</p><button class="primary close-action">开始探索</button></dialog>
 </main>
 <iframe id="courtyardRoom" class="room-frame" title="43号院三维漫游" allow="fullscreen; autoplay" allowfullscreen hidden></iframe>
-<script type="module" src="./archive.js?v=afternoon11"></script>
+<script type="module" src="./archive.js?v=memory12"></script>
 </body></html>

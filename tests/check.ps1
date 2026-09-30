@@ -10,6 +10,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Room structure checks failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 whitebox checks failed.' }
 & $node (Join-Path $PSScriptRoot 'courtyard43-interior.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 interior checks failed.' }
+& $node (Join-Path $PSScriptRoot 'courtyard43-memory.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 memory revision checks failed.' }
 & $node (Join-Path $PSScriptRoot 'courtyard43-runtime.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 runtime checks failed.' }
 & $node (Join-Path $PSScriptRoot 'courtyard43-exterior.mjs')
@@ -28,6 +30,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Asset checks failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Shelf detail checks failed.' }
 & $node --experimental-vm-modules (Join-Path $PSScriptRoot 'viewer-lifecycle.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Viewer lifecycle checks failed.' }
+& $node --experimental-vm-modules (Join-Path $PSScriptRoot 'home-selection.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Homepage room selection checks failed.' }
 & $node (Join-Path $PSScriptRoot 'room-session.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Room session checks failed.' }
 & $node (Join-Path $PSScriptRoot 'breeze.mjs')

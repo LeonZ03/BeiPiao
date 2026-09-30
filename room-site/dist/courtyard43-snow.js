@@ -18,7 +18,7 @@ export function createCourtyardSnow(THREE, scene, { count = 900 } = {}) {
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1));
   const material = new THREE.ShaderMaterial({
-    transparent: true, depthWrite: false, toneMapped: false,
+    transparent: true, depthTest: true, depthWrite: false, toneMapped: false,
     uniforms: { uTime: { value: 0 }, uPixelRatio: { value: 1 } },
     vertexShader: `attribute float aSeed; uniform float uTime, uPixelRatio; varying float vAlpha;
       void main(){ vec3 p=position; float phase=aSeed*6.2831853;
@@ -35,7 +35,9 @@ export function createCourtyardSnow(THREE, scene, { count = 900 } = {}) {
   const points = new THREE.Points(geometry, material);
   points.name = 'C43_ZWinter_Snow';
   points.frustumCulled = false;
-  points.renderOrder = 20;
+  // Opaque objects populate depth first. Clear window glass must blend over
+  // the flakes afterward, rather than flakes overlaying foreground glazing.
+  points.renderOrder = -1;
   points.visible = false;
   points.userData.exteriorOnly = true;
   scene.add(points);

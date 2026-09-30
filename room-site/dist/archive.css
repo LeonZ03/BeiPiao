@@ -5,7 +5,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--archive-dark)}
 #archive{height:100dvh;min-height:640px;color:var(--archive-paper);font-family:var(--archive-serif);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 #archive *,#archive *::before,#archive *::after{box-sizing:border-box}
 #archive button,#archive a,.archive-directory a{font-family:inherit;color:inherit;text-decoration:none;letter-spacing:.06em}
-#archive a:focus-visible,#archive button:focus-visible,.archive-directory a:focus-visible{outline:2px solid #e6c7a6;outline-offset:7px}
+#archive a:focus-visible,#archive button:focus-visible,.archive-directory a:focus-visible,.archive-directory button:focus-visible{outline:2px solid #e6c7a6;outline-offset:7px}
 #archive button{border:0;border-radius:0;background:none;box-shadow:none}
 #archive img{-webkit-user-drag:none}
 .archive-hero{position:relative;height:80.14%;min-height:450px;overflow:hidden}
@@ -30,6 +30,9 @@ html,body{margin:0;width:100%;height:100%;background:var(--archive-dark)}
 .archive-timeline ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1.08fr 1fr .77fr;border-top:1px solid #b3a793}
 .archive-timeline li{position:relative;min-width:0}
 .archive-timeline li a,.archive-timeline li button{display:flex;align-items:center;gap:19px;padding:28px 0 0;white-space:nowrap;width:100%;text-align:left;font-size:18px}
+.archive-timeline li button{cursor:pointer}
+.archive-timeline li.current .timeline-dot{background:#e5d5bd;box-shadow:0 0 0 4px #1c1c1a}
+.archive-timeline li.current button>span:last-child{color:#fff}
 .archive-timeline b{font-weight:400;margin-right:12px}
 .timeline-dot{position:absolute;left:0;top:-8px;width:16px;height:16px;border:1px solid #e5d5bd;border-radius:50%;background:var(--archive-dark)}
 .current .timeline-dot{background:#f7ecdb}
@@ -41,8 +44,9 @@ html,body{margin:0;width:100%;height:100%;background:var(--archive-dark)}
 .archive-directory{font-family:var(--archive-serif);color:var(--archive-paper);background:#222320;border:1px solid #555247;border-radius:0;padding:42px;width:min(580px,calc(100% - 32px));}
 .archive-directory::backdrop{background:#101110b8;backdrop-filter:blur(8px)}
 .archive-directory .eyebrow{color:#bea88c}.archive-directory h2{font-family:inherit;font-weight:400;margin:18px 0 32px}
-.archive-directory a,.archive-directory>p:not(.eyebrow){display:flex;gap:24px;border-top:1px solid #ffffff26;margin:0;padding:22px 0;font-size:20px}
-.archive-directory a span:last-child{margin-left:auto}.archive-directory>p:not(.eyebrow){color:#aaa293}
+.archive-directory>button:not(.close),.archive-directory>p:not(.eyebrow){display:flex;gap:24px;border:0;border-top:1px solid #ffffff26;margin:0;padding:22px 0;font-size:20px;width:100%;text-align:left;background:none;color:inherit;font-family:inherit;cursor:pointer}
+.archive-directory>button[aria-pressed="true"]{color:#f3d7b5}
+.archive-directory>button:not(.close) span:last-child{margin-left:auto}.archive-directory>p:not(.eyebrow){color:#aaa293}
 .archive-directory .close{color:var(--archive-paper)}
 /* Inside the room, keep the scene clear and echo B's quiet dark framing. */
 #app{font-family:"Microsoft YaHei",sans-serif}

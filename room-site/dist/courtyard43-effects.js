@@ -97,6 +97,16 @@ export function createCourtyardFinish(THREE,renderer,scene,camera){
   float ao=1.-strength*occ/8.;color*=ao;gl_FragColor=vec4(color,1.);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
+  // Restrained aged-print finish, after tone mapping in display colour space.
+  // Retain the north-facing winter light; avoid sepia, blur or animated grain.
+  vec3 c=gl_FragColor.rgb;float luma=dot(c,vec3(.2126,.7152,.0722));
+  c=mix(vec3(luma),c,.90);
+  c=c*vec3(1.022,1.008,.977);
+  c=(c-.5)*.955+.5;
+  c+=vec3(-.003,.002,.003)*(1.-smoothstep(.12,.5,luma));
+  c-=vec3(.018,.019,.020)*smoothstep(.62,1.,luma);
+  float vignette=1.-.035*smoothstep(.18,.72,length(vUv-.5));
+  gl_FragColor.rgb=clamp(c*vignette,0.,1.);
   }`});
   const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),material);passScene.add(quad);let frames=0;
   function resize(){const size=renderer.getDrawingBufferSize(new THREE.Vector2());target.setSize(size.x,size.y);material.uniforms.resolution.value.copy(size);}
