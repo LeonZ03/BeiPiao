@@ -1,0 +1,19 @@
+{
+  "revision": "corridor-sketch04-unapproved",
+  "source": "assets\\layout-studies\\corridor-sketch04.blend",
+  "views": [
+    "01-top.png",
+    "02-oblique.png"
+  ],
+  "slidingDoorOpenFraction": 0.5,
+  "corridorContents": [],
+  "hiddenForPlanReview": [
+    "Water heater above sink",
+    "Water heater dark panel",
+    "East wall upper cabinet",
+    "South wall upper cabinet",
+    "Dark extractor hood",
+    "Hood duct"
+  ],
+  "dimensionsMeasured": false
+}

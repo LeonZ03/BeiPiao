@@ -1,0 +1,28 @@
+{
+  "version": "corridor-correction04",
+  "parent": "corridor-correction03",
+  "privateReference": "rooms/Courtyard43/references/corridor-user-correction04.png",
+  "explicitUserFacts": [
+    "走廊右边有一段墙",
+    "饭桌和厨房中间有一道推拉门隔开",
+    "推拉门平时开着，留一半通行空间",
+    "图最上方是房门",
+    "物品及摆放依据既有视频"
+  ],
+  "diagramInterpretation": {
+    "diningArea": "above corridor, between bathroom and kitchen",
+    "topRoomDoor": "top wall of dining area, as marked",
+    "slidingPartition": "vertical divider between dining area and kitchen; leaves stacked toward drawing-top, lower half open",
+    "shortWall": "between corridor right segment and kitchen",
+    "corridorContents": []
+  },
+  "videoEvidence": {
+    "10.80-11.10": "wall-side white dining table, white chair, papers, leaning timber board",
+    "13.30": "double sink with microwave to its right",
+    "14.10": "top loading washing machine below kitchen window, left of sink when facing counter",
+    "15.50-16.30": "microwave, counter corner, twin gas hob",
+    "17.30-17.90": "upper cabinets, extractor hood and duct, wall mounted water heater"
+  },
+  "secondaryBedrooms": {"count": 2, "openable": false, "explorable": false, "modelInteriors": false},
+  "unconfirmed": ["metric dimensions", "sliding panels' exact stacking side", "top room door swing", "precise furniture offsets"]
+}
