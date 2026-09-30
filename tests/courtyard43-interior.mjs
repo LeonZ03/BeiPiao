@@ -136,6 +136,26 @@ const textures=manifest.textures.map(descriptor=>Object.assign(new THREE.Texture
 const {world,refs}=parseBlenderRoom(THREE,manifest,buffer,textures);
 const byName=name=>{const object=world.getObjectByName(name);assert.ok(object,'Missing '+name);return object;};
 const bounds=name=>new THREE.Box3().setFromObject(byName(name),true);
+// The doorway backdrop must stay a closed, noninteractive background. Its
+// floor meets the approved threshold and it must not seal the door aperture.
+const corridor=byName('C43_ZCorridor');
+assert.ok(refs.cutaway.includes(corridor),'Corridor hides in the existing room overview');
+assert.equal(corridor.userData.explorable,false);
+const secondary=manifest.nodes.filter(n=>n.userData.secondaryBedroom);
+assert.equal(secondary.length,2);
+for(const node of secondary){
+  assert.equal(node.userData.openable,false);
+  assert.ok(!manifest.interactions.some(i=>i.node===node.id),'Secondary bedrooms cannot open');
+}
+const corridorFloor=bounds('C43_ZCorridor_Floor');
+assert.ok(Math.abs(corridorFloor.max.y)<.0001,'Corridor floor meets bedroom floor height');
+assert.ok(Math.abs(corridorFloor.min.z-approved.room.depth)<.002,'No gap at the threshold');
+const corridorRay=new THREE.Raycaster(new THREE.Vector3(1.48,1.4,approved.room.depth),new THREE.Vector3(0,0,1));
+const corridorHits=corridorRay.intersectObject(corridor,true);
+assert.ok(corridorHits.length&&corridorHits[0].distance>.9&&corridorHits[0].distance<2,'Door opens onto visible depth, not a near wall or void');
+for(const material of manifest.materials.filter(m=>m.name?.startsWith('C43_ZCorridor'))){
+  assert.equal(material.textures.aoMap,undefined,'Old bedroom contact AO must not be projected onto the corridor');
+}
 const fullCap=bounds('C43_Radiator_Cap_Front'),endPanel=bounds('C43_Radiator_Solid_Body');
 assert.ok(fullCap.max.z-fullCap.min.z>.39,'Counter bridges the internal partition depth');
 assert.ok(Math.abs(endPanel.min.y)<.0001&&Math.abs(endPanel.max.y-fullCap.min.y)<.0001,'Solid body joins floor and counter');

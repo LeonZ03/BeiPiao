@@ -6,8 +6,8 @@ import {createRenderProbe} from './render-probe.js?v=finish07';
 import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';
-import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior08';
-import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior08';
+import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior09';
+import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior09';
 
 import {createRoomSession} from './room-session.js?v=session39';
 const session=createRoomSession();
@@ -19,7 +19,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior08');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior09');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -62,6 +62,7 @@ try{
   const keys=new Set();let mode='walk',yaw=0,pitch=0,drag=null,locked=false,immersive=false,dirty=true,last=performance.now(),lightOn=false,lockOn=false;
   const renderProbe=createRenderProbe();
   const extraViews={
+    corridor:{position:[1.58,1.48,2.65],target:[.15,.75,4.12]},
     wardrobe:{position:[.76,1.28,.86],target:[1.70,1.06,.8]},
     radiator:{position:[.49,1.13,1.18],target:[.84,.82,.14]},
     curtain:{position:[-.08,1.47,1.12],target:[.28,1.35,.07]},
