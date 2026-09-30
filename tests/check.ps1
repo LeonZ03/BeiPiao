@@ -12,6 +12,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 whitebox checks failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 interior checks failed.' }
 & $node (Join-Path $PSScriptRoot 'courtyard43-runtime.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 runtime checks failed.' }
+& $node (Join-Path $PSScriptRoot 'courtyard43-exterior.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 winter exterior checks failed.' }
+& $node (Join-Path $PSScriptRoot 'courtyard43-snow.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Courtyard43 snowfall checks failed.' }
 foreach ($folder in @('room-site/dist','local-access','tests')) {
     foreach ($file in Get-ChildItem -LiteralPath (Join-Path $root $folder) -File -Recurse | Where-Object { $_.Extension -in @('.js','.mjs') }) {
         & $node --check $file.FullName
