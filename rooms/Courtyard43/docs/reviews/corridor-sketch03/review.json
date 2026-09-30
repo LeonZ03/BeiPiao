@@ -1,0 +1,20 @@
+{
+  "revision": "corridor-sketch03-unapproved",
+  "topologySource": "user hand-drawn plan and annotated correction03, 2026-09-30",
+  "corridorEmpty": true,
+  "kitchenConnection": "open, no dividing wall or door",
+  "bathroomDoor": "lower end of right partition",
+  "bedroomDoorHinge": "drawing-left",
+  "metricApproved": false,
+  "source": "assets\\layout-studies\\corridor-sketch03.blend",
+  "views": [
+    "01-top.png",
+    "02-oblique.png"
+  ],
+  "secondaryBedrooms": {
+    "count": 2,
+    "closed": true,
+    "interactive": false,
+    "interiorsModeled": false
+  }
+}

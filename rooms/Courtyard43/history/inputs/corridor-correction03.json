@@ -1,0 +1,14 @@
+{
+  "version": "corridor-correction03",
+  "parent": "corridor-topology-sketch02",
+  "privateReference": "rooms/Courtyard43/references/corridor-user-correction03.png",
+  "explicitUserFacts": ["走廊是半开放的", "走廊没东西", "上一版门不对"],
+  "annotationInterpretationPendingReview": {
+    "bedroomDoor": "drawing-left hinge, opens toward bedroom",
+    "bathroomDoor": "lower end of bathroom right partition, opens into bathroom",
+    "kitchenCorridorBoundary": "remove wall and door, keep open connection"
+  },
+  "corridorContents": [],
+  "secondaryBedrooms": {"count": 2, "openable": false, "explorable": false, "modelInteriors": false},
+  "dimensions": "illustrative, not measured"
+}

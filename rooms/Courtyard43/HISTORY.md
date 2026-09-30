@@ -1,5 +1,9 @@
 # Courtyard43 · 制作记录
 
+## 2026-09-30：门洞与半开放走廊纠正（sketch03）
+
+用户明确走廊半开放且没有陈设，并标注门洞错误。官方 Blender Lab MCP 制作独立 sketch03 审阅源和两张俯视图：清空桌椅；按标线解释卧室门左铰接、厕所门改到右侧隔墙下端，移除厨房与走廊隔墙及门；两扇次卧关闭门保持，不建次卧室内。明确事实与标线解释分别存入 `history/inputs/corridor-correction03.json`，等待新图核对。正式 interior08、网站与永旺未修改。
+
 ## 2026-09-30：按手绘纠正门外布局（sketch02）
 
 用户明确横向走廊、下方卧室、上方左厕右厨及左右次卧关闭门。保存结构输入 `history/inputs/corridor-topology-sketch02.json`，通过官方 Blender Lab MCP 创建独立 `assets/layout-studies/corridor-sketch02.blend` 和正/斜俯视图。两间次卧只建关闭门，无内部空间及可探索交互。原 hypothesis01 保留为被取代的历史假设，不再用作当前布局依据。手绘原图留在忽略的 references，当前室内工程和网站未改。
