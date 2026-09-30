@@ -1,5 +1,9 @@
 # Courtyard43 · 制作记录
 
+## 2026-09-30：门外布局理解稿 A（未确认）
+
+用户要求用多个偏俯瞰三维角度核对门外关系。通过官方 Blender Lab MCP 创建独立 `assets/layout-studies/corridor-hypothesis01.blend`，脚本为 `build-corridor-study.py`；输出三个斜俯视和一个正上方视角至 `docs/reviews/corridor-hypothesis01/`。明确标注 A 卧室门口、B 贴红饰的门、C 桌边区域、D 卫生间、E 厨房；橙色门洞与蓝色路线表达暂定连接，不是确定户型或尺寸。保留源与可重复脚本，未修改或接入正式室内模型和网页，等待用户纠正。
+
 ## 2026-09-30：窗外与门外视频关键帧整理
 
 按用户要求从 V01/V02 提取 23 张原尺寸关键帧及两张精选联系表，保存于忽略目录 `references/exterior-corridor-review/`；可重复提取脚本为 `extract-exterior-references.py`。原始视频和截图保持私人本地资料。固定空间观察、时间索引、未确认关系与后续边界见 `docs/EXTERIOR_CORRIDOR_EVIDENCE.md`。本阶段未修改模型、网页或 interior08 revision。

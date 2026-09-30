@@ -1,0 +1,12 @@
+{
+  "revision": "corridor-hypothesis01-unapproved",
+  "approved": false,
+  "source": "assets\\layout-studies\\corridor-hypothesis01.blend",
+  "views": [
+    "01-front-oblique.png",
+    "02-left-oblique.png",
+    "03-reverse-oblique.png",
+    "04-top.png"
+  ],
+  "hypothesis": "A bedroom -> short passage with B ahead; guessed right branch C -> D bathroom / E kitchen. No metric or cardinal claims."
+}
