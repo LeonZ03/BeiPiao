@@ -221,6 +221,13 @@ const chair=bounds('C43_Chair15_BlackSeatPad'),chairBack=bounds('C43_Chair15_Whi
 assert.ok(chair.max.y-chair.min.y<.025,'Chair retains the photographed thin cushion');
 assert.ok(chair.getCenter(new THREE.Vector3()).z>desk.max.z&&chairBack.getCenter(new THREE.Vector3()).z>chair.getCenter(new THREE.Vector3()).z,'Chair faces the desk, its back faces the bed');
 assert.ok(chairBack.max.z<bed.min.z,'Chair clears bed');
+// From the seated/front side, the white shell must cover its support tubes.
+const chairParts=['C43_Chair15_WhiteCurvedBack','C43_Chair15_ContinuousBackLeg_L','C43_Chair15_ContinuousBackLeg_R','C43_Chair15_CurvedTopRail'].map(byName);
+for(const x of [-1.518,-1.35,-1.182])for(const y of [.65,.72,.82]){
+  const ray=new THREE.Raycaster(new THREE.Vector3(x,y,.5),new THREE.Vector3(0,0,1));
+  const hits=ray.intersectObjects(chairParts,false);
+  assert.ok(hits.length&&hits[0].object.name==='C43_Chair15_WhiteCurvedBack','White chair front covers steel at '+[x,y]);
+}
 assert.equal(manifest.nodes.filter(node=>node.name==='C43_DeskChair').length,1);
 assert.ok(!manifest.nodes.some(node=>/spare.?chair/i.test(node.name)),'Keep the entrance free of a spare chair');
 for(const name of [...names].filter(name=>/^C43_(BedFootCap|DeskFoot|ChairRubberFoot)/.test(name)))near(bounds(name).min.y,0,'Ground contact '+name);

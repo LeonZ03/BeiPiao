@@ -100,12 +100,15 @@ export function createCourtyardFinish(THREE,renderer,scene,camera){
   // Restrained aged-print finish, after tone mapping in display colour space.
   // Retain the north-facing winter light; avoid sepia, blur or animated grain.
   vec3 c=gl_FragColor.rgb;float luma=dot(c,vec3(.2126,.7152,.0722));
-  c=mix(vec3(luma),c,.90);
-  c=c*vec3(1.022,1.008,.977);
-  c=(c-.5)*.955+.5;
-  c+=vec3(-.003,.002,.003)*(1.-smoothstep(.12,.5,luma));
-  c-=vec3(.018,.019,.020)*smoothstep(.62,1.,luma);
-  float vignette=1.-.035*smoothstep(.18,.72,length(vUv-.5));
+  // Dry winter print: soften chroma, preserve dark structure, warm only the
+  // midtones. Neutral highlights keep snow/linen white instead of sepia.
+  c=mix(vec3(luma),c,.86);
+  float mid=smoothstep(.10,.40,luma)*(1.-smoothstep(.65,.94,luma));
+  c+=vec3(.013,.003,-.009)*mid;
+  c=(c-.5)*1.035+.5;
+  c+=vec3(.014,.012,.011)*(1.-smoothstep(.03,.24,luma));
+  c-=vec3(.010)*smoothstep(.73,1.,luma);
+  float vignette=1.-.028*smoothstep(.18,.72,length(vUv-.5));
   gl_FragColor.rgb=clamp(c*vignette,0.,1.);
   }`});
   const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),material);passScene.add(quad);let frames=0;
