@@ -229,6 +229,10 @@ const pillow=bounds('C43_CottonPillow'),sheet=bounds('C43_DrapedWhiteSheet'),duv
 const bottle=bounds('C43_Ribbed_water_bottle'),bottleCap=bounds('C43_Bottle_cap'),cup=bounds('C43_Plastic_cup'),packet=bounds('C43_Tissue_packet');
 for(const [name,box] of [['bottle',bottle],['cup',cup],['tissue packet',packet]])near(box.min.y,fullCap.max.y,name+' rests on the counter',.0005);
 near(bottle.getCenter(new THREE.Vector3()).x,bottleCap.getCenter(new THREE.Vector3()).x,'Bottle cap remains concentric after relocation',.001);
+assert.ok((bottleCap.max.y-bottle.min.y)/(bottle.max.x-bottle.min.x)>3.6,'1.5 L bottle retains the slender product silhouette');
+assert.equal(byName('C43_Bottle_water').userData.fillFraction,.75,'Bottle retains three-quarter water volume');
+assert.equal(byName('C43_Bottle_water').userData.nominalCapacityL,1.5);
+assert.ok(names.has('C43_Nongfu16_logo_main')&&names.has('C43_Nongfu16_english'),'Product front label includes mountain and bilingual brand');
 assert.ok(bottleCap.min.y<bottle.max.y&&bottleCap.max.y>bottle.max.y,'Cap physically overlaps the bottle neck');
 assert.ok(bottle.max.x<cup.min.x&&cup.max.x<packet.min.x,'Photo-supported bottle, cup, packet order');
 for(const name of ['C43_Tissue_0','C43_Tissue_1'])near(bounds(name).min.y,packet.max.y,'Paper emerges from packet opening',.001);

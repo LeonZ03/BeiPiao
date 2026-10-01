@@ -1,5 +1,7 @@
 # Courtyard43 陈设来源
 
+水瓶最新修正为 `interior16`，按官网 1.5L 产品图重建，见 [NONGFU16](NONGFU16.md)。
+
 最新完整源为 `interior15`，帽子、垃圾袋包装、水瓶及供电连接已按新证据修正，见 [DETAILS15](DETAILS15.md)。以下 props02 是历史组件记录，不可覆盖当前完整源。
 
 入住后 P03/P04 为主。原图不进入网页资源，文字、商标和不可辨认标签不猜造。当前源 `assets/props/Courtyard43-props.blend` 为 `courtyard43-props02`，通过官方 Blender Lab MCP 从 props01 执行 `scripts/refine-furnishings.py`；不重跑旧 `build-props.py` 覆盖现有精修。

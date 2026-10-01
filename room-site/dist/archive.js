@@ -39,7 +39,7 @@ async function route(){
   courtyard.hidden=!isCourtyard;syncCourtyard();
   if(isCourtyard){
     roomModule?.pauseRoom();app.hidden=true;archive.hidden=true;document.title='43号院 · 北漂';
-    if(!courtyardCreated){courtyardCreated=true;courtyard.src='./courtyard43.html?embedded=1&v=details15';}
+    if(!courtyardCreated){courtyardCreated=true;courtyard.src='./courtyard43.html?embedded=1&v=bottle16';}
     courtyard.focus({preventScroll:true});return;
   }
   if(!view){
