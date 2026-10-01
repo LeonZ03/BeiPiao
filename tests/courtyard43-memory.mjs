@@ -11,7 +11,7 @@ const pack=path.join(root,'room-site/dist/assets/rooms/Courtyard43/interior');
 const manifest=JSON.parse(fs.readFileSync(path.join(pack,'scene.json'),'utf8'));
 const buffer=fs.readFileSync(path.join(pack,'geometry.bin'));
 assert.equal(manifest.format,'blender-room-pack-1');
-assert.ok(['courtyard43-interior12','courtyard43-interior13'].includes(manifest.revision));
+assert.ok(['courtyard43-interior12','courtyard43-interior13','courtyard43-interior14'].includes(manifest.revision));
 const nodes=new Map(manifest.nodes.map(node=>[node.name,node]));
 const byName=name=>{const node=nodes.get(name);assert.ok(node,'Missing '+name);return node;};
 const materialFor=node=>manifest.materials[Array.isArray(node.material)?node.material[0]:node.material];

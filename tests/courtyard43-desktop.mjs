@@ -17,6 +17,8 @@ const kit=manifest.nodes.filter(n=>n.name.startsWith('C43_DevKit_'));
 assert.equal(kit.length,10);
 assert.ok(!manifest.nodes.some(n=>n.name==='C43_Mousepad'||n.name.startsWith('C43_Mouse_')),'Old pad and mouse are archived, not intersecting the boards');
 const desk=bounds(named.get('C43_DeskTop')),mat=bounds(named.get('C43_DevKit_Mousemat'));
+const matSize=mat.getSize(new THREE.Vector3());
+for(const [axis,expected] of [['x',.28],['y',.002],['z',.43]])assert.ok(Math.abs(matSize[axis]-expected)<.00001,'430x280x2mm product dimensions; long side runs front-to-back');
 assert.ok(Math.abs(mat.min.y-desk.max.y)<.0002,'Fabric underside touches the table');
 assert.ok(mat.min.x>desk.min.x&&mat.max.x<desk.max.x&&mat.min.z>desk.min.z&&mat.max.z<desk.max.z,'Mat remains inside the unchanged desk outline');
 for(const node of kit){
@@ -27,14 +29,17 @@ for(const node of kit){
 }
 for(const name of ['Main_board','Expansion_board']){
   const b=bounds(named.get('C43_DevKit_'+name));
-  assert.ok(Math.abs(b.min.y-.7433)<.0001,'PCB lower edges touch the 3.3mm fabric');
-  assert.ok(b.max.y-b.min.y>.05,'Real sloping board assemblies retain depth');
+  assert.ok(Math.abs(b.min.y-.742)<.0001,'PCB lower edges touch the 2mm fabric');
+  assert.ok(b.max.y-b.min.y>.035,'Real sloping board assemblies retain depth');
 }
 for(const suffix of ['mousemat','cardboard','soldermask']){
   const m=manifest.materials.find(m=>m.name==='C43_DevKit_'+suffix);
   assert.ok(m.textures.bumpMap!==undefined,'Fine surface map exported: '+suffix);
 }
 const film=manifest.materials.find(m=>m.name==='C43_DevKit_bubble_film');
+const printed=manifest.materials.find(m=>m.name==='C43_DevKit_mousemat_product_print');
+assert.ok(printed.textures.map!==undefined,'Provided product graphic is exported as the printed face');
+assert.equal(manifest.textures[printed.textures.bumpMap].channel,1,'Physical weave coordinates are independent from product artwork');
 assert.equal(film.props.depthWrite,false);
 assert.ok(film.props.opacity<.3);
 console.log('PASS desktop kit: table contact, board slopes, curtain-side clearance, separate old mouse, and exported fine-scale surface maps.');
