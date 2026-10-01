@@ -3,12 +3,12 @@
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {createRenderProbe} from './render-probe.js?v=finish07';
-import {createCourtyardSnow,courtyardSnowShouldRun} from './courtyard43-snow.js?v=desktop14';
+import {createCourtyardSnow,courtyardSnowShouldRun} from './courtyard43-snow.js?v=details15';
 import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';
-import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior14';
-import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior14';
+import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior15';
+import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior15';
 
 import {createRoomSession} from './room-session.js?v=session39';
 const session=createRoomSession();
@@ -20,7 +20,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior14');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior15');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -73,6 +73,10 @@ try{
     bedding:{position:[.69,1.03,1.98],target:[-1.15,.63,2.04]},
     accessories:{position:[.77,1.40,.88],target:[.87,1.13,.21]},
     hats:{position:[-1.22,1.61,.74],target:[-1.46,1.52,.13]},
+    chair:{position:[-.78,.92,1.35],target:[-1.35,.47,.80]},
+    power:{position:[-1.49,1.02,1.15],target:[-1.94,.74,.69]},
+    curtainClose:{position:[-.26,1.82,.52],target:[-.50,1.74,.075]},
+    bottle:{position:[.62,1.38,.66],target:[.56,1.17,.215]},
     bag:{position:[1.79,1.50,2.12],target:[1.955,1.37,1.45]},
     floor:{position:[.94,.72,2.30],target:[.5,0,1.20]},
     window:{position:[-.22,1.58,-.37],target:[.28,1.45,-1.12]},

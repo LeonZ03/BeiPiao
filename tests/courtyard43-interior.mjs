@@ -217,7 +217,8 @@ near(nearSide.max.x,right,'Wardrobe right anchor');near(nearSide.min.x,right-app
 near(nearSide.max.z,approved.wardrobe.centerZ+approved.wardrobe.width/2,'Wardrobe near end');
 near(farSide.min.z,approved.wardrobe.centerZ-approved.wardrobe.width/2,'Wardrobe far end');
 near(nearSide.max.y,approved.wardrobe.height,'Wardrobe height');
-const chair=bounds('C43_ChairBlackCushion'),chairBack=bounds('C43_ChairWhiteCurvedBack');
+const chair=bounds('C43_Chair15_BlackSeatPad'),chairBack=bounds('C43_Chair15_WhiteCurvedBack');
+assert.ok(chair.max.y-chair.min.y<.025,'Chair retains the photographed thin cushion');
 assert.ok(chair.getCenter(new THREE.Vector3()).z>desk.max.z&&chairBack.getCenter(new THREE.Vector3()).z>chair.getCenter(new THREE.Vector3()).z,'Chair faces the desk, its back faces the bed');
 assert.ok(chairBack.max.z<bed.min.z,'Chair clears bed');
 assert.equal(manifest.nodes.filter(node=>node.name==='C43_DeskChair').length,1);
@@ -236,7 +237,7 @@ assert.ok(byName('C43_Floor_RedBrown_Boards').material.roughnessMap,'Timber fini
 assert.ok(byName('C43_Floor_RedBrown_Boards').geometry.attributes.uv1,'Floor contact bake UV1 survives finish changes');
 assert.ok(!names.has('C43_Bottle_label_band'),'Label colours share one surface, without near-coplanar overlay');
 assert.ok(pillow.min.y>=sheet.max.y-.001&&pillow.min.y-sheet.max.y<.003,'Pillow rests on the sheet');
-assert.ok(sheet.min.y>0&&duvet.min.y>0,'Bed linen remains above the floor');
+assert.ok(sheet.min.y>.45&&duvet.min.y>.56,'Short sheet and quilt do not hang below the bed');
 // Local quilt accumulations may be as high as the pillow; judge the pillow's
 // own loft/support instead of forcing every quilt fold below its top.
 assert.ok(pillow.max.y-pillow.min.y>.10&&pillow.max.y-pillow.min.y<.18,'Pillow keeps a soft, bounded loft');

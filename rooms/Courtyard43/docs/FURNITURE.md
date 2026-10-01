@@ -1,5 +1,7 @@
 # Courtyard43 家具组件
 
+最新完整源为 `interior15`，椅子已重建、被面及床单已收短，见 [DETAILS15](DETAILS15.md)。以下 furniture06 为历史组件记录，不可覆盖当前完整源。
+
 组件源：`assets/furniture/Courtyard43-furniture.blend`；基础生成脚本：`scripts/build-furniture.py`，后续原位精修：`scripts/refine-desk-outline.py`、`scripts/refine-desk-front-curve.py`；只读检查/可选检查渲染：`scripts/furniture-check.py`。全部建模、材料生成、源检查及渲染均经 Blender Lab 官方 MCP 后台执行。根集合为 `C43_Furniture`，当前组件版本 `courtyard43-furniture06`。旧生成器不能覆盖当前源；主工程及网页由整合脚本另行创建，不覆盖白模。
 
 ## 第三轮表面：furniture06

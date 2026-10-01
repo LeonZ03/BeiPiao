@@ -1,5 +1,7 @@
 # Courtyard43 建筑组件
 
+最新灰帘在完整源 `interior15` 中：加厚边缝、低对比织纹、哑光不透明材质，见 [DETAILS15](DETAILS15.md)。以下 architecture08/07 为历史组件记录，不可覆盖当前完整源。
+
 组件源为 `assets/architecture/Courtyard43-architecture.blend`，当前版本 `architecture08`。基础与后续修改均通过 Blender Lab 官方 MCP 完成；禁止重新运行旧生成器覆盖当前源。所有尺度仍为照片估计，不是实测。
 
 第三轮 `refine-furnishings.py` 仅更换木地板独立材质：保留认可的深红棕均色、原板缝/实体几何/UV0 与完整场景 UV1 接触图，降低密集等距细纹和法线强度，使用宽缓非均匀纹理、约 .39 的空间粗糙度及 .08 的克制清漆。其余 80 个建筑对象不变，灰帘和已认可台体不重建。
