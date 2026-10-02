@@ -38,7 +38,7 @@ await navigate('#room');finishExit();await oldHome;
 assert.equal(el('app').hidden,false);assert.equal(el('archive').hidden,true);
 assert.ok(pauses>=3);
 await navigate('#courtyard43');assert.equal(frameLoads,1);assert.equal(el('app').hidden,true);assert.equal(doc.title,'43号院 · 北漂');
-const cachedFrame=el('courtyardRoom');assert.equal(cachedFrame.src,'./courtyard43.html?embedded=1&v=photo17','Courtyard iframe requests the current homepage cache version');frameEvents.get('load')();assert.equal(messages.at(-1)[0].active,true);
+const cachedFrame=el('courtyardRoom');assert.equal(cachedFrame.src,'./courtyard43.html?embedded=1&v=atmosphere18','Courtyard iframe requests the current homepage cache version');frameEvents.get('load')();assert.equal(messages.at(-1)[0].active,true);
 await navigate('#');assert.equal(cachedFrame.hidden,true);assert.equal(messages.at(-1)[0].active,false);
 await navigate('#courtyard43');assert.equal(frameLoads,1,'Re-entry never resets the cached frame src');assert.equal(messages.at(-1)[0].active,true);
 await navigate('#room');assert.equal(imports,1,'Returning from another room reuses Yongwang module and GPU scene');assert.equal(starts,1);

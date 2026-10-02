@@ -4,11 +4,12 @@ import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {createRenderProbe} from './render-probe.js?v=finish07';
 import {createCourtyardSnow,courtyardSnowShouldRun} from './courtyard43-snow.js?v=photo17';
+import {createCourtyardDust,courtyardDustShouldRun} from './courtyard43-dust.js?v=atmosphere18';
 import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';
-import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior17';
-import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior17';
+import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior18';
+import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior18';
 
 import {createRoomSession} from './room-session.js?v=session39';
 const session=createRoomSession();
@@ -20,7 +21,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior17');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior18');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -96,6 +97,8 @@ try{
   function pick(clientX,clientY){if(mode!=='walk')return null;const rect=canvas.getBoundingClientRect();pointer.set(locked?0:(clientX-rect.left)/rect.width*2-1,locked?0:1-(clientY-rect.top)/rect.height*2);pickRay.setFromCamera(pointer,camera);pickRay.far=4;world.updateMatrixWorld(true);const hits=pickRay.intersectObjects(pickMeshes.filter(isVisible),false);for(const hit of hits){const mats=Array.isArray(hit.object.material)?hit.object.material:[hit.object.material];if(mats.every(m=>m.transparent&&m.opacity<.25))continue;return owner(hit.object);}return null;}
   function move(dx,dy,dz){let changed=false;for(const [axis,delta]of [['x',dx],['y',dy],['z',dz]]){if(!delta)continue;tmp.copy(camera.position);tmp[axis]+=delta;if(navigation.canTravel(camera.position,tmp)){camera.position.copy(tmp);changed=true;}}return changed;}
   const snow=createCourtyardSnow(THREE,scene);
+  const dustAnchor=curtains.reduce((sum,item)=>sum.add(item.position),new THREE.Vector3()).multiplyScalar(1/Math.max(1,curtains.length));
+  const dust=createCourtyardDust(THREE,scene,dustAnchor);
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');let snowNextAt=0;
   function go(view){renderProbe.update(performance.now(),false);let v=review.viewpoints[view]||extraViews[view];if(!v)throw Error('Unknown viewpoint');if(view==='overview')v=courtyardOverviewView(v);if(view==='lock'){
       // The lock belongs to the moving door. Observe its current room-facing
@@ -122,13 +125,16 @@ try{
   }
   function resize(){const width=$('app').clientWidth,height=$('app').clientHeight;if(!width||!height)return;camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);finish.resize();$('app').classList.toggle('touch-device',matchMedia('(pointer: coarse)').matches||innerWidth<=900);invalidate(true);}
   function toggleImmersive(){immersive=!immersive;$('app').classList.toggle('immersive',immersive);$('immersiveBtn').textContent=immersive?'退出沉浸':'沉浸看房';$('immersiveBtn').setAttribute('aria-pressed',String(immersive));invalidate();}
-  function tick(now){frame=0;if(disposed||!session.active||document.hidden){snow.setEnabled(false);return;}const dt=Math.min(Math.max((now-last)/1000,.001),.05);last=now;let keep=false;
+  function tick(now){frame=0;if(disposed||!session.active||document.hidden){snow.setEnabled(false);dust.setEnabled(false);return;}const dt=Math.min(Math.max((now-last)/1000,.001),.05);last=now;let keep=false;
     if(mode==='walk'){const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft')),v=Number(keys.has('ShiftLeft')||keys.has('ShiftRight'))-Number(keys.has('ControlLeft')||keys.has('ControlRight'));if(f||s||v){const step=dt/(Math.hypot(f,s)||1);dirty=move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*step,v*dt*.8,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*step)||dirty;keep=true;}camera.rotation.set(pitch,yaw,0,'YXZ');}
     else if(orbit.update()){dirty=true;keep=true;}
     keep=updateInteractions(dt)||keep;if(renderProbe.update(now,mode==='walk')){dirty=true;keep=true;}
     camera.getWorldDirection(tmp);const shouldSnow=courtyardSnowShouldRun({active:entered&&!document.hidden,overview:mode==='overview',reducedMotion:reducedMotion.matches,cameraPosition:camera.position,forward:tmp,curtainAmounts:curtainAmounts()});
     if(shouldSnow!==snow.active){snow.setEnabled(shouldSnow);dirty=true;}
     if(shouldSnow){snow.update(dt,renderer.getPixelRatio());if(now>=snowNextAt){snowNextAt=now+42;dirty=true;}keep=true;}
+    const shouldDust=courtyardDustShouldRun({active:entered&&!document.hidden,overview:mode==='overview',reducedMotion:reducedMotion.matches,cameraPosition:camera.position,forward:tmp});
+    if(shouldDust!==dust.active){dust.setEnabled(shouldDust);dirty=true;}
+    if(shouldDust){dust.update(dt,renderer.getPixelRatio(),curtainAmount(),canvas.height,curtainAmounts(),lightOn);if(now>=snowNextAt){snowNextAt=now+42;dirty=true;}keep=true;}
     if(dirty){finish.render();dirty=false;}if(keep&&!frame)frame=requestAnimationFrame(tick);
   }
   orbit.addEventListener('change',()=>invalidate());
@@ -149,9 +155,9 @@ try{
   $('helpBtn').onclick=()=>{clearInput();if(document.pointerLockElement)document.exitPointerLock();$('helpDialog').showModal();};for(const b of document.querySelectorAll('#helpDialog .close,#helpDialog .close-action'))b.onclick=()=>$('helpDialog').close();
   for(const type of ['selectstart','dragstart','contextmenu'])$('app').addEventListener(type,e=>e.preventDefault());
   window.addEventListener('resize',resize);window.visualViewport?.addEventListener('resize',resize);
-  document.addEventListener('visibilitychange',()=>{clearInput();last=performance.now();audio.setActive(entered&&!document.hidden);if(document.hidden){snow.setEnabled(false);renderProbe.update(performance.now(),false);cancelAnimationFrame(frame);frame=0;}else invalidate();});
+  document.addEventListener('visibilitychange',()=>{clearInput();last=performance.now();audio.setActive(entered&&!document.hidden);if(document.hidden){snow.setEnabled(false);dust.setEnabled(false);renderProbe.update(performance.now(),false);cancelAnimationFrame(frame);frame=0;}else invalidate();});
   reducedMotion.addEventListener?.('change',()=>invalidate());
-  const state=()=>({room:'Courtyard43',name:'43号院',active:entered,revision:manifest.revision,stage:'interior',structureApproved:true,mode,position:camera.position.toArray(),yaw,pitch,immersive,fullscreen:!!document.fullscreenElement,lightOn,lockOn,curtainOpen:curtains.every(item=>item.target===1),curtainAmount:curtainAmount(),curtainAmounts:curtainAmounts(),curtains:Object.fromEntries(curtains.map(item=>[item.id.replace('curtain-',''),{amount:item.amount,target:item.target}])),snow:{active:snow.active,count:snow.count},sound:audio.state,interactions:interactions.map(({id,kind,amount,target,blocked,openAngle,defaultOpen})=>({id,kind,amount,target,blocked,openAngle,defaultOpen:!!defaultOpen})),rendering:{drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderCount:finish.frames,batchedMeshes:batching.removed,batches:batching.created,collisionSurfaces:navigation.surfaces,collisionRadius:navigation.radius},assetStatistics:statistics});
+  const state=()=>({room:'Courtyard43',name:'43号院',active:entered,revision:manifest.revision,stage:'interior',structureApproved:true,mode,position:camera.position.toArray(),yaw,pitch,immersive,fullscreen:!!document.fullscreenElement,lightOn,lockOn,curtainOpen:curtains.every(item=>item.target===1),curtainAmount:curtainAmount(),curtainAmounts:curtainAmounts(),curtains:Object.fromEntries(curtains.map(item=>[item.id.replace('curtain-',''),{amount:item.amount,target:item.target}])),snow:{active:snow.active,count:snow.count},dust:{active:dust.active,count:dust.count,elapsed:dust.elapsed},sound:audio.state,interactions:interactions.map(({id,kind,amount,target,blocked,openAngle,defaultOpen})=>({id,kind,amount,target,blocked,openAngle,defaultOpen:!!defaultOpen})),rendering:{drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderCount:finish.frames,batchedMeshes:batching.removed,batches:batching.created,collisionSurfaces:navigation.surfaces,collisionRadius:navigation.radius},assetStatistics:statistics});
   window.courtyard43Diagnostics={get state(){return state();},canTravel:(a,b)=>navigation.canTravel(new THREE.Vector3(...a),new THREE.Vector3(...b)),navigate:go,interact,comparisonViews:Object.fromEntries(['entry','bed','curtain','tabletop'].map(name=>[name,structuredClone(review.viewpoints[name]||extraViews[name])])),getObjectBounds:name=>landmarks.get(name)?.clone()};
   const lifecycle=new AbortController(),register=t=>{try{Promise.resolve(document.modelContext?.registerTool(t,{signal:lifecycle.signal})).catch(()=>{});}catch{}};
   register({name:'get_courtyard43_view',description:'读取43号院成品房间的视角、材质版本、门帘开关、静音与实际渲染计数。',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute:state});
@@ -159,10 +165,10 @@ try{
   register({name:'navigate_courtyard43',description:'切换43号院入口、床边、桌面、阳台、反看、总览及物件近景。',inputSchema:{type:'object',properties:{viewpoint:{type:'string',enum:viewNames}},required:['viewpoint'],additionalProperties:false},execute({viewpoint}){go(viewpoint);return state();}});
   register({name:'walk_courtyard43',description:'沿当前视角小步移动，使用真实实体表面检查阻挡。',inputSchema:{type:'object',properties:{direction:{type:'string',enum:['forward','back','left','right','up','down']},distance:{type:'number',minimum:.01,maximum:2}},required:['direction','distance'],additionalProperties:false},execute({direction,distance}){if(mode!=='walk'||!['forward','back','left','right','up','down'].includes(direction)||!Number.isFinite(distance)||distance<.01||distance>2)throw Error('Invalid movement');const start=camera.position.clone(),f=direction==='forward'?1:direction==='back'?-1:0,s=direction==='right'?1:direction==='left'?-1:0,n=Math.ceil(distance/.02),step=distance/n;for(let i=0;i<n;i++)move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*step,(direction==='up'?1:direction==='down'?-1:0)*step,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*step);invalidate();return{...state(),distanceMoved:start.distanceTo(camera.position)};}});
   register({name:'interact_courtyard43',description:'通过同一状态控制器操作已建模窗帘、双柜门、房门、开关和反锁。',inputSchema:{type:'object',properties:{id:{type:'string',enum:[...new Set([...interactions.map(x=>x.id),'curtain'])]},open:{type:'boolean'}},required:['id'],additionalProperties:false},execute({id,open}){return interact(id,open);}});
-  window.addEventListener('pagehide',e=>{renderProbe.update(performance.now(),false);entered=false;snow.setEnabled(false);audio.setActive(false);clearInput();cancelAnimationFrame(frame);frame=0;if(!e.persisted){disposed=true;lifecycle.abort();audio.dispose();snow.dispose();finish.dispose();lighting.dispose();orbit.dispose();renderer.dispose();} });
+  window.addEventListener('pagehide',e=>{renderProbe.update(performance.now(),false);entered=false;snow.setEnabled(false);dust.setEnabled(false);audio.setActive(false);clearInput();cancelAnimationFrame(frame);frame=0;if(!e.persisted){disposed=true;lifecycle.abort();audio.dispose();snow.dispose();dust.dispose();finish.dispose();lighting.dispose();orbit.dispose();renderer.dispose();} });
   window.addEventListener('pageshow',e=>{if(e.persisted){entered=session.active;void audio.setMuted(true);audio.setActive(entered&&!document.hidden);last=performance.now();resize();}});
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(frame);frame=0;audio.setActive(false);failRoomLoading();$('errorDetail').textContent='图形显示暂时中断，请重新打开房间。';});
-  session.subscribe(active=>{entered=active;clearInput();last=performance.now();audio.setActive(active&&!document.hidden);if(!active){snow.setEnabled(false);renderProbe.update(performance.now(),false);cancelAnimationFrame(frame);frame=0;document.querySelectorAll('dialog[open]').forEach(d=>d.close());if(document.pointerLockElement)document.exitPointerLock();}else{resize();canvas.focus({preventScroll:true});invalidate();}});
+  session.subscribe(active=>{entered=active;clearInput();last=performance.now();audio.setActive(active&&!document.hidden);if(!active){snow.setEnabled(false);dust.setEnabled(false);renderProbe.update(performance.now(),false);cancelAnimationFrame(frame);frame=0;document.querySelectorAll('dialog[open]').forEach(d=>d.close());if(document.pointerLockElement)document.exitPointerLock();}else{resize();canvas.focus({preventScroll:true});invalidate();}});
   for(const item of interactions)apply(item);navigation.updateDynamic();lighting.update(curtainAmount(),lightOn,curtainAmounts());
   go('entry');resize();reportRoomLoading(94,'正在准备光影');await renderer.compileAsync(scene,camera);finish.render();await finishRoomLoading();entered=session.active;audio.setActive(entered&&!document.hidden);last=performance.now();invalidate();
 }catch(error){console.error('Courtyard43 failed',error);audio.setActive(false);failRoomLoading();$('errorDetail').textContent=error.message||'请检查连接，或使用支持 WebGL 的浏览器。';}

@@ -223,7 +223,7 @@ assert.ok(chair.getCenter(new THREE.Vector3()).z>desk.max.z&&chairBack.getCenter
 assert.ok(chairBack.max.z<bed.min.z,'Chair clears bed');
 // From the seated/front side, the white shell must cover its support tubes.
 const chairParts=['C43_Chair15_WhiteCurvedBack','C43_Chair15_ContinuousBackLeg_L','C43_Chair15_ContinuousBackLeg_R','C43_Chair15_CurvedTopRail'].map(byName);
-for(const x of [-1.518,-1.35,-1.182])for(const y of [.65,.72,.82]){
+for(const x of [-1.538,-1.518,-1.35,-1.182,-1.162])for(const y of [.69,.76,.83]){
   const ray=new THREE.Raycaster(new THREE.Vector3(x,y,.5),new THREE.Vector3(0,0,1));
   const hits=ray.intersectObjects(chairParts,false);
   assert.ok(hits.length&&hits[0].object.name==='C43_Chair15_WhiteCurvedBack','White chair front covers steel at '+[x,y]);
