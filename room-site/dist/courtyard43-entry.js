@@ -3,5 +3,5 @@
 if(window.parent===window){
   location.replace(new URL('./#courtyard43',location.href));
 }else{
-  await import('./courtyard43.js?v=atmosphere18');
+  await import('./courtyard43.js?v=dust19');
 }

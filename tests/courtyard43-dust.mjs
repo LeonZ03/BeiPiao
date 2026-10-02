@@ -5,7 +5,7 @@ import { createCourtyardDust, courtyardDustShouldRun } from '../room-site/dist/c
 const scene = new THREE.Scene();
 const anchor = new THREE.Vector3(.24, 1.3, .08);
 const dust = createCourtyardDust(THREE, scene, anchor);
-assert.equal(dust.count, 128, 'Indoor motes stay sparse');
+assert.equal(dust.count, 192, 'Indoor motes stay sparse');
 assert.equal(scene.children.length, 1);
 const points = scene.children[0];
 assert.equal(points.name, 'C43_Indoor_Dust');
@@ -13,7 +13,7 @@ assert.equal(points.visible, false);
 assert.equal(points.material.depthTest, true, 'Opaque furniture and walls occlude indoor motes');
 assert.equal(points.material.depthWrite, false, 'Motes do not write depth');
 assert.equal(points.material.blending, THREE.NormalBlending, 'Motes use restrained alpha blending');
-assert.equal(points.geometry.getAttribute('position').count, 128);
+assert.equal(points.geometry.getAttribute('position').count, 192);
 const position = points.geometry.getAttribute('position');
 const positionArray = position.array;
 const initial = positionArray.slice();

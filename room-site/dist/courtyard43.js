@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {createRenderProbe} from './render-probe.js?v=finish07';
 import {createCourtyardSnow,courtyardSnowShouldRun} from './courtyard43-snow.js?v=photo17';
-import {createCourtyardDust,courtyardDustShouldRun} from './courtyard43-dust.js?v=atmosphere18';
+import {createCourtyardDust,courtyardDustShouldRun} from './courtyard43-dust.js?v=dust19';
 import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';

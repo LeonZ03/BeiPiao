@@ -1,7 +1,7 @@
 // Sparse indoor motes near the north window. Position and slow drift stay on
 // the GPU; ordinary room depth keeps them behind furniture and walls.
 export function createCourtyardDust(THREE, scene, anchor = new THREE.Vector3()) {
-  const count = 128;
+  const count = 192;
   const positions = new Float32Array(count * 3);
   const seeds = new Float32Array(count);
   let seed = 0x43d057;
@@ -23,19 +23,21 @@ export function createCourtyardDust(THREE, scene, anchor = new THREE.Vector3()) 
     uniforms: { uTime: { value: 0 }, uPixelRatio: { value: 1 }, uCurtainOpen: { value: 0 }, uLeft: { value: 0 }, uRight: { value: 0 }, uLight: { value: 0 }, uHeight: { value: 720 } },
     vertexShader: `attribute float aSeed; uniform float uTime,uPixelRatio,uHeight,uLeft,uRight,uLight; varying float vAlpha;
       void main(){ vec3 p=position; float phase=aSeed*6.2831853;
-        p.x+=sin(uTime*.19+phase)*.025+sin(uTime*.071+phase*.61)*.012;
-        p.y+=sin(uTime*.23+phase)*.026+cos(uTime*.11+phase*.73)*.014;
-        p.z+=sin(uTime*.17+phase*.83)*.022;
+        p.x+=sin(uTime*.31+phase)*.038+sin(uTime*.11+phase*.61)*.018;
+        p.y+=sin(uTime*.29+phase)*.034+cos(uTime*.13+phase*.73)*.018;
+        p.z+=sin(uTime*.23+phase*.83)*.030;
         vec4 mv=modelViewMatrix*vec4(p,1.0); gl_Position=projectionMatrix*mv;
-        float diameter=.0022+aSeed*.0020;
-        gl_PointSize=clamp(diameter*uHeight*projectionMatrix[1][1]*.5/max(.30,-mv.z),.9*uPixelRatio,2.3*uPixelRatio);
+        // Preserve a small readable core at normal viewing distances. The old
+        // subpixel soft edge erased most of the already faint particle alpha.
+        float diameter=.0030+aSeed*.0020;
+        gl_PointSize=clamp(diameter*uHeight*projectionMatrix[1][1]*.5/max(.30,-mv.z),1.6*uPixelRatio,3.1*uPixelRatio);
         float side=mix(uLeft,uRight,smoothstep(-.1,.9,p.x));
-        float windowLight=exp(-p.z*.75)*(.13+.87*side);
-        vAlpha=(.14+aSeed*.24)*(windowLight+uLight*.21)*smoothstep(.10,.45,-mv.z);
+        float windowLight=exp(-p.z*.38)*(.10+.90*side);
+        vAlpha=(.44+aSeed*.34)*(windowLight+uLight*.21)*smoothstep(.10,.45,-mv.z);
       }`,
     fragmentShader: `varying float vAlpha;
       void main(){ float r=length(gl_PointCoord-.5); if(r>.5) discard;
-        float edge=1.0-smoothstep(.04,.5,r);
+        float edge=1.0-smoothstep(.18,.5,r);
         gl_FragColor=vec4(.84,.82,.77,edge*vAlpha);
       }`
   });
