@@ -40,7 +40,8 @@ async def main():
         command=sys.executable,
         args=[str(ROOT / 'run-official-blender-mcp.py')], env=env)
     async with stdio_client(server) as (read, write):
-        async with ClientSession(read, write, read_timeout_seconds=datetime.timedelta(seconds=300)) as client:
+        budget = max(300, min(900, float(env.get('BLENDER_MCP_CLI_TIMEOUT_SECONDS', 120))) + 30)
+        async with ClientSession(read, write, read_timeout_seconds=datetime.timedelta(seconds=budget)) as client:
             await client.initialize()
             if args.list:
                 result = await client.list_tools()

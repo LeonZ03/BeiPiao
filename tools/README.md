@@ -46,3 +46,5 @@ exec(compile(script.read_text(encoding='utf-8'), str(script), 'exec'),
 `rooms/yongwang-jiayuan/scripts/build-*` 与 `refine-*` 保留了制作过程，**不是一条从头重跑的构建命令**。部分依赖特定父 revision 或本地私人参考；地砖与高达的必要阶段数据保存在该房间 `history/inputs/`。它们不能直接用于当前精修工程。不要删除版本断言后强跑。新房间遵循 `rooms/README.md`，创建自己的生成脚本，不复用一长串历史补丁。
 
 `capture-room-for-blender.mjs` 是旧网页迁入 Blender 时的尺寸采集工具；需要 `npm ci` 的开发依赖，不是新房间建模入口。`install-official-blender-addon.py` 仅在确实需要交互扩展时使用，并需自行准备官方 `tools/blender-mcp-official/` 源码；常规后台 MCP 工作流不需要安装或启动该扩展。
+
+完整场景导出超过官方默认 120 秒时，可在本次终端设置 `BLENDER_MCP_CLI_TIMEOUT_SECONDS=600`，再通过同一标准 MCP 客户端调用。此选项只扩展后台进程的等待预算（上限 900 秒），不绕过官方工具，不启用 TCP，不改变建模代码。客户端自动同步等待预算。

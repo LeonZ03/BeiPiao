@@ -248,7 +248,7 @@ assert.ok(byName('C43_Floor_RedBrown_Boards').material.roughnessMap,'Timber fini
 assert.ok(byName('C43_Floor_RedBrown_Boards').geometry.attributes.uv1,'Floor contact bake UV1 survives finish changes');
 assert.ok(!names.has('C43_Bottle_label_band'),'Label colours share one surface, without near-coplanar overlay');
 assert.ok(pillow.min.y>=sheet.max.y-.001&&pillow.min.y-sheet.max.y<.003,'Pillow rests on the sheet');
-assert.ok(sheet.min.y>.45&&duvet.min.y>.56,'Short sheet and quilt do not hang below the bed');
+assert.ok(sheet.min.y>.45&&duvet.min.y>=sheet.max.y+.001,'Short sheet and quilt do not hang below the bed');
 // Local quilt accumulations may be as high as the pillow; judge the pillow's
 // own loft/support instead of forcing every quilt fold below its top.
 assert.ok(pillow.max.y-pillow.min.y>.10&&pillow.max.y-pillow.min.y<.18,'Pillow keeps a soft, bounded loft');

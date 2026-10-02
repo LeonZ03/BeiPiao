@@ -90,7 +90,7 @@ export function createCourtyardLighting(THREE,scene,renderer,materials){
 export function createCourtyardFinish(THREE,renderer,scene,camera){
   const target=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:Math.min(4,renderer.capabilities.maxSamples||0)});target.depthTexture=new THREE.DepthTexture(1,1,THREE.UnsignedIntType);
   const passScene=new THREE.Scene(),passCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-  const material=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,uniforms:{source:{value:target.texture},depth:{value:target.depthTexture},inverseProjection:{value:camera.projectionMatrixInverse},projection:{value:camera.projectionMatrix},resolution:{value:new THREE.Vector2()},strength:{value:.35}},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:`varying vec2 vUv;uniform sampler2D source,depth;uniform mat4 inverseProjection,projection;uniform vec2 resolution;uniform float strength;
+  const material=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,uniforms:{source:{value:target.texture},depth:{value:target.depthTexture},inverseProjection:{value:camera.projectionMatrixInverse},projection:{value:camera.projectionMatrix},resolution:{value:new THREE.Vector2()},strength:{value:.35},gradeAmount:{value:1}},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:`varying vec2 vUv;uniform sampler2D source,depth;uniform mat4 inverseProjection,projection;uniform vec2 resolution;uniform float strength,gradeAmount;
   vec3 viewPosition(vec2 uv){vec4 p=inverseProjection*vec4(uv*2.-1.,texture2D(depth,uv).x*2.-1.,1.);return p.xyz/p.w;}
   void main(){vec3 color=texture2D(source,vUv).rgb;vec3 p=viewPosition(vUv);vec3 n=normalize(cross(dFdx(p),dFdy(p)));if(dot(n,-p)<0.)n=-n;float occ=0.;float radius=.18;vec2 size=min(vec2(projection[0][0],projection[1][1])*radius/max(.08,-p.z)*.5,vec2(24.)/resolution);
   for(int i=0;i<8;i++){float a=float(i)*2.399963;vec2 uv=clamp(vUv+vec2(cos(a),sin(a))*sqrt((float(i)+.5)/8.)*size,vec2(.001),vec2(.999));vec3 delta=viewPosition(uv)-p;float dist=length(delta);occ+=max(dot(n,delta/max(dist,.0001))-.12,0.)*(1.-smoothstep(.025,radius,dist));}
@@ -109,10 +109,10 @@ export function createCourtyardFinish(THREE,renderer,scene,camera){
   c+=vec3(.014,.012,.011)*(1.-smoothstep(.03,.24,luma));
   c-=vec3(.010)*smoothstep(.73,1.,luma);
   float vignette=1.-.028*smoothstep(.18,.72,length(vUv-.5));
-  gl_FragColor.rgb=clamp(c*vignette,0.,1.);
+  gl_FragColor.rgb=mix(gl_FragColor.rgb,clamp(c*vignette,0.,1.),gradeAmount);
   }`});
   const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),material);passScene.add(quad);let frames=0;
   function resize(){const size=renderer.getDrawingBufferSize(new THREE.Vector2());target.setSize(size.x,size.y);material.uniforms.resolution.value.copy(size);}
   function render(){renderer.info.reset();renderer.setRenderTarget(target);renderer.render(scene,camera);renderer.setRenderTarget(null);renderer.render(passScene,passCamera);frames++;}
-  resize();return{render,resize,get frames(){return frames;},dispose(){target.dispose();material.dispose();quad.geometry.dispose();}};
+  resize();return{render,resize,setGrading(enabled){material.uniforms.gradeAmount.value=enabled?1:0;},get frames(){return frames;},dispose(){target.dispose();material.dispose();quad.geometry.dispose();}};
 }

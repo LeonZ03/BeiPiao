@@ -27,7 +27,7 @@ def meta(block, key):
     return json.loads(value) if isinstance(value, str) else dict(value)
 
 
-def export_interior():
+def export_interior(progress=None):
     scene = bpy.context.scene
     assert scene.get('room_id') == 'Courtyard43' and scene.get('stage') == 'interior'
     assert scene.unit_settings.system == 'METRIC' and scene.unit_settings.scale_length == 1
@@ -171,6 +171,8 @@ def export_interior():
     rotation = TO_WEB.to_3x3()
 
     for obj in objects:
+        if progress:
+            progress(obj.name)
         tags = meta(obj, 'web_tags')
         parent = ids.get(obj.parent.name, 0) if obj.parent else 0
         matrix = obj.parent.matrix_world.inverted() @ obj.matrix_world if parent else obj.matrix_world
@@ -206,15 +208,23 @@ def export_interior():
             uv1 = next((layer for layer in mesh.uv_layers if layer != uv), None)
             positions, normals, uvs, uv1s, indices, groups, loop_order = [], [], [], [], [], [], []
             unique = {}
+            # Cache RNA collections once. Repeated corner_normals access in
+            # the inner triangle loop can recompute Blender's normal cache,
+            # making a full-room official MCP export exceed its time limit.
+            vertex_positions = [rotation @ v.co for v in mesh.vertices]
+            corner_normals = [(rotation @ n.vector).normalized() for n in mesh.corner_normals]
+            vertex_indices = [loop.vertex_index for loop in mesh.loops]
+            texcoords = [d.uv.copy() for d in uv.data]
+            texcoords1 = [d.uv.copy() for d in uv1.data] if uv1 else None
             for tri in mesh.loop_triangles:
                 if not groups or groups[-1]['materialIndex'] != tri.material_index:
                     groups.append(dict(start=len(indices), count=0, materialIndex=tri.material_index))
                 for li in tri.loops:
-                    vi = mesh.loops[li].vertex_index
-                    pos = rotation @ mesh.vertices[vi].co
-                    normal = (rotation @ mesh.corner_normals[li].vector).normalized()
-                    tex = uv.data[li].uv
-                    tex1 = uv1.data[li].uv if uv1 else ()
+                    vi = vertex_indices[li]
+                    pos = vertex_positions[vi]
+                    normal = corner_normals[li]
+                    tex = texcoords[li]
+                    tex1 = texcoords1[li] if texcoords1 else ()
                     key = (vi if keys else -1, *[round(v, 7) for v in (*pos, *normal, *tex, *tex1)])
                     if key not in unique:
                         unique[key] = len(unique)
@@ -238,9 +248,11 @@ def export_interior():
                     target = evaluated.to_mesh(preserve_all_data_layers=True, depsgraph=depsgraph)
                     assert topology == (len(target.vertices), len(target.loops)), f'Morph topology changed: {obj.name}'
                     mp, mn = [], []
+                    target_positions = [rotation @ v.co for v in target.vertices]
+                    target_normals = [(rotation @ n.vector).normalized() for n in target.corner_normals]
                     for vi, li in loop_order:
-                        mp.extend(rotation @ target.vertices[vi].co)
-                        mn.extend((rotation @ target.corner_normals[li].vector).normalized())
+                        mp.extend(target_positions[vi])
+                        mn.extend(target_normals[li])
                     morphs['position'].append(pack(mp, 3)); morphs['normal'].append(pack(mn, 3))
                     evaluated.to_mesh_clear()
                     shape.value = 0
