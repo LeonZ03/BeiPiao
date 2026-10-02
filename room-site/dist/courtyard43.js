@@ -23,7 +23,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior21');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior22');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -82,6 +82,10 @@ try{
     power:{position:[-1.49,1.02,1.15],target:[-1.94,.74,.69]},
     curtainClose:{position:[-.26,1.82,.52],target:[-.50,1.74,.075]},
     bottle:{position:[.62,1.38,.66],target:[.56,1.17,.215]},
+    bottleFront:{position:[.56,1.23,.60],target:[.56,1.17,.215]},
+    bottleSide:{position:[.945,1.23,.215],target:[.56,1.17,.215]},
+    bottleBack:{position:[.56,1.145,.135],target:[.56,1.13,.215]},
+    bottleReverse:{position:[.175,1.23,.215],target:[.56,1.17,.215]},
     bag:{position:[1.79,1.50,2.12],target:[1.955,1.37,1.45]},
     floor:{position:[.94,.72,2.30],target:[.5,0,1.20]},
     window:{position:[-.22,1.58,-.37],target:[.28,1.45,-1.12]},
