@@ -1,3 +1,4 @@
+import {COURTYARD_LOOK as LOOK} from './courtyard43-look.js?v=quality21';
 // Courtyard-specific geometry batching, real-surface navigation and neutral
 // lighting. No Yongwang layout, vegetation, time-of-day or particle assumptions.
 import {installSoftSunShadows} from './soft-daylight.js?v=breeze28';
@@ -83,7 +84,7 @@ export function createCourtyardLighting(THREE,scene,renderer,materials){
   const ceiling=new THREE.PointLight('#fff4e6',0,7,2);ceiling.name='C43_Ceiling_Light';ceiling.position.set(.1,2.62,1.425);ceiling.castShadow=true;ceiling.shadow.mapSize.set(1024,1024);ceiling.shadow.normalBias=.012;ceiling.shadow.bias=-.0015;ceiling.shadow.radius=12;ceiling.shadow.intensity=.6;ceiling.shadow.camera.near=.08;ceiling.shadow.camera.far=7;scene.add(ceiling);
   const fixtureMaterials=materials.filter(m=>m.name?.includes('Downlight')||m.userData?.lightFixture),clothMaterials=materials.filter(m=>m.userData.curtainBacklight);
   for(const material of clothMaterials)installCourtyardCurtainTransmission(material);
-  function update(curtainOpen,lightOn,sides={left:curtainOpen,right:curtainOpen}){const clamp=value=>Math.max(0,Math.min(1,value)),a=clamp(curtainOpen),left=clamp(sides.left??a),right=clamp(sides.right??a);scene.environmentIntensity=.23+.16*a+(lightOn?.06:0);sky.intensity=.28+.19*a;daylight.intensity=.025+.38*a;windowFills[0].intensity=.035+.79*left;windowFills[1].intensity=.035+.79*right;bounce.intensity=.16+.19*a+(lightOn?.13:0);ceiling.intensity=lightOn?4.8:0;for(const m of fixtureMaterials)m.emissiveIntensity=lightOn?1.15:0;for(const m of clothMaterials){const openness=m.userData.curtainSide==='left'?left:m.userData.curtainSide==='right'?right:a;m.emissiveIntensity=.045*(1-openness);}renderer.shadowMap.needsUpdate=true;}
+  function update(curtainOpen,lightOn,sides={left:curtainOpen,right:curtainOpen}){const clamp=value=>Math.max(0,Math.min(1,value)),a=clamp(curtainOpen),left=clamp(sides.left??a),right=clamp(sides.right??a);scene.environmentIntensity=LOOK.environmentBase+LOOK.environmentGain*a+(lightOn?.06:0);sky.intensity=LOOK.skyBase+LOOK.skyGain*a;daylight.intensity=.025+.38*a;windowFills[0].intensity=LOOK.windowBase+LOOK.windowGain*left;windowFills[1].intensity=LOOK.windowBase+LOOK.windowGain*right;bounce.intensity=LOOK.bounceBase+LOOK.bounceGain*a+(lightOn?.13:0);ceiling.intensity=lightOn?4.8:0;for(const m of fixtureMaterials)m.emissiveIntensity=lightOn?1.15:0;for(const m of clothMaterials){const openness=m.userData.curtainSide==='left'?left:m.userData.curtainSide==='right'?right:a;m.emissiveIntensity=.045*(1-openness);}renderer.shadowMap.needsUpdate=true;}
   update(0,false);return{update,daylight,dispose(){environment.dispose();}};
 }
 
@@ -102,13 +103,13 @@ export function createCourtyardFinish(THREE,renderer,scene,camera){
   vec3 c=gl_FragColor.rgb;float luma=dot(c,vec3(.2126,.7152,.0722));
   // Dry winter print: soften chroma, preserve dark structure, warm only the
   // midtones. Neutral highlights keep snow/linen white instead of sepia.
-  c=mix(vec3(luma),c,.86);
+  c=mix(vec3(luma),c,${LOOK.saturation});
   float mid=smoothstep(.10,.40,luma)*(1.-smoothstep(.65,.94,luma));
-  c+=vec3(.013,.003,-.009)*mid;
-  c=(c-.5)*1.035+.5;
-  c+=vec3(.014,.012,.011)*(1.-smoothstep(.03,.24,luma));
-  c-=vec3(.010)*smoothstep(.73,1.,luma);
-  float vignette=1.-.028*smoothstep(.18,.72,length(vUv-.5));
+  c+=vec3(${LOOK.warmth.join(",")})*mid;
+  c=(c-.5)*${LOOK.contrast}+.5;
+  c+=vec3(${LOOK.shadowLift.join(",")})*(1.-smoothstep(.03,.24,luma));
+  c-=vec3(${LOOK.highlightReduction})*smoothstep(.73,1.,luma);
+  float vignette=1.-${LOOK.vignette}*smoothstep(.18,.72,length(vUv-.5));
   gl_FragColor.rgb=mix(gl_FragColor.rgb,clamp(c*vignette,0.,1.),gradeAmount);
   }`});
   const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),material);passScene.add(quad);let frames=0;

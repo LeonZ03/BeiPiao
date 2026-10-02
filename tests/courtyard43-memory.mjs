@@ -40,7 +40,9 @@ for(const side of ['Left','Right']){
   const curtain=byName(`C43_Curtain_${side}`),material=materialFor(curtain),props=material.props;
   assert.equal(props.transparent,false,`${side} blackout curtain is opaque`);
   assert.equal(props.depthWrite,true,`${side} curtain writes its depth`);
-  assert.ok(props.roughness>=.98,`${side} curtain has a matte roughness`);
+  assert.ok(props.roughness>=.95,`${side} curtain retains broad matte reflection`);
+  assert.ok(props.specularIntensity<=.2,`${side} cloth avoids a bright specular lobe`);
+  assert.equal(props.metalness,0,`${side} cloth is not metallic`);
   assert.ok(material.userData.surfaceFinish.includes('matte blackout woven cloth'));
 }
 

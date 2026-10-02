@@ -7,6 +7,22 @@ import * as THREE from '../room-site/dist/vendor/three.module.js';
 import {parseBlenderRoom} from '../room-site/dist/blender-room.js';
 import {batchCourtyardGeometry,createCourtyardNavigation,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView,installCourtyardCurtainTransmission,createCourtyardLighting} from '../room-site/dist/courtyard43-effects.js';
 import {createCourtyardAudio} from '../room-site/dist/courtyard43-audio.js';
+import {createCourtyardReview} from '../room-site/dist/courtyard43-review.js';
+
+// Review modes must restore exact material identities, retain glass occlusion,
+// and remain reversible without accumulating grey material clones.
+{
+  const root=new THREE.Group(),opaque=new THREE.MeshStandardMaterial(),glass=new THREE.MeshPhysicalMaterial({transmission:1});
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(),[opaque,glass]);root.add(mesh);
+  const original=mesh.material;let grading=true,invalidations=0;
+  const review=createCourtyardReview(THREE,root,{setGrading(v){grading=v;}},()=>invalidations++);
+  review.set('neutral-grey');const grey=mesh.material[0];
+  assert.notEqual(grey,opaque);assert.equal(mesh.material[1],glass);assert.equal(grading,false);
+  review.set('no-grade');assert.equal(mesh.material,original);assert.equal(grading,false);
+  review.set('neutral-grey');assert.equal(mesh.material[0],grey);
+  review.set('final');assert.equal(mesh.material,original);assert.equal(grading,true);assert.equal(invalidations,4);
+  review.dispose();mesh.geometry.dispose();opaque.dispose();glass.dispose();
+}
 
 const base=new URL('../room-site/dist/assets/rooms/Courtyard43/interior/',import.meta.url);
 const manifest=JSON.parse(fs.readFileSync(new URL('scene.json',base)));

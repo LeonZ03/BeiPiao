@@ -1,3 +1,4 @@
+import {COURTYARD_LOOK} from './courtyard43-look.js?v=quality21';
 // Independent completed-room viewer. Blender owns persistent shapes/materials;
 // this module owns input, sound, live lighting and reversible state animation.
 import * as THREE from 'three';
@@ -9,8 +10,8 @@ import {createCourtyardDust,courtyardDustShouldRun} from './courtyard43-dust.js?
 import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';
-import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior20';
-import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior20';
+import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior21';
+import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior21';
 
 import {createRoomSession} from './room-session.js?v=session39';
 const session=createRoomSession();
@@ -22,7 +23,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior20');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior21');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -37,7 +38,7 @@ try{
   const scene=new THREE.Scene();scene.background=new THREE.Color('#d7e0e3');scene.add(world);
   renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(devicePixelRatio,matchMedia('(pointer: coarse)').matches?1.2:1.4));
-  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
+  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=COURTYARD_LOOK.exposure;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;renderer.info.autoReset=false;
   const camera=new THREE.PerspectiveCamera(64,1,.003,60);camera.rotation.order='YXZ';
   const orbit=new OrbitControls(camera,canvas);orbit.enabled=false;orbit.enableDamping=true;orbit.dampingFactor=.10;orbit.minDistance=2.5;orbit.maxDistance=13;orbit.maxPolarAngle=Math.PI*.48;
@@ -159,7 +160,7 @@ try{
   window.addEventListener('resize',resize);window.visualViewport?.addEventListener('resize',resize);
   document.addEventListener('visibilitychange',()=>{clearInput();last=performance.now();audio.setActive(entered&&!document.hidden);if(document.hidden){snow.setEnabled(false);dust.setEnabled(false);renderProbe.update(performance.now(),false);cancelAnimationFrame(frame);frame=0;}else invalidate();});
   reducedMotion.addEventListener?.('change',()=>invalidate());
-  const state=()=>({room:'Courtyard43',name:'43号院',active:entered,revision:manifest.revision,stage:'interior',structureApproved:true,reviewLook:reviewLook.mode,mode,position:camera.position.toArray(),yaw,pitch,immersive,fullscreen:!!document.fullscreenElement,lightOn,lockOn,curtainOpen:curtains.every(item=>item.target===1),curtainAmount:curtainAmount(),curtainAmounts:curtainAmounts(),curtains:Object.fromEntries(curtains.map(item=>[item.id.replace('curtain-',''),{amount:item.amount,target:item.target}])),snow:{active:snow.active,count:snow.count},dust:{active:dust.active,count:dust.count,elapsed:dust.elapsed},sound:audio.state,interactions:interactions.map(({id,kind,amount,target,blocked,openAngle,defaultOpen})=>({id,kind,amount,target,blocked,openAngle,defaultOpen:!!defaultOpen})),rendering:{drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderCount:finish.frames,batchedMeshes:batching.removed,batches:batching.created,collisionSurfaces:navigation.surfaces,collisionRadius:navigation.radius},assetStatistics:statistics});
+  const state=()=>({room:'Courtyard43',name:'43号院',active:entered,revision:manifest.revision,stage:'interior',look:COURTYARD_LOOK.version,structureApproved:true,reviewLook:reviewLook.mode,mode,position:camera.position.toArray(),yaw,pitch,immersive,fullscreen:!!document.fullscreenElement,lightOn,lockOn,curtainOpen:curtains.every(item=>item.target===1),curtainAmount:curtainAmount(),curtainAmounts:curtainAmounts(),curtains:Object.fromEntries(curtains.map(item=>[item.id.replace('curtain-',''),{amount:item.amount,target:item.target}])),snow:{active:snow.active,count:snow.count},dust:{active:dust.active,count:dust.count,elapsed:dust.elapsed},sound:audio.state,interactions:interactions.map(({id,kind,amount,target,blocked,openAngle,defaultOpen})=>({id,kind,amount,target,blocked,openAngle,defaultOpen:!!defaultOpen})),rendering:{drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderCount:finish.frames,batchedMeshes:batching.removed,batches:batching.created,collisionSurfaces:navigation.surfaces,collisionRadius:navigation.radius},assetStatistics:statistics});
   window.courtyard43Diagnostics={get state(){return state();},canTravel:(a,b)=>navigation.canTravel(new THREE.Vector3(...a),new THREE.Vector3(...b)),navigate:go,interact,comparisonViews:Object.fromEntries(['entry','bed','curtain','tabletop'].map(name=>[name,structuredClone(review.viewpoints[name]||extraViews[name])])),getObjectBounds:name=>landmarks.get(name)?.clone()};
   const lifecycle=new AbortController(),register=t=>{try{Promise.resolve(document.modelContext?.registerTool(t,{signal:lifecycle.signal})).catch(()=>{});}catch{}};
   register({name:'set_courtyard43_review_look',description:'仅本次网页验收：中性灰检查形体、关闭回忆调色、恢复完整效果；不保存也不改模型。',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['neutral-grey','no-grade','final']}},required:['mode'],additionalProperties:false},execute({mode}){reviewLook.set(mode);return state();}});
