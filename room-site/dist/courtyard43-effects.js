@@ -1,4 +1,4 @@
-import {COURTYARD_LOOK as LOOK} from './courtyard43-look.js?v=quality21';
+import {COURTYARD_LOOK as LOOK} from './courtyard43-look.js?v=winter23';
 // Courtyard-specific geometry batching, real-surface navigation and neutral
 // lighting. No Yongwang layout, vegetation, time-of-day or particle assumptions.
 import {installSoftSunShadows} from './soft-daylight.js?v=breeze28';

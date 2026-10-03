@@ -1,4 +1,4 @@
-import {COURTYARD_LOOK} from './courtyard43-look.js?v=quality21';
+import {COURTYARD_LOOK} from './courtyard43-look.js?v=winter23';
 // Independent completed-room viewer. Blender owns persistent shapes/materials;
 // this module owns input, sound, live lighting and reversible state animation.
 import * as THREE from 'three';
@@ -11,7 +11,7 @@ import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';
 import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior21';
-import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=courtyard43-interior21';
+import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=winter23';
 
 import {createRoomSession} from './room-session.js?v=session39';
 const session=createRoomSession();
