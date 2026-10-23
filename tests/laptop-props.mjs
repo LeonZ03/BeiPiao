@@ -5,8 +5,16 @@ import {gunzipSync} from 'node:zlib';
 import * as THREE from '../room-site/dist/vendor/three.module.js';
 import {parseBlenderRoom} from '../room-site/dist/blender-room.js';
 import {createLaptop} from '../room-site/dist/laptop.js';
+import {batchStaticGeometry} from '../room-site/dist/navigation.js';
+// Retired unnamed parts must never reappear through static batching.
+{
+  const root=new THREE.Group(),material=new THREE.MeshStandardMaterial();
+  for(let i=0;i<4;i++){const o=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),material);o.visible=false;root.add(o);}
+  assert.equal(batchStaticGeometry(THREE,root),0);
+  assert.ok(root.children.every(o=>!o.visible));
+}
 const web=new URL('../room-site/dist/',import.meta.url);
-for(const [path,revision] of [['assets/full-room/','inspiron41'],['assets/rooms/Courtyard43/interior/','courtyard43-laptop25']]){
+for(const [path,revision] of [['assets/full-room/','laptop42b'],['assets/rooms/Courtyard43/interior/','courtyard43-logo26']]){
   const dir=new URL(path,web),m=JSON.parse(fs.readFileSync(new URL('scene.json',dir))),b=fs.readFileSync(new URL('geometry.bin',dir));
   assert.equal(m.revision,revision);
   assert.deepEqual(gunzipSync(fs.readFileSync(new URL('geometry.bin.gz',dir))),b);
@@ -50,7 +58,10 @@ for(const [path,revision] of [['assets/full-room/','inspiron41'],['assets/rooms/
     }
   }
   assert.ok(lidLow>keysHigh,`Closed screen clears the keycaps: lid ${lidLow}, keys ${keysHigh}`);
-  if(revision==='inspiron41'){
+  if(revision==='laptop42b'){
+    const mat=m.nodes.find(n=>n.name==='printed-black-mouse-mat'),g=m.geometries[mat.geometry];
+    assert.ok(g.groups.some(x=>x.materialIndex===1),'Reused printed top retains its material assignment');
+    assert.ok(g.attributes.uv1,'Reused woven microtexture retains UV1');
     const controller=createLaptop(world);assert.equal(controller.state.amount,1);
     controller.toggle();for(let i=0;i<80;i++)controller.update(.05);assert.equal(controller.state.amount,0);
     controller.toggle();controller.update(.05);const mid=controller.state.amount;controller.toggle();controller.update(.05);assert.ok(controller.state.amount<mid);

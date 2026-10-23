@@ -5,7 +5,7 @@ export function createFlyNavigation(THREE,world,excluded=[]){
   const expanded=new THREE.Box3(),segment=new THREE.Box3(),hit=new THREE.Vector3();
   world.updateMatrixWorld(true);
   function collect(o,moving=false){
-    if(excluded.includes(o)||o.userData.noCollision)return;
+    if(!o.visible||excluded.includes(o)||o.userData.noCollision)return;
     moving=moving||!!o.userData.collisionDynamic;
     if(o.isMesh&&!o.isInstancedMesh&&!o.material.transparent&&!o.material.isShaderMaterial){
       o.geometry.computeBoundingBox();const bounds=o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld);
@@ -33,11 +33,11 @@ export function createFlyNavigation(THREE,world,excluded=[]){
 export function batchStaticGeometry(THREE,root,excluded=[]){
   let removed=0;
   function visit(parent){
-    if(excluded.includes(parent)||parent.userData.interactive||parent.userData.dynamic)return;
+    if(!parent.visible||excluded.includes(parent)||parent.userData.interactive||parent.userData.dynamic)return;
     [...parent.children].filter(o=>!o.isMesh).forEach(visit);
     const sets=new Map();
     for(const o of parent.children){
-      if(!o.isMesh||o.isInstancedMesh||o.name||excluded.includes(o)||o.userData.interactive||o.userData.dynamic||Array.isArray(o.material)||o.material.isShaderMaterial||!o.geometry.attributes.normal)continue;
+      if(!o.visible||!o.isMesh||o.isInstancedMesh||o.name||excluded.includes(o)||o.userData.interactive||o.userData.dynamic||Array.isArray(o.material)||o.material.isShaderMaterial||!o.geometry.attributes.normal)continue;
       const key=`${o.material.uuid}/${o.castShadow}/${o.receiveShadow}`;if(!sets.has(key))sets.set(key,[]);sets.get(key).push(o);
     }
     for(const list of sets.values()){
