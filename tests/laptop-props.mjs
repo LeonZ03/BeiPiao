@@ -1,4 +1,4 @@
-// Targeted checks for the two authored laptops and props24. No browser mocks.
+// Targeted checks for the two authored laptops and laptop25. No browser mocks.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {gunzipSync} from 'node:zlib';
@@ -6,7 +6,7 @@ import * as THREE from '../room-site/dist/vendor/three.module.js';
 import {parseBlenderRoom} from '../room-site/dist/blender-room.js';
 import {createLaptop} from '../room-site/dist/laptop.js';
 const web=new URL('../room-site/dist/',import.meta.url);
-for(const [path,revision] of [['assets/full-room/','laptop40'],['assets/rooms/Courtyard43/interior/','courtyard43-props24']]){
+for(const [path,revision] of [['assets/full-room/','inspiron41'],['assets/rooms/Courtyard43/interior/','courtyard43-laptop25']]){
   const dir=new URL(path,web),m=JSON.parse(fs.readFileSync(new URL('scene.json',dir))),b=fs.readFileSync(new URL('geometry.bin',dir));
   assert.equal(m.revision,revision);
   assert.deepEqual(gunzipSync(fs.readFileSync(new URL('geometry.bin.gz',dir))),b);
@@ -30,7 +30,27 @@ for(const [path,revision] of [['assets/full-room/','laptop40'],['assets/rooms/Co
     });
   }
   assert.ok(min>.001,'Lid sweep stays above desk: '+min);
-  if(revision==='laptop40'){
+  // The former generic case was 350mm wide. Lock the documented 5430 envelope
+  // and verify that closed display/camera surfaces do not cut through keycaps.
+  let shell;lid.traverse(o=>{if(o.isMesh&&o.visible&&o.name.includes('bead-blasted'))shell=o;});
+  assert.ok(shell,'Authored silver shell exists');
+  const shellBox=new THREE.Box3().setFromBufferAttribute(shell.geometry.attributes.position);
+  assert.ok(Math.abs(shellBox.max.x-shellBox.min.x-.314)<1e-5,'314mm cover width');
+  assert.ok(Math.abs(shellBox.max.y-shellBox.min.y-.2183)<1e-5,'Tall 16:10 cover geometry');
+  lid.rotation.x=Math.PI/2;world.updateMatrixWorld(true);
+  let lidLow=Infinity,keysHigh=-Infinity;
+  for(const mesh of all){
+    const inLid=mesh.parent===lid&&mesh.name.includes('unlit display');
+    if(mesh.parent===lid&&!inLid)continue;
+    if(!inLid&&!mesh.name.includes('keycaps'))continue;
+    const a=mesh.geometry.attributes.position;
+    for(let i=0;i<a.count;i++){
+      p.fromBufferAttribute(a,i).applyMatrix4(mesh.matrixWorld).applyMatrix4(inv);
+      if(inLid)lidLow=Math.min(lidLow,p.y);else keysHigh=Math.max(keysHigh,p.y);
+    }
+  }
+  assert.ok(lidLow>keysHigh,`Closed screen clears the keycaps: lid ${lidLow}, keys ${keysHigh}`);
+  if(revision==='inspiron41'){
     const controller=createLaptop(world);assert.equal(controller.state.amount,1);
     controller.toggle();for(let i=0;i<80;i++)controller.update(.05);assert.equal(controller.state.amount,0);
     controller.toggle();controller.update(.05);const mid=controller.state.amount;controller.toggle();controller.update(.05);assert.ok(controller.state.amount<mid);
