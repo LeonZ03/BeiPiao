@@ -23,7 +23,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-interior22');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-props24');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -45,12 +45,14 @@ try{
   const axes={x:new THREE.Vector3(1,0,0),y:new THREE.Vector3(0,1,0),z:new THREE.Vector3(0,0,1)};
   const interactions=(manifest.interactions||[]).map(desc=>{
     const node=world.getObjectByName(manifest.nodes[desc.node].name);if(!node)throw Error(`缺少可操作物件 ${desc.id}`);
-    node.userData.interactive=true;const amount=desc.defaultOpen?1:0,axis=axes[desc.axis]||axes.y,angle=desc.kind==='hinge'?desc.openAngle:desc.kind==='lock'?Math.PI/2:.10;
+    node.userData.interactive=true;const amount=desc.defaultOpen?1:0,axis=axes[desc.axis]||axes.y,angle=['hinge','laptop'].includes(desc.kind)?desc.openAngle:desc.kind==='lock'?Math.PI/2:.10;
     const base=node.quaternion.clone();if(desc.kind==='hinge'&&amount)base.multiply(new THREE.Quaternion().setFromAxisAngle(axis,-angle));
     const record={...desc,node,amount,target:amount,base,axis,angle,serial:0,blocked:false,moving:false,position:new THREE.Vector3(),meshes:[]};
     node.traverse(o=>{if(o.isMesh){record.meshes.push(o);o.userData.interactive=true;}});return record;
   });
   const byId=new Map(interactions.map(x=>[x.id,x])),byObject=new Map(interactions.map(x=>[x.node,x]));
+  const laptop=byId.get('laptop');
+  if(laptop){const root=laptop.node.parent;byObject.set(root,laptop);root.traverse(o=>{if(o.isMesh)o.userData.interactive=true;});}
   const curtains=interactions.filter(x=>x.kind==='curtain');
   const curtainAmounts=()=>({left:byId.get('curtain-left')?.amount??0,right:byId.get('curtain-right')?.amount??0});
   const curtainAmount=()=>curtains.reduce((sum,item)=>sum+item.amount,0)/Math.max(1,curtains.length);
@@ -118,6 +120,7 @@ try{
     if(item.kind==='switch'){lightOn=!!target;audio.interaction('switch',item.node.getWorldPosition(tmp).toArray());toast(lightOn?'灯已打开':'灯已关闭');}
     else if(item.kind==='lock'){if(target&&byId.get('entry-door')?.amount>.04){item.target=0;toast('先关上房门再反锁');return false;}lockOn=!!target;audio.interaction('lock',item.node.getWorldPosition(tmp).toArray());toast(lockOn?'门已反锁':'反锁已解除');}
     else if(item.kind==='curtain')toast(`${item.id==='curtain-left'?'左侧':item.id==='curtain-right'?'右侧':''}窗帘正在${target?'拉开':'合上'}`);
+    else if(item.kind==='laptop')toast(target?'笔记本正在打开':'笔记本正在合上');
     else toast(target?'门正在打开':'门正在合上');
     invalidate(true);return true;
   }
@@ -126,7 +129,7 @@ try{
     if(id==='curtain'){const target=value===undefined?Number(!curtains.every(item=>item.target===1)):Number(!!value);for(const item of curtains)activate(item,target);return state();}
     const item=byId.get(id);if(!item)throw Error('Unknown object');activate(item,value);return state();
   }
-  function updateInteractions(dt){let active=false,changed=false;for(const item of interactions){item.moving=false;item.speed=0;if(item.amount===item.target)continue;active=true;const old=item.amount;item.amount=easedAmount(old,item.target,dt,item.kind==='hinge'?3.1:item.kind==='curtain'?2.7:9);apply(item);if(item.kind==='hinge'&&blocksViewer(item)){item.amount=old;item.target=old;item.blocked=true;apply(item);toast('请稍微离开门边');}else{item.moving=Math.abs(item.amount-old)>1e-7;changed=changed||item.moving;}if(item.kind==='curtain')item.speed=Math.abs(item.amount-old)/Math.max(.001,dt);}
+  function updateInteractions(dt){let active=false,changed=false;for(const item of interactions){item.moving=false;item.speed=0;if(item.amount===item.target)continue;active=true;const old=item.amount;item.amount=easedAmount(old,item.target,dt,['hinge','laptop'].includes(item.kind)?3.1:item.kind==='curtain'?2.7:9);apply(item);if(item.kind==='hinge'&&blocksViewer(item)){item.amount=old;item.target=old;item.blocked=true;apply(item);toast('请稍微离开门边');}else{item.moving=Math.abs(item.amount-old)>1e-7;changed=changed||item.moving;}if(item.kind==='curtain')item.speed=Math.abs(item.amount-old)/Math.max(.001,dt);}
     if(changed){navigation.updateDynamic();lighting.update(curtainAmount(),lightOn,curtainAmounts());dirty=true;}
     audio.update(dt,{curtains:curtains.map(item=>({id:item.id,speed:item.speed,position:item.position.toArray()})),doors:hinges.map(item=>({...item,position:item.node.getWorldPosition(item.position).toArray()})),position:camera.position,yaw});return active;
   }

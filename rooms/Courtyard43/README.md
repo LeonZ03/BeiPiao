@@ -1,6 +1,6 @@
 # Courtyard43 · 房间复刻
 
-状态：`ready`。当前完整源及网页包为 `courtyard43-interior21`，运行入口缓存为 `quality21`，微尘保持 `dust19`。展示名称为 **43号院**，居住日期未补充。已认可的 `whitebox06` 布局固定，当前制作从完整源增量精修；本轮形体、材料、色彩与网页验收见 [整体优化记录](docs/QUALITY21.md)。旧阶段经验保留在 [HISTORY](HISTORY.md)。
+状态：`ready`。当前完整源及网页包为 `courtyard43-props24`，运行入口缓存为 `props24`，微尘保持 `dust19`。展示名称为 **43号院**，居住日期未补充。已认可的 `whitebox06` 布局固定，当前制作从完整源增量精修；本轮窗帘厚度、卷袋包装、抽纸复用和笔记本交互见 [定向修改记录](docs/PROPS24.md)；整体形体与色彩基线见 [整体优化记录](docs/QUALITY21.md)。旧阶段经验保留在 [HISTORY](HISTORY.md)。
 
 ## 参考与结构约束
 
@@ -60,9 +60,9 @@
 
 - 建筑：白墙与下挂边顶、单个顶灯、红棕木地板、砖纹阳台半墙、连续外窗/转角玻璃、磨砂植物纹隔断、青蓝横条罩体、实体灰窗帘和可动房门。台面完整接至内隔断、左端板落地；旧版推定帘槽已取消，左右帘与挂环各自开合。
 - 家具：白色板床头与细圆腿、真实厚度的床垫/枕被、浅米色弱木纹书桌、单白背黑座金属椅和双门衣柜。床品接触及柜门全程避让已检查；远柜门约 72°、近柜门 90°，柜体位置保持。
-- 陈设：隔离复用的合盖电脑、鼠标与挂帽；按可见类型新建水瓶、杯、纸巾、挂袋、纸篓和桌上小容器，并连接供电线。已有产品参考支持农夫山泉 1.5L 标签、约 3/4 水位、开发板与竖置鼠标垫；不可辨认文字仍留空。窗外采用已确认冬季邻楼和雪景；门外保留空走廊，不扩建厨卫。
+- 陈设：隔离复用且可开合的电脑、鼠标与挂帽；按可见类型新建水瓶、杯、纸巾、挂袋、纸篓和桌上小容器，并连接供电线。已有产品参考支持农夫山泉 1.5L 标签、约 3/4 水位、开发板与竖置鼠标垫；不可辨认文字仍留空。窗外采用已确认冬季邻楼和雪景；门外保留空走廊，不扩建厨卫。
 - 网页：独立成品页接入首页目录，保留自由探索、总览、复位、沉浸、手机移动/升降和统一加载/错误状态；灰帘、双柜门、房门、墙上开关及反锁可往返。默认静音，用户开启后使用适用音效。保留窗外飘雪与 dust19 室内微尘，在首页、后台、总览及减少动态效果时暂停；静止视角仍需更新可见粒子。
-- 源链：三个 `build-architecture.py`、`build-furniture.py`、`build-props.py` 各自保存独立组件，经 `assemble-interior.py` 组装，再由 `export-interior.py` 同次保存精修包。所有 Blender 操作走官方 MCP；这些是初始组件制作链；当前权威源是完整 interior21 工程，后续按父 revision 从完整源增量修改，不运行旧组件组装或已锁止白模生成器覆盖精修。
+- 源链：三个 `build-architecture.py`、`build-furniture.py`、`build-props.py` 各自保存独立组件，经 `assemble-interior.py` 组装，再由 `export-interior.py` 同次保存精修包。所有 Blender 操作走官方 MCP；这些是初始组件制作链；当前权威源是完整 props24 工程，后续按父 revision 从完整源增量修改，不运行旧组件组装或已锁止白模生成器覆盖精修。
 
 米制坐标沿用网页 X 向右、Y 向上、Z 从阳台向入口；阳台地理朝向为北；真实拍摄时间、隐藏结构和实际尺寸继续标作未知或推定。材料按 P03/P04 校准，最终颜色与光照以真实网页为准。
 
@@ -71,7 +71,7 @@
 - `assets/full-room/`：独立完整 Blender 源；`scripts/`：阶段脚本。
 - `docs/`：约束和定稿；`history/inputs/`：可提交必要输入。
 - 精修导出目录：`room-site/dist/assets/rooms/Courtyard43/interior/`，与永旺家园及旧白模包分离。
-- 当前完整源：`assets/full-room/Courtyard43-interior.blend`；当前模型 revision：`courtyard43-interior21`。`room.json` 为 `ready`，指向此源与精修清单。
+- 当前完整源：`assets/full-room/Courtyard43-interior.blend`；当前模型 revision：`courtyard43-props24`。`room.json` 为 `ready`，指向此源与精修清单。
 - 已批准结构输入：`history/inputs/approved-layout.json`；批准前的参数 `whitebox-06.json` 和历次修正保留在历史输入目录与 Git。`assets/full-room/Courtyard43-whitebox.blend` 和原运行包保留为白模检查点，不再被精修覆盖。
 - 床约 2.4 × 1.5 米、卧室约 4.3 × 2.9 米、桌长约 1.3 米、阳台深约 1.1 米。**这些是依据照片与用户比例修正建立的估计，不是实测或用户确认尺寸。** 厨卫范围不在本次制作范围内。
 - 本地成品入口：[43号院正式入口](https://room.leonz03.dpdns.org/#courtyard43)；保留的结构审阅入口：[Courtyard43 白模](http://127.0.0.1:48173/courtyard43-whitebox.html)。使用根目录启动器启动 HTTP 网站后打开；不可从 `file://` 打开。
