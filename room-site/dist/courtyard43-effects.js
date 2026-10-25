@@ -1,4 +1,4 @@
-import {COURTYARD_LOOK as LOOK} from './courtyard43-look.js?v=winter27';
+import {COURTYARD_LOOK as LOOK} from './courtyard43-look.js?v=daylight28';
 // Courtyard-specific geometry batching, real-surface navigation and neutral
 // lighting. No Yongwang layout, vegetation, time-of-day or particle assumptions.
 import {installSoftSunShadows} from './soft-daylight.js?v=breeze28';
@@ -71,7 +71,11 @@ export function createCourtyardLighting(THREE,scene,renderer,materials){
   function panel(w,h,pos,target,strength,color){const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(color).multiplyScalar(strength),side:THREE.DoubleSide}));mesh.position.fromArray(pos);mesh.lookAt(...target);studio.add(mesh);}
   panel(4,2.6,[.2,1.7,-5.8],[0,1.2,0],1.6,'#edf1f5');panel(6,5,[0,4.4,0],[0,0,0],.3,'#f3efea');
   const pmrem=new THREE.PMREMGenerator(renderer),environment=pmrem.fromScene(studio,.04,.1,25);scene.environment=environment.texture;pmrem.dispose();studio.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});
-  const sky=new THREE.HemisphereLight('#eef1f4','#776756',.29);sky.name='C43_Diffuse_Sky';scene.add(sky);
+  // An open north window receives broad upward snow reflection as well as sky.
+  // Close that contribution continuously with the blackout panels; keep the
+  // dark-floor response when shut instead of lifting the whole room uniformly.
+  const groundClosed=new THREE.Color(LOOK.groundClosedColor),groundOpen=new THREE.Color(LOOK.groundOpenColor);
+  const sky=new THREE.HemisphereLight(LOOK.skyColor,groundClosed,.29);sky.name='C43_Diffuse_Sky';scene.add(sky);
   // User-confirmed north balcony, weak diffuse sky. No direct solar light or
   // sun position is inferred from the bright camera exposure in the photos.
   const daylight=new THREE.DirectionalLight('#e6edf5',.3);daylight.name='C43_North_Daylight';daylight.position.set(-.4,4.8,-4);daylight.target.position.set(.25,.4,1.3);daylight.castShadow=true;daylight.shadow.mapSize.set(2048,2048);Object.assign(daylight.shadow.camera,{left:-3.5,right:3.5,top:3.6,bottom:-3.4,near:.1,far:14});daylight.shadow.normalBias=.002;daylight.shadow.bias=-.00006;daylight.shadow.camera.updateProjectionMatrix();scene.add(daylight,daylight.target);
@@ -84,11 +88,12 @@ export function createCourtyardLighting(THREE,scene,renderer,materials){
   const ceiling=new THREE.PointLight('#fff4e6',0,7,2);ceiling.name='C43_Ceiling_Light';ceiling.position.set(.1,2.62,1.425);ceiling.castShadow=true;ceiling.shadow.mapSize.set(1024,1024);ceiling.shadow.normalBias=.012;ceiling.shadow.bias=-.0015;ceiling.shadow.radius=12;ceiling.shadow.intensity=.6;ceiling.shadow.camera.near=.08;ceiling.shadow.camera.far=7;scene.add(ceiling);
   const fixtureMaterials=materials.filter(m=>m.name?.includes('Downlight')||m.userData?.lightFixture),clothMaterials=materials.filter(m=>m.userData.curtainBacklight);
   for(const material of clothMaterials)installCourtyardCurtainTransmission(material);
-  function update(curtainOpen,lightOn,sides={left:curtainOpen,right:curtainOpen}){const clamp=value=>Math.max(0,Math.min(1,value)),a=clamp(curtainOpen),left=clamp(sides.left??a),right=clamp(sides.right??a);scene.environmentIntensity=LOOK.environmentBase+LOOK.environmentGain*a+(lightOn?.06:0);sky.intensity=LOOK.skyBase+LOOK.skyGain*a;daylight.intensity=.025+.38*a;windowFills[0].intensity=LOOK.windowBase+LOOK.windowGain*left;windowFills[1].intensity=LOOK.windowBase+LOOK.windowGain*right;bounce.intensity=LOOK.bounceBase+LOOK.bounceGain*a+(lightOn?.13:0);ceiling.intensity=lightOn?4.8:0;for(const m of fixtureMaterials)m.emissiveIntensity=lightOn?1.15:0;for(const m of clothMaterials){const openness=m.userData.curtainSide==='left'?left:m.userData.curtainSide==='right'?right:a;m.emissiveIntensity=.045*(1-openness);}renderer.shadowMap.needsUpdate=true;}
+  function update(curtainOpen,lightOn,sides={left:curtainOpen,right:curtainOpen}){const clamp=value=>Math.max(0,Math.min(1,value)),a=clamp(curtainOpen),left=clamp(sides.left??a),right=clamp(sides.right??a);scene.environmentIntensity=LOOK.environmentBase+LOOK.environmentGain*a+(lightOn?.06:0);sky.intensity=LOOK.skyBase+LOOK.skyGain*a;sky.groundColor.copy(groundClosed).lerp(groundOpen,a);daylight.intensity=.025+.38*a;windowFills[0].intensity=LOOK.windowBase+LOOK.windowGain*left;windowFills[1].intensity=LOOK.windowBase+LOOK.windowGain*right;bounce.intensity=LOOK.bounceBase+LOOK.bounceGain*a+(lightOn?.13:0);ceiling.intensity=lightOn?4.8:0;for(const m of fixtureMaterials)m.emissiveIntensity=lightOn?1.15:0;for(const m of clothMaterials){const openness=m.userData.curtainSide==='left'?left:m.userData.curtainSide==='right'?right:a;m.emissiveIntensity=.045*(1-openness);}renderer.shadowMap.needsUpdate=true;}
   update(0,false);return{update,daylight,dispose(){environment.dispose();}};
 }
 
 export function createCourtyardFinish(THREE,renderer,scene,camera){
+  const glslFloat=value=>Number(value).toFixed(6);
   const target=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:Math.min(4,renderer.capabilities.maxSamples||0)});target.depthTexture=new THREE.DepthTexture(1,1,THREE.UnsignedIntType);
   const passScene=new THREE.Scene(),passCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   const material=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,uniforms:{source:{value:target.texture},depth:{value:target.depthTexture},inverseProjection:{value:camera.projectionMatrixInverse},projection:{value:camera.projectionMatrix},resolution:{value:new THREE.Vector2()},strength:{value:.35},gradeAmount:{value:1}},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:`varying vec2 vUv;uniform sampler2D source,depth;uniform mat4 inverseProjection,projection;uniform vec2 resolution;uniform float strength,gradeAmount;
@@ -98,18 +103,18 @@ export function createCourtyardFinish(THREE,renderer,scene,camera){
   float ao=1.-strength*occ/8.;color*=ao;gl_FragColor=vec4(color,1.);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
-  // Restrained aged-print finish, after tone mapping in display colour space.
+  // Gentle winter finish, after tone mapping in display colour space.
   // Retain the north-facing winter light; avoid sepia, blur or animated grain.
   vec3 c=gl_FragColor.rgb;float luma=dot(c,vec3(.2126,.7152,.0722));
-  // Dry winter print: soften chroma, preserve dark structure, warm only the
+  // Keep material colour and dark structure; gently warm only the
   // midtones. Neutral highlights keep snow/linen white instead of sepia.
-  c=mix(vec3(luma),c,${LOOK.saturation});
+  c=mix(vec3(luma),c,${glslFloat(LOOK.saturation)});
   float mid=smoothstep(.10,.40,luma)*(1.-smoothstep(.65,.94,luma));
-  c+=vec3(${LOOK.warmth.join(",")})*mid;
-  c=(c-.5)*${LOOK.contrast}+.5;
-  c+=vec3(${LOOK.shadowLift.join(",")})*(1.-smoothstep(.03,.24,luma));
-  c-=vec3(${LOOK.highlightReduction})*smoothstep(.73,1.,luma);
-  float vignette=1.-${LOOK.vignette}*smoothstep(.18,.72,length(vUv-.5));
+  c+=vec3(${LOOK.warmth.map(glslFloat).join(",")})*mid;
+  c=(c-.5)*${glslFloat(LOOK.contrast)}+.5;
+  c+=vec3(${LOOK.shadowLift.map(glslFloat).join(",")})*(1.-smoothstep(.03,.24,luma));
+  c-=vec3(${glslFloat(LOOK.highlightReduction)})*smoothstep(.73,1.,luma);
+  float vignette=1.-${glslFloat(LOOK.vignette)}*smoothstep(.18,.72,length(vUv-.5));
   gl_FragColor.rgb=mix(gl_FragColor.rgb,clamp(c*vignette,0.,1.),gradeAmount);
   }`});
   const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),material);passScene.add(quad);let frames=0;

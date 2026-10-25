@@ -14,7 +14,7 @@ import {batchStaticGeometry} from '../room-site/dist/navigation.js';
   assert.ok(root.children.every(o=>!o.visible));
 }
 const web=new URL('../room-site/dist/',import.meta.url);
-for(const [path,revision] of [['assets/full-room/','props43a'],['assets/rooms/Courtyard43/interior/','courtyard43-charger27a']]){
+for(const [path,revision] of [['assets/full-room/','props44a'],['assets/rooms/Courtyard43/interior/','courtyard43-switch28']]){
   const dir=new URL(path,web),m=JSON.parse(fs.readFileSync(new URL('scene.json',dir))),b=fs.readFileSync(new URL('geometry.bin',dir));
   assert.equal(m.revision,revision);
   assert.deepEqual(gunzipSync(fs.readFileSync(new URL('geometry.bin.gz',dir))),b);
@@ -58,9 +58,9 @@ for(const [path,revision] of [['assets/full-room/','props43a'],['assets/rooms/Co
     }
   }
   assert.ok(lidLow>keysHigh,`Closed screen clears the keycaps: lid ${lidLow}, keys ${keysHigh}`);
-  if(revision==='props43a'){
+  if(revision==='props44a'){
     assert.equal(m.nodes[1041].visible,false,'Wireless mouse has no cable');
-    assert.equal(m.nodes[835].name,'Wilson43 left racket brand');
+    assert.ok(m.nodes.some(n=>n.name==='Clash44 Wilson wordmark'&&n.visible));
     const mat=m.nodes.find(n=>n.name==='printed-black-mouse-mat'),g=m.geometries[mat.geometry];
     assert.ok(g.groups.some(x=>x.materialIndex===1),'Reused printed top retains its material assignment');
     assert.ok(g.attributes.uv1,'Reused woven microtexture retains UV1');
