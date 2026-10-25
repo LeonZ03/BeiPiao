@@ -1,13 +1,13 @@
-import {createLaptop} from './laptop.js?v=laptop42b';
+import {createLaptop} from './laptop.js?v=props43a';
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {Reflector} from './vendor/Reflector.js';
 import {createAfternoon} from './afternoon.js?v=wardrobe30';
 import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=sunview34h';
-import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=laptop42b';
-import {createInteractions} from './interactions.js?v=laptop42b';
+import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=props43a';
+import {createInteractions} from './interactions.js?v=props43a';
 import {createRoomAudio} from './room-audio.js?v=audio5';
-import {loadBlenderRoom} from './blender-room.js?v=laptop42b';
+import {loadBlenderRoom} from './blender-room.js?v=props43a';
 import {reportRoomLoading,finishRoomLoading,nextPaint} from './room-loading.js?v=viewer26';
 import {createCurtainController} from './curtain.js?v=curtain23d';
 import {createRoomBreeze} from './room-breeze.js?v=window38';

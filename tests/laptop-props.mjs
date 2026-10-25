@@ -14,7 +14,7 @@ import {batchStaticGeometry} from '../room-site/dist/navigation.js';
   assert.ok(root.children.every(o=>!o.visible));
 }
 const web=new URL('../room-site/dist/',import.meta.url);
-for(const [path,revision] of [['assets/full-room/','laptop42b'],['assets/rooms/Courtyard43/interior/','courtyard43-logo26']]){
+for(const [path,revision] of [['assets/full-room/','props43a'],['assets/rooms/Courtyard43/interior/','courtyard43-charger27a']]){
   const dir=new URL(path,web),m=JSON.parse(fs.readFileSync(new URL('scene.json',dir))),b=fs.readFileSync(new URL('geometry.bin',dir));
   assert.equal(m.revision,revision);
   assert.deepEqual(gunzipSync(fs.readFileSync(new URL('geometry.bin.gz',dir))),b);
@@ -58,7 +58,9 @@ for(const [path,revision] of [['assets/full-room/','laptop42b'],['assets/rooms/C
     }
   }
   assert.ok(lidLow>keysHigh,`Closed screen clears the keycaps: lid ${lidLow}, keys ${keysHigh}`);
-  if(revision==='laptop42b'){
+  if(revision==='props43a'){
+    assert.equal(m.nodes[1041].visible,false,'Wireless mouse has no cable');
+    assert.equal(m.nodes[835].name,'Wilson43 left racket brand');
     const mat=m.nodes.find(n=>n.name==='printed-black-mouse-mat'),g=m.geometries[mat.geometry];
     assert.ok(g.groups.some(x=>x.materialIndex===1),'Reused printed top retains its material assignment');
     assert.ok(g.attributes.uv1,'Reused woven microtexture retains UV1');
@@ -67,6 +69,13 @@ for(const [path,revision] of [['assets/full-room/','laptop42b'],['assets/rooms/C
     controller.toggle();controller.update(.05);const mid=controller.state.amount;controller.toggle();controller.update(.05);assert.ok(controller.state.amount<mid);
     for(let i=0;i<80;i++)controller.update(.05);const r=controller.revision;controller.update(.05);assert.equal(controller.revision,r,'Settled state does not invalidate cache');
   }else{
+    assert.equal(m.nodes.filter(n=>n.visible&&n.userData?.reusedFrom==='Yongwang props43').length,8,'Eight charger parts reused with isolated materials');
+    assert.ok(!m.nodes.some(n=>n.name==='C43_Desk_small_dark_device'&&n.visible),'Old adapter retired');
+    const lead=world.getObjectByName('C43_Charger27_DC_lead');assert.ok(lead);
+    for(let i=0;i<lead.geometry.attributes.position.count;i++){
+      p.fromBufferAttribute(lead.geometry.attributes.position,i).applyMatrix4(lead.matrixWorld).applyMatrix4(inv);
+      assert.ok(p.x<-.158,'DC lead remains outside laptop footprint');
+    }
     assert.ok(m.nodes.some(n=>n.name==='C43_Bag24_new_roll'&&n.visible));
     assert.ok(m.nodes.some(n=>n.name.includes('softpack')&&n.visible));
     assert.ok(m.interactions.find(x=>x.id==='laptop'&&!x.defaultOpen&&x.kind==='laptop'));
