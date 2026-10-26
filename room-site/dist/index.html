@@ -29,7 +29,7 @@
 </main>
 <dialog id="directoryDialog" class="archive-directory"><button class="close" id="closeDirectoryBtn" aria-label="关闭目录">×</button><p class="eyebrow">北漂 · 居住记录</p><h2>房间目录</h2><button type="button" data-room-select="yongwang-jiayuan" aria-pressed="true"><span>01</span> 永旺家园 <span aria-hidden="true">↗</span></button><button type="button" data-room-select="Courtyard43" aria-pressed="false"><span>02</span> 43号院 <span aria-hidden="true">↗</span></button><p><span>03</span> 待录入</p></dialog>
 <main id="app" hidden aria-label="永旺家园三维漫游">
-  <canvas id="world" tabindex="0" aria-label="房间三维视图，拖动环顾，WASD 前后左右移动，左右方向键横移，↑ 或 Shift 上升，↓ 或 Fn 下降"></canvas>
+  <canvas id="world" tabindex="0" aria-label="房间三维视图，拖动环顾，WASD 前后左右移动，左右方向键横移，滚轮升降，↑ 上升、↓ 下降"></canvas>
   <header class="topbar">
     <div class="identity"><a id="archiveHomeBtn" href="#" aria-label="返回居住记录">← <span>北漂</span></a><span class="room-identity">永旺家园</span></div>
     <nav class="top-actions" aria-label="视图选项"><button id="immersiveBtn" aria-pressed="false">沉浸看房</button><button id="soundBtn" aria-label="开启声音" title="开启声音" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4 6 8H3v8h3l5 4Z"/><path class="sound-off" d="m16 9 6 6m0-6-6 6"/><path class="sound-on" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg></button><button id="helpBtn" aria-label="操作帮助">?</button><button id="fullscreenBtn" aria-label="全屏">⛶</button></nav>
@@ -49,8 +49,8 @@
   </section>
   <div class="touch-controls direction-controls" role="group" aria-label="前后左右移动"><button data-move="forward" aria-label="向前">↑</button><button data-move="left" aria-label="向左">←</button><button data-move="back" aria-label="向后">↓</button><button data-move="right" aria-label="向右">→</button></div>
   <div class="touch-controls height-controls" role="group" aria-label="升降视角"><button data-move="up" aria-label="上升"><span aria-hidden="true">↑</span><small>升</small></button><button data-move="down" aria-label="下降"><span aria-hidden="true">↓</span><small>降</small></button></div>
-  <dialog id="helpDialog"><button class="close" aria-label="关闭">×</button><p class="eyebrow">EXPLORE THE ROOM</p><h2>像回家一样，走进来。</h2><div class="help-items"><p><kbd>拖动</kbd><span>环顾四周</span></p><p><kbd>W A S D</kbd><span>前后左右移动，← / → 也可横移</span></p><p><kbd>↑ / ↓</kbd><span>按住上升 / 下降；也可用 Shift 上升、Fn 下降，Fn 无响应时用 ↓</span></p><p><kbd>点击物品</kbd><span>墙上开关、窗帘、花洒和水龙头可以直接操作</span></p><p><kbd>右上角声音</kbd><span>默认静音；点击开启柜门、窗帘与水流音效</span></p><p><kbd>双击画面</kbd><span>锁定鼠标环顾，Esc 退出</span></p><p><kbd>空间总览</kbd><span>旋转、缩放，查看房间布局</span></p></div><p class="note">手机：可竖屏或横屏浏览；左下方向键移动，右下竖排按键上升／下降，滑动画面环顾。沉浸看房时仍保留移动键。视点约 2 毫米，可从家具上方、下方和间隙穿行；实体表面会阻挡移动。</p><button class="primary close-action">开始探索</button></dialog>
+  <dialog id="helpDialog"><button class="close" aria-label="关闭">×</button><p class="eyebrow">EXPLORE THE ROOM</p><h2>像回家一样，走进来。</h2><div class="help-items"><p><kbd>拖动</kbd><span>环顾四周</span></p><p><kbd>W A S D</kbd><span>前后左右移动，← / → 也可横移</span></p><p><kbd>滚轮 / ↑ ↓</kbd><span>滚轮向前上升、向后下降；上下键备用。空间总览中滚轮缩放</span></p><p><kbd>点击物品</kbd><span>墙上开关、窗帘、花洒和水龙头可以直接操作</span></p><p><kbd>右上角声音</kbd><span>默认静音；点击开启柜门、窗帘与水流音效</span></p><p><kbd>双击画面</kbd><span>锁定鼠标环顾，Esc 退出</span></p><p><kbd>空间总览</kbd><span>旋转、缩放，查看房间布局</span></p></div><p class="note">手机：可竖屏或横屏浏览；左下方向键移动，右下竖排按键上升／下降，滑动画面环顾。沉浸看房时仍保留移动键。视点约 2 毫米，可从家具上方、下方和间隙穿行；实体表面会阻挡移动。</p><button class="primary close-action">开始探索</button></dialog>
 </main>
 <iframe id="courtyardRoom" class="room-frame" title="43号院三维漫游" allow="fullscreen; autoplay" allowfullscreen hidden></iframe>
-<script type="module" src="./archive.js?v=mirror29b"></script>
+<script type="module" src="./archive.js?v=wheel30"></script>
 </body></html>

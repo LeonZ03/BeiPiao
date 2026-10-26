@@ -1,6 +1,6 @@
-import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement} from './room-input.js?v=mirror29b';
+import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement,bindWalkWheel} from './room-input.js?v=wheel30';
 import {Reflector} from './vendor/Reflector.js';
-import {installDoorMirror} from './wardrobe.js?v=mirror29b';
+import {installDoorMirror} from './wardrobe.js?v=wheel30';
 import {COURTYARD_LOOK} from './courtyard43-look.js?v=daylight28';
 // Independent completed-room viewer. Blender owns persistent shapes/materials;
 // this module owns input, sound, live lighting and reversible state animation.
@@ -114,6 +114,7 @@ try{
   function owner(o){for(let n=o;n;n=n.parent){const item=byObject.get(n);if(item)return item;}return null;}
   function pick(clientX,clientY){if(mode!=='walk')return null;const rect=canvas.getBoundingClientRect();pointer.set(locked?0:(clientX-rect.left)/rect.width*2-1,locked?0:1-(clientY-rect.top)/rect.height*2);pickRay.setFromCamera(pointer,camera);pickRay.far=4;world.updateMatrixWorld(true);const hits=pickRay.intersectObjects(pickMeshes.filter(isVisible),false);for(const hit of hits){const mats=Array.isArray(hit.object.material)?hit.object.material:[hit.object.material];if(mats.every(m=>m.transparent&&m.opacity<.25))continue;return owner(hit.object);}return null;}
   function move(dx,dy,dz){let changed=false;for(const [axis,delta]of [['x',dx],['y',dy],['z',dz]]){if(!delta)continue;tmp.copy(camera.position);tmp[axis]+=delta;if(navigation.canTravel(camera.position,tmp)){camera.position.copy(tmp);changed=true;}}return changed;}
+  bindWalkWheel({canvas,enabled:()=>mode==='walk'&&entered&&session.active&&!document.hidden&&!disposed&&!document.querySelector('dialog[open]'),move:delta=>{if(move(0,delta,0))invalidate();}});
   const snow=createCourtyardSnow(THREE,scene);
   const dustAnchor=curtains.reduce((sum,item)=>sum.add(item.position),new THREE.Vector3()).multiplyScalar(1/Math.max(1,curtains.length));
   const dust=createCourtyardDust(THREE,scene,dustAnchor);
@@ -126,11 +127,8 @@ try{
   function apply(item){if(item.kind==='curtain'){for(const mesh of item.meshes)if(mesh.morphTargetInfluences)mesh.morphTargetInfluences[0]=item.amount;}else item.node.quaternion.copy(item.base).multiply(new THREE.Quaternion().setFromAxisAngle(item.axis,item.angle*item.amount));}
   function blocksViewer(item){if(mode!=='walk')return false;item.node.updateWorldMatrix(true,true);return item.meshes.some(mesh=>{if(mesh.userData.noCollision)return false;bounds.copy(mesh.geometry.boundingBox||mesh.geometry.computeBoundingBox()).applyMatrix4(mesh.matrixWorld).expandByScalar(.018);return bounds.containsPoint(camera.position);});}
   function activate(item,value){if(!item)return false;if(item.id==='entry-door'&&lockOn&&item.target<.5){toast('门已反锁');return false;}audio.setListener(camera.position,yaw);item.blocked=false;item.serial++;const target=value===undefined?oppositeEndpoint(item.target,item.amount):Number(!!value);item.target=target;
-    if(item.kind==='switch'){lightOn=!!target;audio.interaction('switch',item.node.getWorldPosition(tmp).toArray());toast(lightOn?'灯已打开':'灯已关闭');}
-    else if(item.kind==='lock'){if(target&&byId.get('entry-door')?.amount>.04){item.target=0;toast('先关上房门再反锁');return false;}lockOn=!!target;audio.interaction('lock',item.node.getWorldPosition(tmp).toArray());toast(lockOn?'门已反锁':'反锁已解除');}
-    else if(item.kind==='curtain')toast(`${item.id==='curtain-left'?'左侧':item.id==='curtain-right'?'右侧':''}窗帘正在${target?'拉开':'合上'}`);
-    else if(item.kind==='laptop')toast(target?'笔记本正在打开':'笔记本正在合上');
-    else toast(target?'门正在打开':'门正在合上');
+    if(item.kind==='switch'){lightOn=!!target;audio.interaction('switch',item.node.getWorldPosition(tmp).toArray());}
+    else if(item.kind==='lock'){if(target&&byId.get('entry-door')?.amount>.04){item.target=0;toast('先关上房门再反锁');return false;}lockOn=!!target;audio.interaction('lock',item.node.getWorldPosition(tmp).toArray());}
     invalidate(true);return true;
   }
   function interact(id,value){

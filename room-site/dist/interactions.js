@@ -32,7 +32,7 @@ export function createInteractions({THREE,world,camera,canvas,curtain,toggleCurt
     }
     if(water.faucet){const p=(t*2.4)%1;splash.scale.setScalar(.7+p*2);splash.material.opacity=(1-p)*.5;stream.material.opacity=.45+Math.sin(t*21)*.045;}
   }
-  function perform(id){if(id==='light')toggleLight();else if(id==='curtain')toggleCurtain();else if(id==='laptop')toast(laptop.toggle()?'笔记本正在打开':'笔记本正在合上');else if(id.startsWith('wardrobe'))wardrobe?.toggle(id);else if(id==='doorLock'&&thumbturn){doorLocked=!doorLocked;turnTarget=doorLocked?Math.PI/2:0;thumbturn.userData.locked=doorLocked;toast(doorLocked?'门已反锁':'已解除反锁');}else if(id in water){water[id]=!water[id];(id==='shower'?shower:faucet).visible=water[id];world.userData.waterActive=water.shower||water.faucet;toast((id==='shower'?'花洒':'水龙头')+(water[id]?'已打开':'已关闭'));}onSound(id);return {...water,doorLocked};}
+  function perform(id){if(id==='light')toggleLight();else if(id==='curtain')toggleCurtain();else if(id==='laptop')laptop.toggle();else if(id.startsWith('wardrobe'))wardrobe?.toggle(id);else if(id==='doorLock'&&thumbturn){doorLocked=!doorLocked;turnTarget=doorLocked?Math.PI/2:0;thumbturn.userData.locked=doorLocked;}else if(id in water){water[id]=!water[id];(id==='shower'?shower:faucet).visible=water[id];world.userData.waterActive=water.shower||water.faucet;}onSound(id);return {...water,doorLocked};}
   const ownerOf=o=>{while(o&&!o.userData.interactive)o=o.parent;return o;};
   const visible=o=>{while(o){if(!o.visible)return false;o=o.parent;}return true;};
   function pick(x,y,locked=false){

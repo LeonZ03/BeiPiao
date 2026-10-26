@@ -84,7 +84,7 @@ export function createWardrobe({THREE,world,camera,refs={},renderer,Reflector,to
   function toggle(id){
     const door=doors.find(d=>d.id===id);if(!door)return false;
     door.wanted=!door.wanted;door.blocked=false;
-    toast(door.wanted?'正在打开柜门':'正在合上柜门');return true;
+    return true;
   }
   function place(door,value){door.pivot.quaternion.copy(door.base).multiply(rotation.setFromAxisAngle(axis,door.openAngle*value));door.pivot.updateWorldMatrix(true,true);}
   function cameraInside(door){

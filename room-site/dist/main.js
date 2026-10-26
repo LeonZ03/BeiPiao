@@ -1,4 +1,4 @@
-import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement} from './room-input.js?v=mirror29b';
+import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement,bindWalkWheel} from './room-input.js?v=wheel30';
 import {createLaptop} from './laptop.js?v=props44a';
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
@@ -6,13 +6,13 @@ import {Reflector} from './vendor/Reflector.js';
 import {createAfternoon} from './afternoon.js?v=wardrobe30';
 import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=sunview34h';
 import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=props44a';
-import {createInteractions} from './interactions.js?v=props44a';
+import {createInteractions} from './interactions.js?v=wheel30';
 import {createRoomAudio} from './room-audio.js?v=audio5';
 import {loadBlenderRoom} from './blender-room.js?v=props45';
 import {reportRoomLoading,finishRoomLoading,nextPaint} from './room-loading.js?v=viewer26';
 import {createCurtainController} from './curtain.js?v=curtain23d';
 import {createRoomBreeze} from './room-breeze.js?v=window38';
-import {createWardrobe} from './wardrobe.js?v=mirror29b';
+import {createWardrobe} from './wardrobe.js?v=wheel30';
 import {createRenderProbe} from './render-probe.js?v=sunlight33';
 
 const $ = (id) => document.getElementById(id);
@@ -84,6 +84,7 @@ goTo('entry');
 camera.position.set(.83,1.48,1.66);yaw=.20;pitch=-.20;camera.rotation.set(pitch,yaw,0,'YXZ');
 function canStand(x,z,y=camera.position.y){return navigation.canTravel(camera.position,new THREE.Vector3(x,y,z));}
 function moveVertical(dy){if(!dy)return;const target=camera.position.clone();target.y+=dy;if(navigation.canTravel(camera.position,target))camera.position.copy(target);}
+bindWalkWheel({canvas,enabled:()=>mode==='walk'&&roomEntered&&!document.hidden&&!$('app').hidden&&!document.querySelector('dialog[open]'),move:moveVertical});
 function move(dx,dz){
   const target=camera.position.clone();target.x+=dx;if(dx&&navigation.canTravel(camera.position,target))camera.position.x=target.x;
   target.copy(camera.position);target.z+=dz;if(dz&&navigation.canTravel(camera.position,target))camera.position.z=target.z;
@@ -108,8 +109,8 @@ for(const b of document.querySelectorAll('[data-move]')){const code=touchMovemen
 
 function resetView(){if(mode==='overview')setMode('overview');else{goTo('entry');camera.position.set(.83,1.48,1.66);yaw=.20;pitch=-.20;camera.rotation.set(pitch,yaw,0,'YXZ');}}
 $('walkBtn').onclick=()=>setMode('walk');$('overviewBtn').onclick=()=>setMode('overview');$('resetBtn').onclick=()=>{resetView();canvas.focus({preventScroll:true});};
-function toggleCurtain(){curtainOpen=!curtainOpen;toast(curtainOpen?'正在拉开窗帘':'正在合上窗帘');}
-function toggleLight(){lightOn=!lightOn;lamp.intensity=lightOn?7:0;diffuser.material.emissiveIntensity=lightOn?1.5:.1;const rocker=world.getObjectByName('light-switch-rocker');if(rocker)rocker.rotation.z=lightOn?.13:0;toast(lightOn?'房间灯已打开':'房间灯已关闭');}
+function toggleCurtain(){curtainOpen=!curtainOpen;}
+function toggleLight(){lightOn=!lightOn;lamp.intensity=lightOn?7:0;diffuser.material.emissiveIntensity=lightOn?1.5:.1;const rocker=world.getObjectByName('light-switch-rocker');if(rocker)rocker.rotation.z=lightOn?.13:0;}
 
 let immersive=false;
 function toggleImmersive(){immersive=!immersive;$('app').classList.toggle('immersive',immersive);$('immersiveBtn').textContent=immersive?'退出沉浸':'沉浸看房';$('immersiveBtn').setAttribute('aria-pressed',String(immersive));}

@@ -1,17 +1,15 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../room-site/dist/vendor/three.module.js';
-import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement} from '../room-site/dist/room-input.js';
+import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement,wheelHeightDelta,bindWalkWheel} from '../room-site/dist/room-input.js';
 import {installDoorMirror} from '../room-site/dist/wardrobe.js';
 
 const held=new Set();
 const down=e=>{const key=movementKey(e);if(key)held.add(key);};
 const up=e=>held.delete(releaseMovementKey(e));
-down({key:'Fn',code:''});assert.equal(verticalMovement(held),-1,'Forwarded Fn key lowers the view');
-up({key:'Fn',code:''});assert.equal(verticalMovement(held),0);
-down({key:'Unidentified',code:'Fn'});assert.equal(verticalMovement(held),-1,'Forwarded Fn code also works');
-up({code:'Fn'});down({code:'ControlLeft'});assert.equal(verticalMovement(held),0,'Ctrl no longer lowers the view');
-down({code:'FnLock',key:'FnLock'});assert.equal(verticalMovement(held),0,'Fn lock never latches movement');
-down({code:'KeyC'});assert.equal(verticalMovement(held),0,'C is no longer a height control');
+for(const event of [{key:'Fn',code:''},{code:'Fn'},{code:'FnLock'},{code:'ShiftLeft'},{code:'ShiftRight'},{code:'ControlLeft'},{code:'KeyC'}]){
+  down(event);assert.equal(held.size,0,'Removed height bindings never latch movement');
+}
+assert.equal(verticalMovement(new Set(['ShiftLeft','ShiftRight','Fn'])),0);
 down({code:'ArrowUp'});assert.equal(verticalMovement(held),1,'Up arrow raises the view');
 assert.ok(held.has('MoveUp'));assert.ok(!held.has('ArrowUp'),'Height arrow never enters forward movement');
 up({code:'ArrowUp'});down({code:'ArrowDown'});assert.equal(verticalMovement(held),-1,'Down arrow lowers the view');
@@ -22,6 +20,20 @@ held.add(touchMovementKeys.up);assert.equal(verticalMovement(held),0,'Opposite h
 held.clear();assert.equal(verticalMovement(held),0,'Blur/session clear releases all movement');
 down({code:'KeyW'});down({code:'KeyS'});assert.ok(held.has('KeyW')&&held.has('KeyS'),'W and S retain horizontal movement');
 assert.equal(verticalMovement(held),0);held.clear();
+
+assert.equal(wheelHeightDelta({deltaY:-100,deltaMode:0}),.15,'Forward wheel raises the view');
+assert.ok(Math.abs(wheelHeightDelta({deltaY:3,deltaMode:1})+.072)<1e-12,'Line units normalize to pixels');
+assert.equal(wheelHeightDelta({deltaY:1,deltaMode:2},844),-.18,'Page or large deltas are capped');
+assert.equal(wheelHeightDelta({deltaY:Infinity}),0);
+assert.equal(wheelHeightDelta({deltaY:-100,ctrlKey:true}),0,'Trackpad pinch is not height movement');
+const wheelCanvas=new EventTarget();wheelCanvas.clientHeight=844;
+let walking=true,height=1.5;
+const unbind=bindWalkWheel({canvas:wheelCanvas,enabled:()=>walking,move:delta=>height+=delta});
+const wheel=delta=>{const event=new Event('wheel',{cancelable:true});Object.assign(event,{deltaY:delta,deltaMode:0});wheelCanvas.dispatchEvent(event);return event;};
+assert.equal(wheel(-100).defaultPrevented,true);assert.equal(height,1.65);
+wheel(100);assert.equal(height,1.5);
+walking=false;assert.equal(wheel(-100).defaultPrevented,false,'Overview retains the unmodified wheel for orbit zoom');assert.equal(height,1.5);
+walking=true;unbind();assert.equal(wheel(-100).defaultPrevented,false);assert.equal(height,1.5);
 
 class ProbeReflector extends THREE.Mesh{
   constructor(geometry,options){super(geometry,new THREE.MeshBasicMaterial());this.options=options;this.calls=0;this.onBeforeRender=()=>this.calls++;}
@@ -48,4 +60,4 @@ world.userData.geometryRevision++;mirror.onBeforeRender(renderer,scene,camera);a
 world.userData.reflectionPass=true;world.userData.geometryRevision++;mirror.onBeforeRender(renderer,scene,camera);assert.equal(mirror.calls,3,'Nested reflection cannot recurse');
 world.userData.reflectionPass=false;open=false;camera.position.x+=.1;camera.updateMatrixWorld();mirror.onBeforeRender(renderer,scene,camera);assert.equal(mirror.calls,3);
 assert.equal(renderer.shadowMap.needsUpdate,true,'Reflection preserves the caller shadow update flag');
-console.log('Input and mirror: Fn/arrows/touch movement, door binding, visibility, refresh and recursion PASS');
+console.log('Input and mirror: walk wheel / overview zoom isolation, arrows/touch, removed Shift/Fn, door binding, visibility, refresh and recursion PASS');
