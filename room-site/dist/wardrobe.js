@@ -1,10 +1,10 @@
 // All planar mirrors share one recursion guard. A reflection may display the
 // other mirror's cached texture, but never recursively render its camera.
-export function guardRoomReflection({THREE,world,reflection,interval=50,synchronizeView=false}){
+export function guardRoomReflection({THREE,world,reflection,interval=50,synchronizeView=false,enabled=()=>true}){
   const draw=reflection.onBeforeRender,previousCamera=new THREE.Matrix4(),previousMirror=new THREE.Matrix4();
   let last=-Infinity,lastLighting='',lastGeometry=-1;
   reflection.onBeforeRender=function(renderer,scene,camera,...args){
-    if(world.userData.reflectionPass||world.userData.staticCacheCapture)return;
+    if(!enabled()||world.userData.reflectionPass||world.userData.staticCacheCapture)return;
     const lighting=scene.children.filter(o=>o.isLight).map(o=>`${o.intensity.toFixed(4)}:${o.color.getHex()}`).join('/');
     const geometry=world.userData.geometryRevision||0;
     const viewChanged=!previousCamera.equals(camera.matrixWorld)||!previousMirror.equals(this.matrixWorld);
@@ -21,11 +21,11 @@ export function guardRoomReflection({THREE,world,reflection,interval=50,synchron
   return reflection;
 }
 
-function installDoorMirror({THREE,world,renderer,source,Reflector}){
+export function installDoorMirror({THREE,world,renderer,source,Reflector,enabled=()=>true,clipBias=.001}){
   if(!source||!renderer?.isWebGLRenderer)return source;
   const coarse=globalThis.matchMedia?.('(pointer: coarse)').matches;
   // Reduce pixel cost instead of skipping moving views, which causes judder.
-  const mirror=new Reflector(source.geometry,{textureWidth:coarse?128:256,textureHeight:coarse?256:512,multisample:0,clipBias:.001,
+  const mirror=new Reflector(source.geometry,{textureWidth:coarse?128:256,textureHeight:coarse?256:512,multisample:0,clipBias,
     shader:{uniforms:{color:{value:new THREE.Color(0xffffff)},tDiffuse:{value:null},textureMatrix:{value:new THREE.Matrix4()}},
       vertexShader:'uniform mat4 textureMatrix;varying vec4 reflectedUv;void main(){reflectedUv=textureMatrix*vec4(position,1.);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
       fragmentShader:`uniform sampler2D tDiffuse;varying vec4 reflectedUv;void main(){gl_FragColor=vec4(texture2DProj(tDiffuse,reflectedUv).rgb*vec3(.94,.95,.95),1.);
@@ -38,7 +38,7 @@ function installDoorMirror({THREE,world,renderer,source,Reflector}){
   mirror.userData={...source.userData,dynamic:true,noCollision:true};mirror.castShadow=false;mirror.receiveShadow=false;
   mirror.geometry.userData={...source.geometry.userData};
   source.parent.add(mirror);source.removeFromParent();
-  return guardRoomReflection({THREE,world,reflection:mirror,interval:50,synchronizeView:true});
+  return guardRoomReflection({THREE,world,reflection:mirror,interval:50,synchronizeView:true,enabled});
 }
 
 export function createWardrobe({THREE,world,camera,refs={},renderer,Reflector,toast=()=>{}}){

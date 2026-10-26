@@ -20,6 +20,22 @@ for(const [prefix,parent] of [['Clash44',824],['Radical44',811]]){
 }
 for(const id of [823,836])assert.equal(yw.m.nodes[id].visible,false,'Old block hook retired');
 assert.equal(yw.m.nodes[781].material,yw.m.nodes[773].material,'Visible cabinet base uses same veneer as fixed side');
+if(yw.m.statistics.exteriorRefinement?.props45){
+  const report=yw.m.statistics.exteriorRefinement.props45;
+  assert.ok(report.frameFrontWidthM<.015,'Slim frontal frame section');
+  assert.ok(report.surfacePrint.length>=6,'Visible frame prints follow their source surface');
+  assert.equal(yw.m.nodes[1483].matrix[12],Math.fround(1.387),'Export must not retain the old protruding switch origin');
+  const a=yw.world.getObjectByName('light-switch-rocker'),b=c43.world.getObjectByName('C43_Switch_Rocker');
+  const bounds=o=>new THREE.Box3().setFromBufferAttribute(o.geometry.attributes.position).getSize(new THREE.Vector3());
+  assert.ok(bounds(a).distanceTo(bounds(b))<1e-7,'Reused switch has the same geometry size');
+  assert.ok(a.material.color.toArray().every((v,i)=>Math.abs(v-b.material.color.toArray()[i])<1e-7),'Reused switch base color');
+  for(let id=1070;id<=1077;id++)yw.world.traverse(o=>{if(o.isMesh&&o.geometry.userData.blenderGeometry===yw.m.nodes[id].geometry)targets.push(o);});
+  for(let id=1078;id<1096;id++)assert.equal(yw.m.nodes[id].visible,false,'Old disconnected tuft pieces retired');
+  for(const name of ['C43_WardrobeFarMirror_Reflection','C43_WardrobeFarMirror_Edge']){
+    const n=c43.m.nodes.find(n=>n.name===name);assert.ok(n);assert.equal(c43.m.nodes[n.parent].name,'C43_WardrobeDoorFarPivot');
+    assert.equal(n.userData.noCollision,true);assert.equal(n.castShadow,false);targets.push(c43.world.getObjectByName(name));
+  }
+}
 for(const root of [yw.world,c43.world]){
   const rocker=root.getObjectByName(root===yw.world?'light-switch-rocker':'C43_Switch_Rocker');assert.ok(rocker);targets.push(rocker);
   const box=new THREE.Box3().setFromBufferAttribute(rocker.geometry.attributes.position),size=box.getSize(new THREE.Vector3());
@@ -29,5 +45,5 @@ for(const root of [yw.world,c43.world]){
 let triangles=0;
 for(const mesh of targets){assert.ok(mesh?.isMesh);const g=mesh.geometry,n=g.attributes.position.count;for(const a of Object.values(g.attributes))for(const v of a.array)assert.ok(Number.isFinite(v));for(const i of g.index.array)assert.ok(i>=0&&i<n);triangles+=g.index.count/3;
  const ns=g.attributes.normal;for(let i=0;i<ns.count;i++){const length=Math.hypot(ns.getX(i),ns.getY(i),ns.getZ(i));assert.ok(length>.9&&length<1.1,'Finite normalized surface normals');}}
-assert.ok(triangles<100000,'Detailed rackets remain bounded');
+assert.ok(triangles<110000,'Rackets, switch, toothbrush and mirror remain bounded');
 console.log(JSON.stringify({result:'PASS',targetMeshes:targets.length,targetTriangles:triangles,revisions:[yw.m.revision,c43.m.revision]}));

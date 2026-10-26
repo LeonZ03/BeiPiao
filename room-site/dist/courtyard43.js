@@ -1,3 +1,6 @@
+import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement} from './room-input.js?v=mirror29b';
+import {Reflector} from './vendor/Reflector.js';
+import {installDoorMirror} from './wardrobe.js?v=mirror29b';
 import {COURTYARD_LOOK} from './courtyard43-look.js?v=daylight28';
 // Independent completed-room viewer. Blender owns persistent shapes/materials;
 // this module owns input, sound, live lighting and reversible state animation.
@@ -23,7 +26,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-switch28');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-mirror29a');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -43,6 +46,11 @@ try{
   const camera=new THREE.PerspectiveCamera(64,1,.003,60);camera.rotation.order='YXZ';
   const orbit=new OrbitControls(camera,canvas);orbit.enabled=false;orbit.enableDamping=true;orbit.dampingFactor=.10;orbit.minDistance=2.5;orbit.maxDistance=13;orbit.maxPolarAngle=Math.PI*.48;
   const axes={x:new THREE.Vector3(1,0,0),y:new THREE.Vector3(0,1,0),z:new THREE.Vector3(0,0,1)};
+  world.userData.geometryRevision??=0;
+  const mirrorSource=world.getObjectByName('C43_WardrobeFarMirror_Reflection');
+  // The 3 mm navigation near plane makes a positive oblique clip bias admit
+  // the mirror's own glass backing at some angles. Clip at the real surface.
+  const wardrobeMirror=installDoorMirror({THREE,world,renderer,source:mirrorSource,Reflector,clipBias:0,enabled:()=>mode==='walk'&&(byId.get('wardrobeFar')?.amount??0)>.015});
   const interactions=(manifest.interactions||[]).map(desc=>{
     const node=world.getObjectByName(manifest.nodes[desc.node].name);if(!node)throw Error(`缺少可操作物件 ${desc.id}`);
     node.userData.interactive=true;const amount=desc.defaultOpen?1:0,axis=axes[desc.axis]||axes.y,angle=['hinge','laptop'].includes(desc.kind)?desc.openAngle:desc.kind==='lock'?Math.PI/2:.10;
@@ -69,6 +77,7 @@ try{
   const renderProbe=createRenderProbe();
   const reviewLook=createCourtyardReview(THREE,world,finish,invalidate);
   const extraViews={
+    mirror:{position:[1.45,1.25,1.5],target:[1.39,1.025,.35]},
     corridor:{position:[1.58,1.48,2.65],target:[.15,.75,4.12]},
     wardrobe:{position:[.76,1.28,.86],target:[1.70,1.06,.8]},
     radiator:{position:[.49,1.13,1.18],target:[.84,.82,.14]},
@@ -130,13 +139,13 @@ try{
     const item=byId.get(id);if(!item)throw Error('Unknown object');activate(item,value);return state();
   }
   function updateInteractions(dt){let active=false,changed=false;for(const item of interactions){item.moving=false;item.speed=0;if(item.amount===item.target)continue;active=true;const old=item.amount;item.amount=easedAmount(old,item.target,dt,['hinge','laptop'].includes(item.kind)?3.1:item.kind==='curtain'?2.7:9);apply(item);if(item.kind==='hinge'&&blocksViewer(item)){item.amount=old;item.target=old;item.blocked=true;apply(item);toast('请稍微离开门边');}else{item.moving=Math.abs(item.amount-old)>1e-7;changed=changed||item.moving;}if(item.kind==='curtain')item.speed=Math.abs(item.amount-old)/Math.max(.001,dt);}
-    if(changed){navigation.updateDynamic();lighting.update(curtainAmount(),lightOn,curtainAmounts());dirty=true;}
+    if(changed){world.userData.geometryRevision++;navigation.updateDynamic();lighting.update(curtainAmount(),lightOn,curtainAmounts());dirty=true;}
     audio.update(dt,{curtains:curtains.map(item=>({id:item.id,speed:item.speed,position:item.position.toArray()})),doors:hinges.map(item=>({...item,position:item.node.getWorldPosition(item.position).toArray()})),position:camera.position,yaw});return active;
   }
   function resize(){const width=$('app').clientWidth,height=$('app').clientHeight;if(!width||!height)return;camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);finish.resize();$('app').classList.toggle('touch-device',matchMedia('(pointer: coarse)').matches||innerWidth<=900);invalidate(true);}
   function toggleImmersive(){immersive=!immersive;$('app').classList.toggle('immersive',immersive);$('immersiveBtn').textContent=immersive?'退出沉浸':'沉浸看房';$('immersiveBtn').setAttribute('aria-pressed',String(immersive));invalidate();}
   function tick(now){frame=0;if(disposed||!session.active||document.hidden){snow.setEnabled(false);dust.setEnabled(false);return;}const dt=Math.min(Math.max((now-last)/1000,.001),.05);last=now;let keep=false;
-    if(mode==='walk'){const f=Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft')),v=Number(keys.has('ShiftLeft')||keys.has('ShiftRight'))-Number(keys.has('ControlLeft')||keys.has('ControlRight'));if(f||s||v){const step=dt/(Math.hypot(f,s)||1);dirty=move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*step,v*dt*.8,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*step)||dirty;keep=true;}camera.rotation.set(pitch,yaw,0,'YXZ');}
+    if(mode==='walk'){const f=Number(keys.has('KeyW'))-Number(keys.has('KeyS')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft')),v=verticalMovement(keys);if(f||s||v){const step=dt/(Math.hypot(f,s)||1);dirty=move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*step,v*dt*.8,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*step)||dirty;keep=true;}camera.rotation.set(pitch,yaw,0,'YXZ');}
     else if(orbit.update()){dirty=true;keep=true;}
     keep=updateInteractions(dt)||keep;if(renderProbe.update(now,mode==='walk')){dirty=true;keep=true;}
     camera.getWorldDirection(tmp);const shouldSnow=courtyardSnowShouldRun({active:entered&&!document.hidden,overview:mode==='overview',reducedMotion:reducedMotion.matches,cameraPosition:camera.position,forward:tmp,curtainAmounts:curtainAmounts()});
@@ -154,10 +163,9 @@ try{
   for(const type of ['pointercancel','lostpointercapture'])canvas.addEventListener(type,()=>{drag=null;canvas.style.cursor='grab';});
   canvas.addEventListener('dblclick',()=>{if(mode==='walk')canvas.requestPointerLock?.()?.catch(()=>{});});
   document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;$('crosshair').hidden=!locked;drag=null;});
-  const movement=['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight','ControlLeft','ControlRight'];
-  window.addEventListener('keydown',e=>{if(document.querySelector('dialog[open]'))return;if(e.code==='KeyH'&&!e.repeat)toggleImmersive();if((e.code==='Enter'||e.code==='Space')&&document.activeElement===canvas&&!e.repeat){e.preventDefault();const rect=canvas.getBoundingClientRect();activate(pick(rect.left+rect.width/2,rect.top+rect.height/2));}if(movement.includes(e.code)){e.preventDefault();keys.add(e.code);last=performance.now();invalidate();}});
-  window.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',clearInput);
-  for(const b of document.querySelectorAll('[data-move]')){const code={forward:'KeyW',back:'KeyS',left:'KeyA',right:'KeyD',up:'ShiftLeft',down:'ControlLeft'}[b.dataset.move];b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(code);b.classList.add('held');last=performance.now();invalidate();});for(const type of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(type,()=>{keys.delete(code);b.classList.remove('held');});}
+  window.addEventListener('keydown',e=>{if(document.querySelector('dialog[open]'))return;if(e.code==='KeyH'&&!e.repeat)toggleImmersive();if((e.code==='Enter'||e.code==='Space')&&document.activeElement===canvas&&!e.repeat){e.preventDefault();const rect=canvas.getBoundingClientRect();activate(pick(rect.left+rect.width/2,rect.top+rect.height/2));}const code=movementKey(e);if(code){e.preventDefault();keys.add(code);last=performance.now();invalidate();}});
+  window.addEventListener('keyup',e=>keys.delete(releaseMovementKey(e)));window.addEventListener('blur',clearInput);
+  for(const b of document.querySelectorAll('[data-move]')){const code=touchMovementKeys[b.dataset.move];b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(code);b.classList.add('held');last=performance.now();invalidate();});for(const type of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(type,()=>{keys.delete(code);b.classList.remove('held');});}
   $('walkBtn').onclick=()=>go('entry');$('overviewBtn').onclick=()=>go('overview');$('resetBtn').onclick=()=>{go(mode==='overview'?'overview':'entry');canvas.focus({preventScroll:true});};$('immersiveBtn').onclick=toggleImmersive;
   $('fullscreenBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('当前浏览器暂不支持全屏');}};
   document.addEventListener('fullscreenchange',()=>{$('fullscreenBtn').setAttribute('aria-label',document.fullscreenElement?'退出全屏':'全屏');resize();});
@@ -176,7 +184,7 @@ try{
   register({name:'navigate_courtyard43',description:'切换43号院入口、床边、桌面、阳台、反看、总览及物件近景。',inputSchema:{type:'object',properties:{viewpoint:{type:'string',enum:viewNames}},required:['viewpoint'],additionalProperties:false},execute({viewpoint}){go(viewpoint);return state();}});
   register({name:'walk_courtyard43',description:'沿当前视角小步移动，使用真实实体表面检查阻挡。',inputSchema:{type:'object',properties:{direction:{type:'string',enum:['forward','back','left','right','up','down']},distance:{type:'number',minimum:.01,maximum:2}},required:['direction','distance'],additionalProperties:false},execute({direction,distance}){if(mode!=='walk'||!['forward','back','left','right','up','down'].includes(direction)||!Number.isFinite(distance)||distance<.01||distance>2)throw Error('Invalid movement');const start=camera.position.clone(),f=direction==='forward'?1:direction==='back'?-1:0,s=direction==='right'?1:direction==='left'?-1:0,n=Math.ceil(distance/.02),step=distance/n;for(let i=0;i<n;i++)move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*step,(direction==='up'?1:direction==='down'?-1:0)*step,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*step);invalidate();return{...state(),distanceMoved:start.distanceTo(camera.position)};}});
   register({name:'interact_courtyard43',description:'通过同一状态控制器操作已建模窗帘、双柜门、房门、开关和反锁。',inputSchema:{type:'object',properties:{id:{type:'string',enum:[...new Set([...interactions.map(x=>x.id),'curtain'])]},open:{type:'boolean'}},required:['id'],additionalProperties:false},execute({id,open}){return interact(id,open);}});
-  window.addEventListener('pagehide',e=>{renderProbe.update(performance.now(),false);entered=false;snow.setEnabled(false);dust.setEnabled(false);audio.setActive(false);clearInput();cancelAnimationFrame(frame);frame=0;if(!e.persisted){disposed=true;lifecycle.abort();audio.dispose();snow.dispose();dust.dispose();reviewLook.dispose();finish.dispose();lighting.dispose();orbit.dispose();renderer.dispose();} });
+  window.addEventListener('pagehide',e=>{renderProbe.update(performance.now(),false);entered=false;snow.setEnabled(false);dust.setEnabled(false);audio.setActive(false);clearInput();cancelAnimationFrame(frame);frame=0;if(!e.persisted){disposed=true;lifecycle.abort();audio.dispose();snow.dispose();dust.dispose();reviewLook.dispose();wardrobeMirror?.dispose?.();finish.dispose();lighting.dispose();orbit.dispose();renderer.dispose();} });
   window.addEventListener('pageshow',e=>{if(e.persisted){entered=session.active;void audio.setMuted(true);audio.setActive(entered&&!document.hidden);last=performance.now();resize();}});
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(frame);frame=0;audio.setActive(false);failRoomLoading();$('errorDetail').textContent='图形显示暂时中断，请重新打开房间。';});
   session.subscribe(active=>{entered=active;clearInput();last=performance.now();audio.setActive(active&&!document.hidden);if(!active){snow.setEnabled(false);dust.setEnabled(false);renderProbe.update(performance.now(),false);cancelAnimationFrame(frame);frame=0;document.querySelectorAll('dialog[open]').forEach(d=>d.close());if(document.pointerLockElement)document.exitPointerLock();}else{resize();canvas.focus({preventScroll:true});invalidate();}});
