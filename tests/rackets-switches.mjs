@@ -24,7 +24,7 @@ if(yw.m.statistics.exteriorRefinement?.props45){
   const report=yw.m.statistics.exteriorRefinement.props45;
   assert.ok(report.frameFrontWidthM<.015,'Slim frontal frame section');
   assert.ok(report.surfacePrint.length>=6,'Visible frame prints follow their source surface');
-  assert.equal(yw.m.nodes[1483].matrix[12],Math.fround(1.387),'Export must not retain the old protruding switch origin');
+  assert.equal(yw.m.nodes[1483].matrix[12],Math.fround(yw.m.statistics.exteriorRefinement?.switch31?.rockerCenterX??1.387),'Export matches the current authored switch origin');
   const a=yw.world.getObjectByName('light-switch-rocker'),b=c43.world.getObjectByName('C43_Switch_Rocker');
   const bounds=o=>new THREE.Box3().setFromBufferAttribute(o.geometry.attributes.position).getSize(new THREE.Vector3());
   assert.ok(bounds(a).distanceTo(bounds(b))<1e-7,'Reused switch has the same geometry size');
@@ -39,8 +39,41 @@ if(yw.m.statistics.exteriorRefinement?.props45){
 for(const root of [yw.world,c43.world]){
   const rocker=root.getObjectByName(root===yw.world?'light-switch-rocker':'C43_Switch_Rocker');assert.ok(rocker);targets.push(rocker);
   const box=new THREE.Box3().setFromBufferAttribute(rocker.geometry.attributes.position),size=box.getSize(new THREE.Vector3());
-  assert.ok(size.x<.006&&size.y>.060&&size.z>.060,'Broad thin rocker, not a protruding toggle');
-  for(const angle of [0,.05,.10,.13]){const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),angle);const points=[];for(let x of [box.min.x,box.max.x])for(let y of [box.min.y,box.max.y])for(let z of [box.min.z,box.max.z])points.push(new THREE.Vector3(x,y,z).applyQuaternion(q));assert.ok(points.every(p=>Math.abs(p.x)<.007),'Rocker travel remains inside shallow housing');}
+  assert.ok(size.x<.008&&size.y>.060&&size.z>.060,'Broad rocker with a closed rear skirt');
+  const travel=yw.m.statistics.exteriorRefinement?.switch31?.angle??.13;
+  for(let i=0;i<=20;i++){const angle=travel*i/20,q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),angle);const points=[];for(let x of [box.min.x,box.max.x])for(let y of [box.min.y,box.max.y])for(let z of [box.min.z,box.max.z])points.push(new THREE.Vector3(x,y,z).applyQuaternion(q));assert.ok(points.every(p=>Math.abs(p.x)<.007),'Rocker travel remains inside shallow housing');}
+}
+if(yw.m.statistics.exteriorRefinement?.switch31){
+  const closed=o=>{
+    const p=o.geometry.attributes.position,idx=o.geometry.index.array,edges=new Map();
+    const key=i=>[p.getX(i),p.getY(i),p.getZ(i)].map(v=>Math.round(v*1e9)).join(',');
+    for(let i=0;i<idx.length;i+=3)for(const [a,b]of [[idx[i],idx[i+1]],[idx[i+1],idx[i+2]],[idx[i+2],idx[i]]]){
+      const ka=key(a),kb=key(b);assert.notEqual(ka,kb,'No collapsed exported triangle edge');
+      const edge=ka<kb?ka+'|'+kb:kb+'|'+ka;edges.set(edge,(edges.get(edge)||0)+1);
+    }
+    assert.ok([...edges.values()].every(n=>n===2),'Every welded edge has exactly two faces: no open shell');
+  };
+  for(const [root,plateName,rockerName,wall]of [[yw.world,'wall-switch-86-frame','light-switch-rocker',1.4],[c43.world,'C43_Switch_Backplate','C43_Switch_Rocker',2.225]]){
+    const plate=root.getObjectByName(plateName),rocker=root.getObjectByName(rockerName);closed(plate);closed(rocker);
+    const box=new THREE.Box3().setFromObject(plate);assert.ok(box.max.x>wall&&box.max.x-wall<.0006,'Closed rear seats into wall without a visible air gap');
+    const center=new THREE.Vector3();plate.getWorldPosition(center);
+    const ray=new THREE.Raycaster(new THREE.Vector3(wall-.02,center.y+.0332,center.z),new THREE.Vector3(1,0,0),0,.03);
+    const floor=ray.intersectObject(plate,false)[0];assert.ok(floor,'Narrow seam is backed by a real recess floor');
+    assert.ok(Math.abs(floor.point.x-(wall-.0002))<.0001,'No overlapping dark plane on the front face');
+    const pos=rocker.geometry.attributes.position,pivot=rocker.parent;
+    const animated=root===yw.world?rocker:pivot,base=animated.quaternion.clone();
+    for(let i=0;i<=20;i++){
+      animated.quaternion.copy(base).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),.045*i/20));root.updateMatrixWorld(true);
+      for(let v=0;v<pos.count;v++){
+        const p=new THREE.Vector3().fromBufferAttribute(pos,v).applyMatrix4(rocker.matrixWorld);
+        assert.ok(p.x<wall-.0009,'Button skirt never cuts through the closed floor during switching');
+        assert.ok(Math.abs(p.y-center.y)<.034&&Math.abs(p.z-center.z)<.0335,'Button stays within the well side walls');
+      }
+    }
+    animated.quaternion.copy(base);root.updateMatrixWorld(true);targets.push(plate);
+  }
+  assert.equal(yw.m.nodes[2033].visible,false,'Coplanar old dark reveal is retired');
+  assert.ok(!c43.m.nodes.some(n=>n.name==='C43_Switch28_reveal'),'Coplanar C43 reveal is absent from the pack');
 }
 let triangles=0;
 for(const mesh of targets){assert.ok(mesh?.isMesh);const g=mesh.geometry,n=g.attributes.position.count;for(const a of Object.values(g.attributes))for(const v of a.array)assert.ok(Number.isFinite(v));for(const i of g.index.array)assert.ok(i>=0&&i<n);triangles+=g.index.count/3;

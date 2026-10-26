@@ -1,4 +1,4 @@
-import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement,bindWalkWheel} from './room-input.js?v=wheel30';
+import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement,bindWalkWheel} from './room-input.js?v=switch31';
 import {createLaptop} from './laptop.js?v=props44a';
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
@@ -8,7 +8,7 @@ import {installSoftSunShadows,createSoftDaylight} from './soft-daylight.js?v=sun
 import {createFlyNavigation,batchStaticGeometry} from './navigation.js?v=props44a';
 import {createInteractions} from './interactions.js?v=wheel30';
 import {createRoomAudio} from './room-audio.js?v=audio5';
-import {loadBlenderRoom} from './blender-room.js?v=props45';
+import {loadBlenderRoom} from './blender-room.js?v=props46';
 import {reportRoomLoading,finishRoomLoading,nextPaint} from './room-loading.js?v=viewer26';
 import {createCurtainController} from './curtain.js?v=curtain23d';
 import {createRoomBreeze} from './room-breeze.js?v=window38';
@@ -110,7 +110,7 @@ for(const b of document.querySelectorAll('[data-move]')){const code=touchMovemen
 function resetView(){if(mode==='overview')setMode('overview');else{goTo('entry');camera.position.set(.83,1.48,1.66);yaw=.20;pitch=-.20;camera.rotation.set(pitch,yaw,0,'YXZ');}}
 $('walkBtn').onclick=()=>setMode('walk');$('overviewBtn').onclick=()=>setMode('overview');$('resetBtn').onclick=()=>{resetView();canvas.focus({preventScroll:true});};
 function toggleCurtain(){curtainOpen=!curtainOpen;}
-function toggleLight(){lightOn=!lightOn;lamp.intensity=lightOn?7:0;diffuser.material.emissiveIntensity=lightOn?1.5:.1;const rocker=world.getObjectByName('light-switch-rocker');if(rocker)rocker.rotation.z=lightOn?.13:0;}
+function toggleLight(){lightOn=!lightOn;lamp.intensity=lightOn?7:0;diffuser.material.emissiveIntensity=lightOn?1.5:.1;const rocker=world.getObjectByName('light-switch-rocker');if(rocker)rocker.rotation.z=lightOn?.045:0;}
 
 let immersive=false;
 function toggleImmersive(){immersive=!immersive;$('app').classList.toggle('immersive',immersive);$('immersiveBtn').textContent=immersive?'退出沉浸':'沉浸看房';$('immersiveBtn').setAttribute('aria-pressed',String(immersive));}

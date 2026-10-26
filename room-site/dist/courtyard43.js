@@ -1,4 +1,4 @@
-import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement,bindWalkWheel} from './room-input.js?v=wheel30';
+import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement,bindWalkWheel} from './room-input.js?v=switch31';
 import {Reflector} from './vendor/Reflector.js';
 import {installDoorMirror} from './wardrobe.js?v=wheel30';
 import {COURTYARD_LOOK} from './courtyard43-look.js?v=daylight28';
@@ -26,7 +26,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-mirror29a');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-switch31');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');

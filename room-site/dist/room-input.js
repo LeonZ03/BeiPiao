@@ -15,7 +15,7 @@ export function verticalMovement(keys){
 export function wheelHeightDelta(event,pageHeight=800){
   if(event.ctrlKey||!Number.isFinite(event.deltaY))return 0;
   const pixels=event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?pageHeight:1);
-  return -Math.max(-120,Math.min(120,pixels))*.0015;
+  return -Math.max(-120,Math.min(120,pixels))*.0005;
 }
 export function bindWalkWheel({canvas,enabled,move}){
   const onWheel=event=>{

@@ -21,16 +21,16 @@ held.clear();assert.equal(verticalMovement(held),0,'Blur/session clear releases 
 down({code:'KeyW'});down({code:'KeyS'});assert.ok(held.has('KeyW')&&held.has('KeyS'),'W and S retain horizontal movement');
 assert.equal(verticalMovement(held),0);held.clear();
 
-assert.equal(wheelHeightDelta({deltaY:-100,deltaMode:0}),.15,'Forward wheel raises the view');
-assert.ok(Math.abs(wheelHeightDelta({deltaY:3,deltaMode:1})+.072)<1e-12,'Line units normalize to pixels');
-assert.equal(wheelHeightDelta({deltaY:1,deltaMode:2},844),-.18,'Page or large deltas are capped');
+assert.equal(wheelHeightDelta({deltaY:-100,deltaMode:0}),.05,'Forward wheel raises the view in fine steps');
+assert.ok(Math.abs(wheelHeightDelta({deltaY:3,deltaMode:1})+.024)<1e-12,'Line units normalize to pixels');
+assert.equal(wheelHeightDelta({deltaY:1,deltaMode:2},844),-.06,'Page or large deltas are capped');
 assert.equal(wheelHeightDelta({deltaY:Infinity}),0);
 assert.equal(wheelHeightDelta({deltaY:-100,ctrlKey:true}),0,'Trackpad pinch is not height movement');
 const wheelCanvas=new EventTarget();wheelCanvas.clientHeight=844;
 let walking=true,height=1.5;
 const unbind=bindWalkWheel({canvas:wheelCanvas,enabled:()=>walking,move:delta=>height+=delta});
 const wheel=delta=>{const event=new Event('wheel',{cancelable:true});Object.assign(event,{deltaY:delta,deltaMode:0});wheelCanvas.dispatchEvent(event);return event;};
-assert.equal(wheel(-100).defaultPrevented,true);assert.equal(height,1.65);
+assert.equal(wheel(-100).defaultPrevented,true);assert.equal(height,1.55);
 wheel(100);assert.equal(height,1.5);
 walking=false;assert.equal(wheel(-100).defaultPrevented,false,'Overview retains the unmodified wheel for orbit zoom');assert.equal(height,1.5);
 walking=true;unbind();assert.equal(wheel(-100).defaultPrevented,false);assert.equal(height,1.5);
