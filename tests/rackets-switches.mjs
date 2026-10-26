@@ -13,6 +13,7 @@ function load(path){
   return {m,...parsed};
 }
 const yw=load('assets/full-room/'),c43=load('assets/rooms/Courtyard43/interior/');
+const switchSpec=yw.m.statistics.exteriorRefinement?.switch32??yw.m.statistics.exteriorRefinement?.switch31;
 const targets=[];
 for(const [prefix,parent] of [['Clash44',824],['Radical44',811]]){
   const nodes=yw.m.nodes.filter(n=>n.name.startsWith(prefix));assert.ok(nodes.length>=10);
@@ -24,7 +25,7 @@ if(yw.m.statistics.exteriorRefinement?.props45){
   const report=yw.m.statistics.exteriorRefinement.props45;
   assert.ok(report.frameFrontWidthM<.015,'Slim frontal frame section');
   assert.ok(report.surfacePrint.length>=6,'Visible frame prints follow their source surface');
-  assert.equal(yw.m.nodes[1483].matrix[12],Math.fround(yw.m.statistics.exteriorRefinement?.switch31?.rockerCenterX??1.387),'Export matches the current authored switch origin');
+  assert.equal(yw.m.nodes[1483].matrix[12],Math.fround(switchSpec?.rockerCenterX??1.387),'Export matches the current authored switch origin');
   const a=yw.world.getObjectByName('light-switch-rocker'),b=c43.world.getObjectByName('C43_Switch_Rocker');
   const bounds=o=>new THREE.Box3().setFromBufferAttribute(o.geometry.attributes.position).getSize(new THREE.Vector3());
   assert.ok(bounds(a).distanceTo(bounds(b))<1e-7,'Reused switch has the same geometry size');
@@ -39,9 +40,10 @@ if(yw.m.statistics.exteriorRefinement?.props45){
 for(const root of [yw.world,c43.world]){
   const rocker=root.getObjectByName(root===yw.world?'light-switch-rocker':'C43_Switch_Rocker');assert.ok(rocker);targets.push(rocker);
   const box=new THREE.Box3().setFromBufferAttribute(rocker.geometry.attributes.position),size=box.getSize(new THREE.Vector3());
-  assert.ok(size.x<.008&&size.y>.060&&size.z>.060,'Broad rocker with a closed rear skirt');
-  const travel=yw.m.statistics.exteriorRefinement?.switch31?.angle??.13;
-  for(let i=0;i<=20;i++){const angle=travel*i/20,q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),angle);const points=[];for(let x of [box.min.x,box.max.x])for(let y of [box.min.y,box.max.y])for(let z of [box.min.z,box.max.z])points.push(new THREE.Vector3(x,y,z).applyQuaternion(q));assert.ok(points.every(p=>Math.abs(p.x)<.007),'Rocker travel remains inside shallow housing');}
+  assert.ok(size.x<.0101&&size.y>.060&&size.z>.060,'Broad rocker with a thick closed rear skirt');
+  if(switchSpec?.rockerThicknessM)assert.ok(Math.abs(size.x-switchSpec.rockerThicknessM)<1e-7);
+  const travel=switchSpec?.angle??.13,off=switchSpec?.offAngle??0;
+  for(let i=0;i<=20;i++){const angle=off+travel*i/20,q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),angle);const points=[];for(let x of [box.min.x,box.max.x])for(let y of [box.min.y,box.max.y])for(let z of [box.min.z,box.max.z])points.push(new THREE.Vector3(x,y,z).applyQuaternion(q));assert.ok(points.every(p=>Math.abs(p.x)<.007),'Rocker travel remains inside shallow housing');}
 }
 if(yw.m.statistics.exteriorRefinement?.switch31){
   const closed=o=>{
@@ -62,8 +64,9 @@ if(yw.m.statistics.exteriorRefinement?.switch31){
     assert.ok(Math.abs(floor.point.x-(wall-.0002))<.0001,'No overlapping dark plane on the front face');
     const pos=rocker.geometry.attributes.position,pivot=rocker.parent;
     const animated=root===yw.world?rocker:pivot,base=animated.quaternion.clone();
+    if(switchSpec?.offAngle){assert.ok(Math.abs(2*Math.atan2(base.z,base.w)-switchSpec.offAngle)<1e-6,'Saved default state is already tilted');assert.ok(switchSpec.offAngle<0&&switchSpec.onAngle>0,'Both stable endpoints tilt away from vertical');}
     for(let i=0;i<=20;i++){
-      animated.quaternion.copy(base).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),.045*i/20));root.updateMatrixWorld(true);
+      animated.quaternion.copy(base).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),switchSpec.angle*i/20));root.updateMatrixWorld(true);
       for(let v=0;v<pos.count;v++){
         const p=new THREE.Vector3().fromBufferAttribute(pos,v).applyMatrix4(rocker.matrixWorld);
         assert.ok(p.x<wall-.0009,'Button skirt never cuts through the closed floor during switching');

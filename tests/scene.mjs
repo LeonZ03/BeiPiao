@@ -147,8 +147,8 @@ assert.equal(diagnostics.state.collisionRadius,.002);
 assert.ok(diagnostics.canTravel([.3,.75,.4],[-.6,.75,.4]));assert.ok(diagnostics.canTravel([.3,.15,.4],[-.6,.15,.4]));
 assert.equal(diagnostics.canTravel([.9,1.5,2.5],[1.5,1.5,2.5]),false);
 tools.get('navigate_room').execute({view:'entry'});const y=diagnostics.state.position[1];let now=performance.now()+100;
-events.get('keydown')({code:'ShiftLeft',preventDefault:noop});for(let i=0;i<10;i++)frame(now+=50);events.get('keyup')({code:'ShiftLeft'});assert.ok(diagnostics.state.position[1]>y+.30);
-events.get('keydown')({code:'ControlLeft',preventDefault:noop});for(let i=0;i<10;i++)frame(now+=50);events.get('keyup')({code:'ControlLeft'});assert.ok(Math.abs(diagnostics.state.position[1]-y)<.002);
+events.get('keydown')({code:'ArrowUp',preventDefault:noop});for(let i=0;i<10;i++)frame(now+=50);events.get('keyup')({code:'ArrowUp'});assert.ok(diagnostics.state.position[1]>y+.30);
+events.get('keydown')({code:'ArrowDown',preventDefault:noop});for(let i=0;i<10;i++)frame(now+=50);events.get('keyup')({code:'ArrowDown'});assert.ok(Math.abs(diagnostics.state.position[1]-y)<.002);
 const sunlight=renderedScene.getObjectByName('warm-afternoon-sun');const toSun=sunlight.position.clone().sub(sunlight.target.position).normalize(),casters=[];renderedScene.traverse(o=>{if(o.isMesh&&o.castShadow&&!o.material.transparent)casters.push(o);});
 let sunlitFloor=0,sunlitBed=0;
 // Sample the visible floor toward the bay as well: the photo-corrected right
@@ -186,7 +186,7 @@ if(diagnostics.state.wardrobe.doors.length===3){
       renderedScene.updateMatrixWorld(true);
       const leaf=target.children.find(o=>o.userData.blenderNode===target.userData.leafNodeId)||target.children.find(o=>o.isMesh);
       const center=new THREE.Box3().setFromObject(leaf,true).getCenter(new THREE.Vector3());
-      if(id==='wardrobeRight')center.y=.25; // Below the cloth: exact panel picking.
+      if(id==='wardrobeRight')center.y=1.15; // Visible panel inside the cloth contact band.
       const facing=new THREE.Vector3(1,0,0).applyQuaternion(target.getWorldQuaternion(new THREE.Quaternion()));
       if(id!=='wardrobeLeft'&&diagnostics.state.wardrobe.doors.find(d=>d.id===id).amount>.5)facing.negate();
       renderedCamera.position.copy(center).addScaledVector(facing,.62);renderedCamera.lookAt(center);renderedCamera.updateMatrixWorld(true);

@@ -1,3 +1,4 @@
+import {createCurtainDoorContact,curtainContactVertex,curtainContactFragment,curtainContactNormal} from './curtain-contact.js?v=contact33';
 // Animate the evaluated Blender meshes in the vertex shader. Instance buffers,
 // authored shapes, attachment points and the approved sun-shadow proxies stay put.
 const common=`
@@ -58,6 +59,7 @@ const deformation={
 
 export function createRoomBreeze({THREE,world,camera,media=matchMedia}){
   const reduced=media('(prefers-reduced-motion: reduce)'),coarse=media('(pointer: coarse)');
+  const contact=createCurtainDoorContact({THREE,world});
   const clock={value:0},open={value:0},objects=[],entries=[],frustum=new THREE.Frustum(),vp=new THREE.Matrix4();
   const worldWind=new THREE.Vector3(.85,0,.53).normalize(),q=new THREE.Quaternion();
   let elapsed=0,nextStep=0,visible=0,enabled=false,revision=0;
@@ -67,18 +69,22 @@ export function createRoomBreeze({THREE,world,camera,media=matchMedia}){
     const direction=worldWind.clone().applyQuaternion(mesh.getWorldQuaternion(q).invert());
     const uniforms={breezeTime:clock,breezeOpen:open,breezePower:{value:0},breezePhase:{value:phase},breezeDirection:{value:direction}};
     uniforms.breezeCurtainBounds={value:new THREE.Vector3(mesh.userData.closedLeft??0,mesh.userData.fixedRight??0,mesh.userData.openWidth??0)};
+    if(kind==='curtain')Object.assign(uniforms,contact.uniforms);
     const prior=original.onBeforeCompile,priorKey=original.customProgramCacheKey();
     material.onBeforeCompile=(shader,renderer)=>{
       prior.call(original,shader,renderer);
       Object.assign(shader.uniforms,uniforms);
-      shader.vertexShader=common+shader.vertexShader;
+      shader.vertexShader=(kind==='curtain'?curtainContactVertex:'')+common+shader.vertexShader;
       // This runs after Blender's Closed/Gathered morph, before world projection.
-      shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',deformation[kind]+'\n#include <project_vertex>');
+      const press=kind==='curtain'?'vec3 beforeContact=transformed;transformed=curtainContact(transformed);vCurtainContact=smoothstep(.001,.018,beforeContact.z-transformed.z);':'';
+      shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',deformation[kind]+'\n'+press+'\n#include <project_vertex>');
+      if(kind==='curtain')shader.fragmentShader=curtainContactFragment+shader.fragmentShader.replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n'+curtainContactNormal);
       if(kind==='leaf')shader.vertexShader=shader.vertexShader.replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nobjectNormal=breezeLeafRotation()*objectNormal;');
     };
-    material.customProgramCacheKey=()=>priorKey+'-breeze-window37-'+kind;
+    material.customProgramCacheKey=()=>priorKey+'-breeze-window37-'+kind+(kind==='curtain'?'-contact33':'');
     mesh.material=material;mesh.layers.enable(1);mesh.userData.dynamic=true;mesh.userData.breezeKind=kind;
     const bounds=new THREE.Box3().setFromObject(mesh).expandByScalar(kind==='branch'||kind==='leaf'?.17:.10);
+    if(kind==='curtain')bounds.min.z-=.12;
     const center=kind==='flower'?new THREE.Vector3().setFromMatrixPosition(mesh.parent.matrixWorld):bounds.getCenter(new THREE.Vector3());
     objects.push(mesh);entries.push({mesh,kind,uniforms,bounds,center,moving:false});
   }
@@ -90,11 +96,12 @@ export function createRoomBreeze({THREE,world,camera,media=matchMedia}){
   });
   function update(dt,openness,walking){
     open.value=openness;
+    const contactChanged=contact.update(dt,{immediate:reduced.matches||!walking});
     const active=walking&&!reduced.matches;
     if(!active){
       const changed=enabled;enabled=false;visible=0;
       if(changed){entries.forEach(e=>{e.uniforms.breezePower.value=0;e.moving=false;e.mesh.layers.disable(1);});revision++;}
-      return changed;
+      return changed||contactChanged;
     }
     enabled=true;elapsed+=Math.min(Math.max(dt,0),.05);
     const interval=1/(coarse.matches?24:30);
@@ -125,6 +132,6 @@ export function createRoomBreeze({THREE,world,camera,media=matchMedia}){
     }
     revision++;return visible>0;
   }
-  return {objects,update,get movingObjects(){return entries.filter(e=>e.moving).map(e=>e.mesh);},get visibilityMask(){return entries.map(e=>Number(e.moving)).join('');},get enabled(){return enabled;},get time(){return clock.value;},get active(){return enabled&&visible>0;},
-    get state(){return{version:'breeze28',enabled,visibleMeshes:visible,animatedMeshes:objects.length,leafInstances:objects.filter(o=>o.userData.breezeKind==='leaf').reduce((n,o)=>n+o.count,0),time:Number(clock.value.toFixed(2)),reducedMotion:reduced.matches,revision};}};
+  return {objects,update,adjustContactHit(hit,ray){if(!hit.object.userData.curtainShapeKey)return hit;const p=contact.deform(hit.point);if(hit.point.z-p.z>.001){hit.contactDoorCleared=contact.allowsDoorHit?.(hit.point)??false;hit.point.set(p.x,p.y,p.z);hit.distance=Math.max(hit.distance,hit.point.clone().sub(ray.origin).dot(ray.direction));}return hit;},setContactReviewEnabled:value=>contact.setReviewEnabled?.(value),get contactReviewEnabled(){return contact.reviewEnabled??true;},get staticContactRevision(){return reduced.matches?contact.revision:0;},get movingObjects(){return entries.filter(e=>e.moving).map(e=>e.mesh);},get visibilityMask(){return entries.map(e=>Number(e.moving)).join('');},get enabled(){return enabled;},get time(){return clock.value;},get active(){return enabled&&visible>0;},
+    get state(){return{version:'breeze28',enabled,visibleMeshes:visible,animatedMeshes:objects.length,leafInstances:objects.filter(o=>o.userData.breezeKind==='leaf').reduce((n,o)=>n+o.count,0),time:Number(clock.value.toFixed(2)),reducedMotion:reduced.matches,revision,contact:contact.state};}};
 }

@@ -26,7 +26,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-switch31');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-switch32');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -53,7 +53,7 @@ try{
   const wardrobeMirror=installDoorMirror({THREE,world,renderer,source:mirrorSource,Reflector,clipBias:0,enabled:()=>mode==='walk'&&(byId.get('wardrobeFar')?.amount??0)>.015});
   const interactions=(manifest.interactions||[]).map(desc=>{
     const node=world.getObjectByName(manifest.nodes[desc.node].name);if(!node)throw Error(`缺少可操作物件 ${desc.id}`);
-    node.userData.interactive=true;const amount=desc.defaultOpen?1:0,axis=axes[desc.axis]||axes.y,angle=['hinge','laptop'].includes(desc.kind)?desc.openAngle:desc.kind==='lock'?Math.PI/2:.10;
+    node.userData.interactive=true;const amount=desc.defaultOpen?1:0,axis=axes[desc.axis]||axes.y,angle=['hinge','laptop'].includes(desc.kind)?desc.openAngle:desc.kind==='lock'?Math.PI/2:(desc.angle??.10);
     const base=node.quaternion.clone();if(desc.kind==='hinge'&&amount)base.multiply(new THREE.Quaternion().setFromAxisAngle(axis,-angle));
     const record={...desc,node,amount,target:amount,base,axis,angle,serial:0,blocked:false,moving:false,position:new THREE.Vector3(),meshes:[]};
     node.traverse(o=>{if(o.isMesh){record.meshes.push(o);o.userData.interactive=true;}});return record;
@@ -173,7 +173,7 @@ try{
   window.addEventListener('resize',resize);window.visualViewport?.addEventListener('resize',resize);
   document.addEventListener('visibilitychange',()=>{clearInput();last=performance.now();audio.setActive(entered&&!document.hidden);if(document.hidden){snow.setEnabled(false);dust.setEnabled(false);renderProbe.update(performance.now(),false);cancelAnimationFrame(frame);frame=0;}else invalidate();});
   reducedMotion.addEventListener?.('change',()=>invalidate());
-  const state=()=>({room:'Courtyard43',name:'43号院',active:entered,revision:manifest.revision,stage:'interior',look:COURTYARD_LOOK.version,structureApproved:true,reviewLook:reviewLook.mode,mode,position:camera.position.toArray(),yaw,pitch,immersive,fullscreen:!!document.fullscreenElement,lightOn,lockOn,curtainOpen:curtains.every(item=>item.target===1),curtainAmount:curtainAmount(),curtainAmounts:curtainAmounts(),curtains:Object.fromEntries(curtains.map(item=>[item.id.replace('curtain-',''),{amount:item.amount,target:item.target}])),snow:{active:snow.active,count:snow.count},dust:{active:dust.active,count:dust.count,elapsed:dust.elapsed},sound:audio.state,interactions:interactions.map(({id,kind,amount,target,blocked,openAngle,defaultOpen})=>({id,kind,amount,target,blocked,openAngle,defaultOpen:!!defaultOpen})),rendering:{drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderCount:finish.frames,batchedMeshes:batching.removed,batches:batching.created,collisionSurfaces:navigation.surfaces,collisionRadius:navigation.radius},assetStatistics:statistics});
+  const state=()=>({room:'Courtyard43',name:'43号院',active:entered,revision:manifest.revision,stage:'interior',look:COURTYARD_LOOK.version,structureApproved:true,reviewLook:reviewLook.mode,mode,position:camera.position.toArray(),yaw,pitch,immersive,fullscreen:!!document.fullscreenElement,lightOn,lockOn,curtainOpen:curtains.every(item=>item.target===1),curtainAmount:curtainAmount(),curtainAmounts:curtainAmounts(),curtains:Object.fromEntries(curtains.map(item=>[item.id.replace('curtain-',''),{amount:item.amount,target:item.target}])),snow:{active:snow.active,count:snow.count},dust:{active:dust.active,count:dust.count,elapsed:dust.elapsed},sound:audio.state,interactions:interactions.map(({id,kind,amount,target,blocked,openAngle,defaultOpen,node,angle})=>({id,kind,amount,target,blocked,openAngle,defaultOpen:!!defaultOpen,...(kind==='switch'?{angle,quaternion:node.quaternion.toArray()}:{} )})),rendering:{drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,renderCount:finish.frames,batchedMeshes:batching.removed,batches:batching.created,collisionSurfaces:navigation.surfaces,collisionRadius:navigation.radius},assetStatistics:statistics});
   window.courtyard43Diagnostics={get state(){return state();},canTravel:(a,b)=>navigation.canTravel(new THREE.Vector3(...a),new THREE.Vector3(...b)),navigate:go,interact,comparisonViews:Object.fromEntries(['entry','bed','curtain','tabletop'].map(name=>[name,structuredClone(review.viewpoints[name]||extraViews[name])])),getObjectBounds:name=>landmarks.get(name)?.clone()};
   const lifecycle=new AbortController(),register=t=>{try{Promise.resolve(document.modelContext?.registerTool(t,{signal:lifecycle.signal})).catch(()=>{});}catch{}};
   register({name:'set_courtyard43_review_look',description:'仅本次网页验收：中性灰检查形体、关闭回忆调色、恢复完整效果；不保存也不改模型。',inputSchema:{type:'object',properties:{mode:{type:'string',enum:['neutral-grey','no-grade','final']}},required:['mode'],additionalProperties:false},execute({mode}){reviewLook.set(mode);return state();}});

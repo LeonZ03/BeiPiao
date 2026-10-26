@@ -1,4 +1,4 @@
-export function createInteractions({THREE,world,camera,canvas,curtain,toggleCurtain,toggleLight,wardrobe,laptop,toast,onSound=()=>{}}){
+export function createInteractions({THREE,world,camera,canvas,curtain,toggleCurtain,toggleLight,wardrobe,laptop,toast,onSound=()=>{},adjustHit=hit=>hit}){
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),targets=[],water={shower:false,faucet:false};
   const thumbturn=world.getObjectByName('clickable-privacy-thumbturn');
   let doorLocked=false,turnTarget=0,lastUpdate=0;
@@ -38,11 +38,15 @@ export function createInteractions({THREE,world,camera,canvas,curtain,toggleCurt
   function pick(x,y,locked=false){
     if(locked)pointer.set(0,0);else{const r=canvas.getBoundingClientRect();pointer.set((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1);}
     camera.updateMatrixWorld();world.updateMatrixWorld(true);ray.setFromCamera(pointer,camera);ray.far=4;
-    const candidates=ray.intersectObjects(targets,true).filter(h=>visible(h.object));
+    let candidates=ray.intersectObjects(targets,true).filter(h=>visible(h.object)).map(h=>adjustHit(h,ray.ray)).sort((a,b)=>a.distance-b.distance);
+    // The exact door ray hit remains authoritative. A GPU-pushed cloth hit is
+    // from its old CPU surface and must not steal that now-visible door.
+    const pushedDoor=candidates.find(h=>ownerOf(h.object)?.userData.interactive==='wardrobeRight');
+    if(pushedDoor)candidates=candidates.filter(h=>!h.contactDoorCleared);
     if(!candidates.length)return null;
     const first=candidates[0],owner=ownerOf(first.object);
     // Opaque intervening geometry prevents operating fixtures through a wall.
-    const obstruction=ray.intersectObject(world,true).find(h=>h.object.isMesh&&visible(h.object)&&h.distance<first.distance-.006&&!(Array.isArray(h.object.material)?h.object.material:[h.object.material]).every(m=>m.transparent)&&ownerOf(h.object)!==owner);
+    const obstruction=ray.intersectObject(world,true).map(h=>adjustHit(h,ray.ray)).find(h=>!(h.contactDoorCleared&&owner?.userData.interactive==='wardrobeRight')&&h.object.isMesh&&visible(h.object)&&h.distance<first.distance-.006&&!(Array.isArray(h.object.material)?h.object.material:[h.object.material]).every(m=>m.transparent)&&ownerOf(h.object)!==owner);
     if(obstruction)return null;return owner?.userData.interactive;
   }
   function hover(x,y,locked){const id=pick(x,y,locked);canvas.style.cursor=id?'pointer':'grab';return id;}

@@ -117,6 +117,8 @@ Courtyard43 的 `build-whitebox.py` 已在结构批准后锁止，不再用于�
 
 交互音效由 `room-site/dist/room-audio.js` 管理，首次打开网页必须默认静音，不持久化取消静音的选择。仅用户点击右上角声音按钮后创建/恢复 AudioContext 并加载本地录音；沉浸模式保留此按钮，不恢复“对照照片”。柜门使用用户提供的 `rooms/yongwang-jiayuan/assets/audio/cabinet-door-opens-and-closes.mp3`，按原声前后两次动作裁出独立的开门与关门音频；每次运动只播放对应片段一次，保持原音调和原始相对音量，不循环、不叠加旧咯吱声或合成关门撞击。开门声随实际正向运动启动，关门声在 amount ≤ 0.18 时启动，为录音内约 0.5 秒的碰合前奏预留提前量，让撞击声对齐视觉合拢并保留自然尾音；不能等到几乎完全合上才启动整段录音。门锁瞬态增益为普通开关的 2.5 倍，其他音量保持独立；反向或阻挡时停止旧动作声。静音/后台清理所有声源与动作状态。开合仍采用较缓的指数缓动（系数 3.1）；窗帘仍使用轻量合成布料声。水龙头和花洒分别使用独立的 CC0 水柱落盆、喷淋实录，不能退回同一段噪声仅改滤波。`rooms/yongwang-jiayuan/scripts/prepare-room-audio.py` 为水声裁取稳定段并交叉混合循环接缝，为柜门分离开关动作并淡化裁切边缘，导出无编码延迟的单声道 PCM；来源和许可见 `dist/assets/audio/sources.json`。水声跟随当前水流状态，不能在每帧创建重复声源。首页、后台暂停并清理声源，返回房间按当前状态恢复。修改后运行 `tests/audio.mjs` 和 `tests/wardrobe.mjs`，检查默认静音、独立持续水声、循环接缝、开合速度、暂停/重入及加载失败重试。
 
+最靠窗柜门 `wardrobeRight` 与闭帘的接触复用 `curtain-contact.js` GPU局部约束，详见永旺 `docs/CURTAIN-CONTACT33.md`；不得为了该接触每帧重建/上传帘网格，或取消接触核心区与过渡区的拾取区别。43号院门帘无接触时不强加形变。
+
 ### 4.6 自然微风：已验证的可复用做法
 
 用户已认可 `breeze28` 的微风效果，实现基线为 Git 提交 `f1b0fd2`。新房间优先复用其方法，再按实际尺寸、窗户方向和默认观察距离校准。相关代码为 `room-site/dist/room-breeze.js`（风动）、`sunlit-dust.js`（微尘）、`soft-daylight.js`（渲染缓存）和 `main.js`（调度）。不要仅为了添加微风重新建模或覆盖 Blender 工程。
