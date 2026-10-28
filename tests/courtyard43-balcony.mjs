@@ -37,9 +37,15 @@ for(const side of ['Left','Right']){
 }
 assert.equal(added.filter(n=>/RackScissor\d_\d_\d$/.test(n.name)).length,8);
 assert.equal(added.filter(n=>/DryingRailWallSocket/.test(n.name)).length,0,'Ceiling supports replace the mistaken wall sockets');
-for(const n of added.filter(n=>/RackCeilingPlate\d$/.test(n.name))){
+assert.equal(added.filter(n=>/RackCeilingPlate|RackParallelRail|RackEndCrossbar/.test(n.name)).length,0,'Single pole has no upper rectangle, second pole or crossbars');
+assert.equal(added.filter(n=>/RackCeilingStud\d_\d$/.test(n.name)).length,4);
+for(const n of added.filter(n=>/RackCeilingStud\d_\d$/.test(n.name))){
   const b=new THREE.Box3().setFromObject(world.getObjectByName(n.name));
-  assert.ok(Math.abs(b.max.y-2.75)<.00001,'Rack plates contact the balcony ceiling');
+  assert.ok(b.min.y<2.75&&b.max.y>2.75,'Small studs enter the balcony ceiling directly');
+}
+for(const n of added.filter(n=>/RackScissor\d_\d_\d$/.test(n.name))){
+  const b=new THREE.Box3().setFromObject(world.getObjectByName(n.name));
+  assert.ok(b.max.x-b.min.x>.24&&b.max.z-b.min.z<.005,'Scissor plane follows the single pole after the 90 degree rotation');
 }
 const rightCabinet=new THREE.Box3().makeEmpty();
 for(const n of added.filter(n=>n.name.startsWith('C43_B35_RightCabinet'))){

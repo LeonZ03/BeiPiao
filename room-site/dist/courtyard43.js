@@ -26,7 +26,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-balcony36');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-rack37');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
