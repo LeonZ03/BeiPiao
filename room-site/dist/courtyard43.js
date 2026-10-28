@@ -1,7 +1,7 @@
 import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement,bindWalkWheel} from './room-input.js?v=switch31';
 import {Reflector} from './vendor/Reflector.js';
 import {installDoorMirror} from './wardrobe.js?v=wheel30';
-import {COURTYARD_LOOK} from './courtyard43-look.js?v=tonal34';
+import {COURTYARD_LOOK} from './courtyard43-look.js?v=balcony35';
 // Independent completed-room viewer. Blender owns persistent shapes/materials;
 // this module owns input, sound, live lighting and reversible state animation.
 import * as THREE from 'three';
@@ -14,7 +14,7 @@ import {parseBlenderRoom} from './blender-room.js?v=pages1';
 import {loadRoomBinary} from './room-binary.js?v=pages1';
 import {startRoomLoading,reportRoomLoading,finishRoomLoading,failRoomLoading} from './room-loading.js?v=viewer26';
 import {createCourtyardAudio} from './courtyard43-audio.js?v=courtyard43-interior21';
-import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=tonal34';
+import {batchCourtyardGeometry,createCourtyardNavigation,createCourtyardLighting,createCourtyardFinish,easedAmount,oppositeEndpoint,courtyardLockView,courtyardOverviewView} from './courtyard43-effects.js?v=balcony35';
 
 import {createRoomSession} from './room-session.js?v=session39';
 const session=createRoomSession();
@@ -26,7 +26,7 @@ $('soundBtn').onclick=async()=>{if(!await audio.setMuted(!audio.muted))toast('�
 startRoomLoading();
 
 try{
-  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-switch32');
+  const response=await fetch('./assets/rooms/Courtyard43/interior/scene.json?v=courtyard43-balcony35');
   if(!response.ok)throw Error(`房间清单读取失败 (${response.status})`);
   const manifest=await response.json();
   if(manifest.roomId!=='Courtyard43'||manifest.stage!=='interior'||!manifest.structureApproved)throw Error('房间资料版本不匹配');
@@ -77,6 +77,10 @@ try{
   const renderProbe=createRenderProbe();
   const reviewLook=createCourtyardReview(THREE,world,finish,invalidate);
   const extraViews={
+    balconyLeft:{position:[-.63,1.48,-.34],target:[-1.79,1.08,-.68]},
+    balconyRight:{position:[1.05,1.48,-.34],target:[2.04,1.02,-.67]},
+    dryingRack:{position:[.1,1.57,-.19],target:[.1,2.23,-.76]},
+    bedheadCeiling:{position:[-.50,1.69,1.92],target:[-1.87,2.62,1.40]},
     mirror:{position:[1.45,1.25,1.5],target:[1.39,1.025,.35]},
     corridor:{position:[1.58,1.48,2.65],target:[.15,.75,4.12]},
     wardrobe:{position:[.76,1.28,.86],target:[1.70,1.06,.8]},

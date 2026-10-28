@@ -1,4 +1,4 @@
-import {COURTYARD_LOOK as LOOK} from './courtyard43-look.js?v=tonal34';
+import {COURTYARD_LOOK as LOOK} from './courtyard43-look.js?v=balcony35';
 // Courtyard-specific geometry batching, real-surface navigation and neutral
 // lighting. No Yongwang layout, vegetation, time-of-day or particle assumptions.
 import {installSoftSunShadows} from './soft-daylight.js?v=breeze28';
@@ -81,14 +81,16 @@ export function createCourtyardLighting(THREE,scene,renderer,materials){
   const daylight=new THREE.DirectionalLight(LOOK.daylightColor,.3);daylight.name='C43_North_Daylight';daylight.position.set(-.4,4.8,-4);daylight.target.position.set(.25,.4,1.3);daylight.castShadow=true;daylight.shadow.intensity=LOOK.daylightShadow;daylight.shadow.mapSize.set(2048,2048);Object.assign(daylight.shadow.camera,{left:-3.5,right:3.5,top:3.6,bottom:-3.4,near:.1,far:14});daylight.shadow.normalBias=.002;daylight.shadow.bias=-.00006;daylight.shadow.camera.updateProjectionMatrix();scene.add(daylight,daylight.target);
   const windowFills=[-.22,.91].map((x,i)=>{const light=new THREE.PointLight('#e5edf5',.3,6,2);light.name=`C43_Window_Fill_${i===0?'Left':'Right'}`;light.position.set(x,1.88,-.25);scene.add(light);return light;});
   const bounce=new THREE.PointLight(LOOK.bounceColor,.18,6,1);bounce.name='C43_Interior_Bounce';bounce.position.set(-.7,1.2,1.3);scene.add(bounce);
-  // One switched ceiling emitter remains the only artificial shadow source.
+  // Keep one ceiling shadow source. The three photographed bedhead downlights
+  // use short non-shadow cones; they do not allocate three more shadow maps.
   // Native point PCF keeps the same nine taps; a wider radius and weaker shadow
   // contrast approximate the diffuse fixture and wall interreflection visible
   // in P03/P04 without adding shadow lamps or changing the shared shader.
   const ceiling=new THREE.PointLight('#fff4e6',0,7,2);ceiling.name='C43_Ceiling_Light';ceiling.position.set(.1,2.62,1.425);ceiling.castShadow=true;ceiling.shadow.mapSize.set(1024,1024);ceiling.shadow.normalBias=.012;ceiling.shadow.bias=-.0015;ceiling.shadow.radius=12;ceiling.shadow.intensity=.6;ceiling.shadow.camera.near=.08;ceiling.shadow.camera.far=7;scene.add(ceiling);
+  const bedheadLights=[.60,1.45,2.30].map((z,i)=>{const light=new THREE.SpotLight('#fff0d8',0,2.8,.65,.65,2);light.name=`C43_Bedhead_Downlight_${i}`;light.position.set(-1.885,2.545,z);light.target.position.set(-1.70,1.10,z);scene.add(light,light.target);return light;});
   const fixtureMaterials=materials.filter(m=>m.name?.includes('Downlight')||m.userData?.lightFixture),clothMaterials=materials.filter(m=>m.userData.curtainBacklight);
   for(const material of clothMaterials)installCourtyardCurtainTransmission(material);
-  function update(curtainOpen,lightOn,sides={left:curtainOpen,right:curtainOpen}){const clamp=value=>Math.max(0,Math.min(1,value)),a=clamp(curtainOpen),left=clamp(sides.left??a),right=clamp(sides.right??a);scene.environmentIntensity=LOOK.environmentBase+LOOK.environmentGain*a+(lightOn?.06:0);sky.intensity=LOOK.skyBase+LOOK.skyGain*a;sky.groundColor.copy(groundClosed).lerp(groundOpen,a);daylight.intensity=LOOK.daylightBase+LOOK.daylightGain*a;windowFills[0].intensity=LOOK.windowBase+LOOK.windowGain*left;windowFills[1].intensity=LOOK.windowBase+LOOK.windowGain*right;bounce.intensity=LOOK.bounceBase+LOOK.bounceGain*a+(lightOn?.13:0);ceiling.intensity=lightOn?4.8:0;for(const m of fixtureMaterials)m.emissiveIntensity=lightOn?1.15:0;for(const m of clothMaterials){const openness=m.userData.curtainSide==='left'?left:m.userData.curtainSide==='right'?right:a;m.emissiveIntensity=.045*(1-openness);}renderer.shadowMap.needsUpdate=true;}
+  function update(curtainOpen,lightOn,sides={left:curtainOpen,right:curtainOpen}){const clamp=value=>Math.max(0,Math.min(1,value)),a=clamp(curtainOpen),left=clamp(sides.left??a),right=clamp(sides.right??a);scene.environmentIntensity=LOOK.environmentBase+LOOK.environmentGain*a+(lightOn?.06:0);sky.intensity=LOOK.skyBase+LOOK.skyGain*a;sky.groundColor.copy(groundClosed).lerp(groundOpen,a);daylight.intensity=LOOK.daylightBase+LOOK.daylightGain*a;windowFills[0].intensity=LOOK.windowBase+LOOK.windowGain*left;windowFills[1].intensity=LOOK.windowBase+LOOK.windowGain*right;bounce.intensity=LOOK.bounceBase+LOOK.bounceGain*a+(lightOn?.13:0);ceiling.intensity=lightOn?4.8:0;for(const light of bedheadLights)light.intensity=lightOn?.65:0;for(const m of fixtureMaterials)m.emissiveIntensity=lightOn?1.15:0;for(const m of clothMaterials){const openness=m.userData.curtainSide==='left'?left:m.userData.curtainSide==='right'?right:a;m.emissiveIntensity=.045*(1-openness);}renderer.shadowMap.needsUpdate=true;}
   update(0,false);return{update,daylight,dispose(){environment.dispose();}};
 }
 

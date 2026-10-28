@@ -9,7 +9,10 @@ const clothSides=['left','right'].map(side=>{const m=new THREE.MeshStandardMater
 const lights=createCourtyardLighting({...THREE,PMREMGenerator:ProbeGenerator},lightingScene,lightingRenderer,[fixture,...clothSides]);
 THREE.ShaderChunk.shadowmap_pars_fragment=originalShadowChunk;
 const lightingSources=lightingScene.children.filter(o=>o.isLight),ceiling=lightingScene.getObjectByName('C43_Ceiling_Light'),leftFill=lightingScene.getObjectByName('C43_Window_Fill_Left'),rightFill=lightingScene.getObjectByName('C43_Window_Fill_Right');
-assert.equal(lightingSources.length,6,'Calibration keeps the existing light budget');
+assert.equal(lightingSources.length,9,'Three photographed bedhead lamps add only non-shadow cones');
+const bedheadLights=lightingSources.filter(o=>o.name.startsWith('C43_Bedhead_Downlight_'));
+assert.equal(bedheadLights.length,3);
+assert.ok(bedheadLights.every(o=>o.isSpotLight&&!o.castShadow&&o.intensity===0));
 assert.equal(lightingSources.filter(o=>o.castShadow).length,2,'Only north daylight and one ceiling emitter cast shadows');
 assert.ok(probeMeshes<=3,'Reflection probe has no unsupported side studio emitter');
 assert.equal(ceiling.intensity,0);assert.equal(fixture.emissiveIntensity,0,'The ceiling fixture starts switched off');
@@ -23,6 +26,7 @@ const independentFills=[leftFill.intensity,rightFill.intensity],dayIntensity=lig
 lights.update(.5,true,{left:1,right:0});
 assert.deepEqual([leftFill.intensity,rightFill.intensity],independentFills,'The ceiling switch does not alter individual window inputs');
 assert.equal(lights.daylight.intensity,dayIntensity);assert.ok(ceiling.intensity>0&&fixture.emissiveIntensity>0);
+assert.ok(bedheadLights.every(o=>o.intensity>0),'The three small fixtures follow the existing switch');
 assert.ok(lightingScene.environmentIntensity>closedEnvironment,'Switched light includes a modest indirect response');
 lights.update(0,false);assert.equal(ceiling.intensity,0);assert.equal(fixture.emissiveIntensity,0);assert.equal(leftFill.intensity,rightFill.intensity);
 lights.dispose();assert.equal(probeDisposed,true,'Lighting disposal releases its generated environment');
