@@ -30,11 +30,23 @@ for(const side of ['Left','Right']){
   assert.equal(fronts.length,side==='Left'?2:1);
   for(const n of fronts){
     const b=new THREE.Box3().setFromObject(world.getObjectByName(n.name));
-    assert.ok(b.min.y>=.015&&b.max.y<.93,'Cabinets stand on the existing balcony floor');
+    assert.ok(b.min.y>=.015&&b.max.y>1&&b.max.y<1.1,'Taller cabinets retain floor contact');
     assert.ok(b.min.x>=-2.025&&b.max.x<=2.225,'Cabinet remains within approved walls');
   }
   assert.ok(world.getObjectByName(`C43_B35_OldCurtain${side}`));
 }
+assert.equal(added.filter(n=>/RackScissor\d_\d_\d$/.test(n.name)).length,8);
+assert.equal(added.filter(n=>/DryingRailWallSocket/.test(n.name)).length,0,'Ceiling supports replace the mistaken wall sockets');
+for(const n of added.filter(n=>/RackCeilingPlate\d$/.test(n.name))){
+  const b=new THREE.Box3().setFromObject(world.getObjectByName(n.name));
+  assert.ok(Math.abs(b.max.y-2.75)<.00001,'Rack plates contact the balcony ceiling');
+}
+const rightCabinet=new THREE.Box3().makeEmpty();
+for(const n of added.filter(n=>n.name.startsWith('C43_B35_RightCabinet'))){
+  rightCabinet.union(new THREE.Box3().setFromObject(world.getObjectByName(n.name)));
+}
+const returnSill=new THREE.Box3().setFromObject(world.getObjectByName('C43_Window_Return_Stone_Sill'));
+assert.ok(returnSill.min.x-rightCabinet.max.x>=.009,'Taller right cabinet clears the existing return-window sill');
 const light=world.getObjectByName('C43_B35_BedheadLight0_Diffuser');
 const centre=new THREE.Box3().setFromObject(light).getCenter(new THREE.Vector3());
 // An actual opening through the soffit exposes the inset diffuser to the room.
