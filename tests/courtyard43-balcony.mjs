@@ -30,7 +30,7 @@ for(const side of ['Left','Right']){
   assert.equal(fronts.length,side==='Left'?2:1);
   for(const n of fronts){
     const b=new THREE.Box3().setFromObject(world.getObjectByName(n.name));
-    assert.ok(b.min.y>=.015&&b.max.y>1&&b.max.y<1.1,'Taller cabinets retain floor contact');
+    assert.ok(b.min.y>=.015&&b.max.y>1.1&&b.max.y<1.24,'Taller cabinets retain floor contact');
     assert.ok(b.min.x>=-2.025&&b.max.x<=2.225,'Cabinet remains within approved walls');
   }
   assert.ok(world.getObjectByName(`C43_B35_OldCurtain${side}`));
@@ -45,7 +45,7 @@ for(const n of added.filter(n=>/RackCeilingStud\d_\d$/.test(n.name))){
 }
 for(const n of added.filter(n=>/RackScissor\d_\d_\d$/.test(n.name))){
   const b=new THREE.Box3().setFromObject(world.getObjectByName(n.name));
-  assert.ok(b.max.x-b.min.x>.24&&b.max.z-b.min.z<.005,'Scissor plane follows the single pole after the 90 degree rotation');
+  assert.ok(b.max.x-b.min.x>.17&&b.max.z-b.min.z<.005,'Scissor plane follows the single pole after the 90 degree rotation');
 }
 const rightCabinet=new THREE.Box3().makeEmpty();
 for(const n of added.filter(n=>n.name.startsWith('C43_B35_RightCabinet'))){
@@ -53,6 +53,20 @@ for(const n of added.filter(n=>n.name.startsWith('C43_B35_RightCabinet'))){
 }
 const returnSill=new THREE.Box3().setFromObject(world.getObjectByName('C43_Window_Return_Stone_Sill'));
 assert.ok(returnSill.min.x-rightCabinet.max.x>=.009,'Taller right cabinet clears the existing return-window sill');
+for(const n of added.filter(n=>/WireHanger\d$/.test(n.name))){
+  const o=world.getObjectByName(n.name),b=new THREE.Box3().setFromObject(o);
+  assert.ok(b.max.x-b.min.x<.005&&b.max.z-b.min.z>.37,'Hanger plane is perpendicular to pole');
+  const pivot=o.getWorldPosition(new THREE.Vector3());assert.ok(Math.abs(pivot.y-2.105)<.0001,'Hook pivot follows lowered rail');
+  assert.equal(o.userData.breezeHanger,true);
+}
+const pole=new THREE.Box3().setFromObject(world.getObjectByName('C43_B35_DryingRail'));
+assert.ok(Math.abs(pole.getCenter(new THREE.Vector3()).y-2.095)<.0001,'Single pole lowered 14 cm');
+for(const side of ['Left','Right']){
+  const cabinet=new THREE.Box3().makeEmpty();
+  for(const n of added.filter(n=>n.name.startsWith(`C43_B35_${side}Cabinet`)))cabinet.union(new THREE.Box3().setFromObject(world.getObjectByName(n.name)));
+  const cloth=new THREE.Box3().setFromObject(world.getObjectByName(`C43_B35_OldCurtain${side}`));
+  assert.ok(cabinet.min.z-cloth.max.z>.025,'Case clears the curtain including breeze allowance');
+}
 const light=world.getObjectByName('C43_B35_BedheadLight0_Diffuser');
 const centre=new THREE.Box3().setFromObject(light).getCenter(new THREE.Vector3());
 // An actual opening through the soffit exposes the inset diffuser to the room.

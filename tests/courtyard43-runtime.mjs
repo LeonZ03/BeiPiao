@@ -31,7 +31,7 @@ const bytes=fs.readFileSync(new URL('geometry.bin',base)),buffer=bytes.buffer.sl
 const textures=manifest.textures.map(t=>{assert.ok(fs.existsSync(new URL('../room-site/dist/'+t.webPath,import.meta.url)));return new THREE.Texture();});
 const {world,refs}=parseBlenderRoom(THREE,manifest,buffer,textures);
 const interactions=manifest.interactions.map(d=>({...d,object:world.getObjectByName(manifest.nodes[d.node].name)}));
-assert.deepEqual(new Set(interactions.filter(d=>d.kind!=='curtain').map(d=>d.id)),new Set(['entry-door','entry-lock','ceiling-switch','wardrobeFar','wardrobeNear']));
+assert.deepEqual(new Set(interactions.filter(d=>d.kind!=='curtain').map(d=>d.id)),new Set(['entry-door','entry-lock','laptop','ceiling-switch','wardrobeFar','wardrobeNear']));
 const curtainRoots=interactions.filter(d=>d.kind==='curtain');
 assert.ok(curtainRoots.length===1||curtainRoots.length===2,'Recognized legacy or independent curtain pack');
 assert.deepEqual(new Set(curtainRoots.map(d=>d.id)),new Set(curtainRoots.length===1?['curtain']:['curtain-left','curtain-right']));
@@ -68,7 +68,7 @@ const clothSides=['left','right'].map(side=>{const m=new THREE.MeshStandardMater
 const lights=createCourtyardLighting({...THREE,PMREMGenerator:ProbeGenerator},lightingScene,lightingRenderer,[fixture,...clothSides]);
 THREE.ShaderChunk.shadowmap_pars_fragment=originalShadowChunk;
 const lightingSources=lightingScene.children.filter(o=>o.isLight),ceiling=lightingScene.getObjectByName('C43_Ceiling_Light'),leftFill=lightingScene.getObjectByName('C43_Window_Fill_Left'),rightFill=lightingScene.getObjectByName('C43_Window_Fill_Right');
-assert.equal(lightingSources.length,6,'Calibration keeps the existing light budget');
+assert.equal(lightingSources.length,9,'Main lighting plus three previously confirmed bedhead downlights');
 assert.equal(lightingSources.filter(o=>o.castShadow).length,2,'Only north daylight and one ceiling emitter cast shadows');
 assert.ok(probeMeshes<=3,'Reflection probe has no unsupported side studio emitter');
 assert.equal(ceiling.intensity,0);assert.equal(fixture.emissiveIntensity,0,'The ceiling fixture starts switched off');
@@ -137,7 +137,7 @@ const viewerSource=fs.readFileSync(new URL('../room-site/dist/courtyard43.js',im
 const controllerFunction=(name,next)=>viewerSource.slice(viewerSource.indexOf(`  function ${name}(`),viewerSource.indexOf(`  function ${next}(`));
 const panelItems=['left','right'].map(side=>{const node=new THREE.Group(),mesh=new THREE.Mesh(new THREE.BoxGeometry(.2,1,.02),new THREE.MeshBasicMaterial());mesh.morphTargetInfluences=[0];node.add(mesh);return{id:`curtain-${side}`,kind:'curtain',node,meshes:[mesh],amount:0,target:0,speed:0,serial:0,position:new THREE.Vector3()};});
 const controllerLighting=[],controllerAudio=[];
-const controller={THREE,curtains:panelItems,interactions:panelItems,byId:new Map(panelItems.map(p=>[p.id,p])),byObject:new Map(panelItems.map(p=>[p.node,p])),easedAmount,oppositeEndpoint,tmp:new THREE.Vector3(),camera:{position:new THREE.Vector3()},yaw:0,lockOn:false,lightOn:false,hinges:[],dirty:false,toast(){},invalidate(){},state(){return panelItems.map(p=>({amount:p.amount,target:p.target}));},navigation:{updateDynamic(){}},lighting:{update(...args){controllerLighting.push(args);}},audio:{setListener(){},update(dt,args){controllerAudio.push(args);}},curtainAmount:()=>panelItems.reduce((sum,p)=>sum+p.amount,0)/2,curtainAmounts:()=>({left:panelItems[0].amount,right:panelItems[1].amount})};
+const controller={THREE,world:{userData:{geometryRevision:0}},curtains:panelItems,interactions:panelItems,byId:new Map(panelItems.map(p=>[p.id,p])),byObject:new Map(panelItems.map(p=>[p.node,p])),easedAmount,oppositeEndpoint,tmp:new THREE.Vector3(),camera:{position:new THREE.Vector3()},yaw:0,lockOn:false,lightOn:false,hinges:[],dirty:false,toast(){},invalidate(){},state(){return panelItems.map(p=>({amount:p.amount,target:p.target}));},navigation:{updateDynamic(){}},lighting:{update(...args){controllerLighting.push(args);}},audio:{setListener(){},update(dt,args){controllerAudio.push(args);}},curtainAmount:()=>panelItems.reduce((sum,p)=>sum+p.amount,0)/2,curtainAmounts:()=>({left:panelItems[0].amount,right:panelItems[1].amount})};
 vm.runInNewContext([controllerFunction('owner','pick'),controllerFunction('apply','blocksViewer'),controllerFunction('activate','interact'),controllerFunction('interact','updateInteractions'),controllerFunction('updateInteractions','resize')].join('\n'),controller);
 assert.equal(controller.owner(panelItems[0].meshes[0]).id,'curtain-left');assert.equal(controller.owner(panelItems[1].meshes[0]).id,'curtain-right');
 controller.interact('curtain-left',true);for(let i=0;i<200;i++)controller.updateInteractions(.025);
