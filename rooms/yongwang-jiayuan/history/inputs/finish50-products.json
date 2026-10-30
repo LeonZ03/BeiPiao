@@ -1,0 +1,53 @@
+[
+  {
+    "name": "rejoice-label50",
+    "source": "rooms/yongwang-jiayuan/assets/finish50/labels/rejoice-visible-label50.png",
+    "crop": [
+      0,
+      0,
+      86,
+      200
+    ],
+    "node": 1528,
+    "height": 0.166,
+    "width": 0.049,
+    "depth": 0.032,
+    "profile": "rejoice",
+    "lo": 0.08,
+    "hi": 0.79
+  },
+  {
+    "name": "safeguard-label50",
+    "source": "rooms/yongwang-jiayuan/assets/finish50/labels/safeguard-visible-label50.png",
+    "crop": [
+      0,
+      0,
+      80,
+      177
+    ],
+    "node": 1529,
+    "height": 0.174,
+    "width": 0.048,
+    "depth": 0.03,
+    "profile": "safeguard",
+    "lo": 0.06,
+    "hi": 0.81
+  },
+  {
+    "name": "lux-label50",
+    "source": "rooms/yongwang-jiayuan/assets/finish50/labels/lux-visible-label50.png",
+    "crop": [
+      0,
+      0,
+      131,
+      223
+    ],
+    "node": 1530,
+    "height": 0.195,
+    "width": 0.068,
+    "depth": 0.04,
+    "profile": "lux",
+    "lo": 0.08,
+    "hi": 0.79
+  }
+]

@@ -39,7 +39,7 @@ async function route(){
   courtyard.hidden=!isCourtyard;syncCourtyard();
   if(isCourtyard){
     roomModule?.pauseRoom();app.hidden=true;archive.hidden=true;document.title='43号院 · 北漂';
-    if(!courtyardCreated){courtyardCreated=true;courtyard.src='./courtyard43.html?embedded=1&v=balcony38';}
+    if(!courtyardCreated){courtyardCreated=true;courtyard.src='./courtyard43.html?embedded=1&v=finish39';}
     courtyard.focus({preventScroll:true});return;
   }
   if(!view){
@@ -52,7 +52,7 @@ async function route(){
   }
   archive.hidden=true;app.hidden=false;document.title='永旺家园 · 北漂';
   try{
-    if(!roomPromise){startRoomLoading();roomPromise=import('./main.js?v=fitting49');}
+    if(!roomPromise){startRoomLoading();roomPromise=import('./main.js?v=finish50e');}
     roomModule=await roomPromise;
     if(version===routeVersion){roomModule.enterRoom(view);document.getElementById('world').focus({preventScroll:true});}
   }catch(error){if(version===routeVersion)failRoomLoading();console.error('Room could not load',error);}

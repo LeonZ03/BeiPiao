@@ -24,7 +24,7 @@ for(const o of wind.objects.filter(o=>!o.userData.breezeHanger)){
     m.onBeforeCompile(shader,{});
     assert.ok(shader.vertexShader.includes('transformed.z+=c38D.y'));
     if(m.userData.curtainDiffuseTransmission)assert.ok(shader.fragmentShader.includes('c43WindowTransmission'),'Keep existing transmission hook');
-    assert.ok(m.customProgramCacheKey().includes('courtyard-breeze38'));
+    assert.ok(m.customProgramCacheKey().includes('courtyard-breeze39'));
   }
 }
 const pivots=wind.objects.filter(o=>o.userData.breezeHanger).map(o=>o.getWorldPosition(new THREE.Vector3()));

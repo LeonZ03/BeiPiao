@@ -4,17 +4,23 @@
 export const courtyardGust=t=>.53+.21*Math.sin(t*.23)+.12*Math.sin(t*.071+1.2);
 export const hangerAngle=(t,phase)=>.075*courtyardGust(t)*(Math.sin(t*.81+phase)*.76+Math.sin(t*.37+phase*.7)*.24);
 const clothShader=`
-uniform float c38Time,c38Power,c38Top,c38Bottom,c38Amplitude,c38Phase;
+uniform float c38Time,c38Power,c38Top,c38Bottom,c38Amplitude,c38Phase,c39Grey,c39Side;
 // Displacement and d(displacement)/dy, for a consistent softly sheared normal.
 vec4 c38Cloth(vec3 p){
   float h=max(.1,c38Top-.035-c38Bottom);
   float t=clamp((c38Top-.035-p.y)/h,0.,1.);
-  float w=t*t, dw=t>0.&&t<1.?-2.*t/h:0.;
+  float w=mix(t*t,t*t*(3.-2.*t),c39Grey);
+  float dw=t>0.&&t<1.?mix(-2.*t/h,-6.*t*(1.-t)/h,c39Grey):0.;
+  float anchor=mix(1.,smoothstep(0.,.07,abs(p.x-c39Side)),c39Grey);
   float phase=c38Time*.63+c38Phase-p.y*.28;
   float wave=.55+.45*sin(phase), derivative=-.126*cos(phase);
   float z=c38Amplitude*c38Power*w*wave;
   float dz=c38Amplitude*c38Power*(dw*wave+w*derivative);
-  return vec4(0.,z,0.,dz);
+  // Both main panels share the same field. Only 4mm sideways allowance;
+  // no vertical drop onto the right-hand counter and no moving top rings.
+  float x=.004*c39Grey*c38Power*w*sin(c38Time*.71-p.y*.22);
+  float dx=.004*c39Grey*c38Power*(dw*sin(c38Time*.71-p.y*.22)-.22*w*cos(c38Time*.71-p.y*.22));
+  return vec4(x,z,dx,dz)*anchor;
 }
 `;
 export function createCourtyardBreeze({THREE,world,camera,media=matchMedia}){
@@ -31,17 +37,17 @@ export function createCourtyardBreeze({THREE,world,camera,media=matchMedia}){
     const outer=!!mesh.userData.breezeCloth,grey=mesh.userData.surface==='grey-curtain';
     if(!outer&&!grey)return;
     const bounds=new THREE.Box3().setFromObject(mesh).expandByScalar(.025);
-    const uniforms={c38Time:clock,c38Power:power,c38Top:{value:mesh.userData.fixedTop},c38Bottom:{value:bounds.min.y},c38Amplitude:{value:outer?.025:.012},c38Phase:{value:mesh.userData.breezePhase??0}};
+    const uniforms={c38Time:clock,c38Power:power,c38Top:{value:mesh.userData.fixedTop},c38Bottom:{value:bounds.min.y},c38Amplitude:{value:outer?.025:.012},c38Phase:{value:mesh.userData.breezePhase??0},c39Grey:{value:grey?1:0},c39Side:{value:mesh.userData.fixedSideX??0}};
     const originals=Array.isArray(mesh.material)?mesh.material:[mesh.material];
     const copies=originals.map(original=>{
       const material=original.clone(),prior=original.onBeforeCompile,key=original.customProgramCacheKey();
       material.onBeforeCompile=(shader,renderer)=>{
         prior.call(original,shader,renderer);Object.assign(shader.uniforms,uniforms);
         shader.vertexShader=clothShader+shader.vertexShader;
-        shader.vertexShader=shader.vertexShader.replace('#include <defaultnormal_vertex>','vec4 c38N=c38Cloth(position); objectNormal.y-=c38N.w*objectNormal.z;\n#include <defaultnormal_vertex>');
-        shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>','vec4 c38D=c38Cloth(transformed); transformed.z+=c38D.y;\n#include <project_vertex>');
+        shader.vertexShader=shader.vertexShader.replace('#include <defaultnormal_vertex>','vec4 c38N=c38Cloth(position); objectNormal.y-=c38N.z*objectNormal.x+c38N.w*objectNormal.z;\n#include <defaultnormal_vertex>');
+        shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>','vec4 c38D=c38Cloth(transformed); transformed.x+=c38D.x; transformed.z+=c38D.y;\n#include <project_vertex>');
       };
-      material.customProgramCacheKey=()=>key+':courtyard-breeze38';return material;
+      material.customProgramCacheKey=()=>key+':courtyard-breeze39';return material;
     });
     mesh.material=Array.isArray(mesh.material)?copies:copies[0];
     mesh.userData.dynamic=true;cloth.push({mesh,originals,copies,bounds});objects.push(mesh);
@@ -64,7 +70,7 @@ export function createCourtyardBreeze({THREE,world,camera,media=matchMedia}){
       revision++;return visible>0;
     },
     get active(){return enabled&&visible>0;},
-    get state(){return{version:'balcony38',enabled,visibleMeshes:visible,clothMeshes:cloth.length,hangers:hangers.length,time:+elapsed.toFixed(2),revision,reducedMotion:reduced.matches,hangerAngles:hangers.map(e=>+e.mesh.quaternion.angleTo(e.base).toFixed(5))};},
+    get state(){return{version:'finish39',enabled,visibleMeshes:visible,clothMeshes:cloth.length,hangers:hangers.length,time:+elapsed.toFixed(2),revision,reducedMotion:reduced.matches,hangerAngles:hangers.map(e=>+e.mesh.quaternion.angleTo(e.base).toFixed(5))};},
     dispose(){reset();for(const e of cloth){e.mesh.material=e.originals.length===1?e.originals[0]:e.originals;for(const m of e.copies)m.dispose();}}
   };
 }
