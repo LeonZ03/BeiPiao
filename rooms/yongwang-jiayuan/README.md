@@ -2,7 +2,7 @@
 
 这是当前已上线房间的建模工作目录。网站入口、灯光、模型包和交互仍在仓库根目录的 `room-site/dist/`，双击根目录 `启动房间.cmd` 的方式不变。
 
-- **当前源工程**：[完整场景](assets/full-room/永旺家园-完整场景.blend)，同级 `textures/` 保存源贴图。当前 revision 为 `finish50e`，细节修正见 [FINISH50](docs/FINISH50.md)；后续以网页 `scene.json` 为准。
+- **当前源工程**：[完整场景](assets/full-room/永旺家园-完整场景.blend)，同级 `textures/` 保存源贴图。当前 revision 为 `correction51c`，本轮返修见 [CORRECTION51](docs/CORRECTION51.md)；后续以网页 `scene.json` 为准。
 - **独立物件/素材**：`assets/` 下的头盔、摩托车、高达、门饰、窗帘纹理、杯子图案及原始柜门录音，均保留。
 - **建模和精修**：`scripts/`。这是有父版本约束的历史生成链，不是从头执行的安装脚本；尤其不能用 `build-full-room.py` 覆盖当前工程。
 - **定稿**：`docs/wardrobe-concepts/`、`docs/summer-style/`。全站 UI 定稿另在 `../../docs/ui-concepts/`。

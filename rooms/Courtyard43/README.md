@@ -1,6 +1,6 @@
 # Courtyard43 · 房间复刻
 
-状态：`ready`。当前完整源及网页包为 `courtyard43-finish39`，运行入口缓存为 `finish39`，光照调色仍为 `tonal34`，微尘保持 `dust19`。展示名称为 **43号院**，居住日期未补充。已认可的 `whitebox06` 布局固定，当前制作从完整源增量精修；同步棒球帽和主灰帘轻风见 [FINISH39](docs/FINISH39.md)；柜体大小、晾杆高度、垂直衣架及微风见 [BALCONY38](docs/BALCONY38.md)；单杆及支架转向见 [RACK37](docs/RACK37.md)；柜高更正见 [BALCONY36](docs/BALCONY36.md)；阳台旧外帘及床头三灯、架空边顶见 [BALCONY35](docs/BALCONY35.md)；减少惨白与恢复明暗层次见 [TONAL34](docs/TONAL34.md)；柜门内镜面见 [MIRROR29](docs/MIRROR29.md)；柔和雪地反光及普通开关见 [DAYLIGHT28](docs/DAYLIGHT28.md)。此前窗帘厚度、卷袋包装、抽纸复用和笔记本交互见 [定向修改记录](docs/PROPS24.md)；整体形体与色彩基线见 [整体优化记录](docs/QUALITY21.md)。旧阶段经验保留在 [HISTORY](HISTORY.md)。
+状态：`ready`。当前完整源及网页包为 `courtyard43-cap40`，运行入口缓存为 `cap40`，光照调色仍为 `tonal34`，微尘保持 `dust19`。展示名称为 **43号院**，居住日期未补充。已认可的 `whitebox06` 布局固定，当前制作从完整源增量精修；帽檐返修见 [CAP40](docs/CAP40.md)，此前主灰帘轻风见 [FINISH39](docs/FINISH39.md)；柜体大小、晾杆高度、垂直衣架及微风见 [BALCONY38](docs/BALCONY38.md)；单杆及支架转向见 [RACK37](docs/RACK37.md)；柜高更正见 [BALCONY36](docs/BALCONY36.md)；阳台旧外帘及床头三灯、架空边顶见 [BALCONY35](docs/BALCONY35.md)；减少惨白与恢复明暗层次见 [TONAL34](docs/TONAL34.md)；柜门内镜面见 [MIRROR29](docs/MIRROR29.md)；柔和雪地反光及普通开关见 [DAYLIGHT28](docs/DAYLIGHT28.md)。此前窗帘厚度、卷袋包装、抽纸复用和笔记本交互见 [定向修改记录](docs/PROPS24.md)；整体形体与色彩基线见 [整体优化记录](docs/QUALITY21.md)。旧阶段经验保留在 [HISTORY](HISTORY.md)。
 
 ## 参考与结构约束
 
