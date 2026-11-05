@@ -14,6 +14,14 @@ world.updateMatrixWorld(true);
 // The counter's former right-hand slot must be closed even at oblique angles,
 // from the floor through the underside and overhang of its cap.
 const counterReturn=world.getObjectByName('C43_Wall_Balcony_Pier_Right');
+const counterSkirt=world.getObjectByName('C43_Skirting_Dark_Timber');
+for(const x of [1.395,1.42,1.445])for(const y of [.006,.04,.08]){
+  const ray=new THREE.Raycaster(new THREE.Vector3(x,y,.5),new THREE.Vector3(0,0,-1),0,.6);
+  assert.ok(ray.intersectObject(counterSkirt).length,'Continuous skirting covers the counter junction');
+}
+assert.ok(new THREE.Box3().setFromObject(world.getObjectByName('C43_Threshold_Dark_Stone')).max.x
+  <new THREE.Box3().setFromObject(world.getObjectByName('C43_Radiator_Solid_Body')).max.x,
+  'Threshold end is concealed behind the solid counter');
 for(const x of [1.392,1.405,1.425,1.445])for(const y of [.006,.05,.4,.98,1.01]){
   for(const dx of [-.12,0,.12]){
     const origin=new THREE.Vector3(x+dx,y,.5),target=new THREE.Vector3(x,y,-.02);
