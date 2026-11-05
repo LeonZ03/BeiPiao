@@ -51,8 +51,21 @@ const rightCabinet=new THREE.Box3().makeEmpty();
 for(const n of added.filter(n=>n.name.startsWith('C43_B35_RightCabinet'))){
   rightCabinet.union(new THREE.Box3().setFromObject(world.getObjectByName(n.name)));
 }
-const returnSill=new THREE.Box3().setFromObject(world.getObjectByName('C43_Window_Return_Stone_Sill'));
-assert.ok(returnSill.min.x-rightCabinet.max.x>=.009,'Taller right cabinet clears the existing return-window sill');
+const leftWall=world.getObjectByName('C43_Wall_Balcony_Left');
+const rightWall=world.getObjectByName('C43_Wall_Balcony_Right');
+assert.ok(rightWall?.userData.cutaway,'Right wall preserves the overview cutaway');
+assert.equal(rightWall.material.name,leftWall.material.name,'Both ends use the same plaster');
+const rightBounds=new THREE.Box3().setFromObject(rightWall);
+assert.ok(rightBounds.min.x-rightCabinet.max.x>.09,'Right cabinet clears the wall');
+assert.ok(rightBounds.getSize(new THREE.Vector3()).distanceTo(
+  new THREE.Box3().setFromObject(leftWall).getSize(new THREE.Vector3()))<.00001,'Wall sections match');
+for(const y of [.35,1.55,2.5])for(const z of [-.95,-.55,-.15]){
+  const ray=new THREE.Raycaster(new THREE.Vector3(2.1,y,z),new THREE.Vector3(1,0,0),0,.2);
+  assert.equal(ray.intersectObject(rightWall)[0]?.object,rightWall,'End wall closes the full opening');
+}
+assert.ok(!pack.nodes.some(n=>/^C43_Window_Return_|^C43_Wall_Balcony_Brick_Return$/.test(n.name)));
+const frames=new THREE.Box3().setFromObject(world.getObjectByName('C43_Window_White_Frames'));
+assert.ok(frames.max.z<-1.05&&frames.max.x>2.24,'Front PVC frames and corner mullion are retained');
 for(const n of added.filter(n=>/WireHanger\d$/.test(n.name))){
   const o=world.getObjectByName(n.name),b=new THREE.Box3().setFromObject(o);
   assert.ok(b.max.x-b.min.x<.005&&b.max.z-b.min.z>.37,'Hanger plane is perpendicular to pole');
@@ -66,6 +79,20 @@ for(const side of ['Left','Right']){
   for(const n of added.filter(n=>n.name.startsWith(`C43_B35_${side}Cabinet`)))cabinet.union(new THREE.Box3().setFromObject(world.getObjectByName(n.name)));
   const cloth=new THREE.Box3().setFromObject(world.getObjectByName(`C43_B35_OldCurtain${side}`));
   assert.ok(cabinet.min.z-cloth.max.z>.025,'Case clears the curtain including breeze allowance');
+}
+const sill=new THREE.Box3().setFromObject(world.getObjectByName('C43_Window_Stone_Sill'));
+const curtain=world.getObjectByName('C43_B35_OldCurtainRight');
+const clothBounds=new THREE.Box3().setFromObject(curtain);
+assert.ok(clothBounds.min.y<sill.min.y&&clothBounds.max.y>sill.max.y,'Curtain still falls below the sill');
+const positions=curtain.geometry.attributes.position;
+const point=new THREE.Vector3();
+for(let i=0;i<positions.count;i++){
+  point.fromBufferAttribute(positions,i).applyMatrix4(curtain.matrixWorld);
+  // Include the rows either side of the sill so interpolated faces clear it too.
+  if(point.y>=sill.min.y-.07&&point.y<=sill.max.y+.07){
+    assert.ok(point.z>sill.max.z+.012,'Both fabric surfaces pass in front of the sill');
+  }
+  assert.ok(point.x<rightBounds.min.x-.04,'Fabric clears the solid side wall');
 }
 const light=world.getObjectByName('C43_B35_BedheadLight0_Diffuser');
 const centre=new THREE.Box3().setFromObject(light).getCenter(new THREE.Vector3());
