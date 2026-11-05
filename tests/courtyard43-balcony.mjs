@@ -11,6 +11,16 @@ assert.deepEqual(gunzipSync(gz),raw);
 const buffer=raw.buffer.slice(raw.byteOffset,raw.byteOffset+raw.byteLength);
 const {world}=parseBlenderRoom(THREE,pack,buffer,pack.textures.map(()=>new THREE.Texture()));
 world.updateMatrixWorld(true);
+// The counter's former right-hand slot must be closed even at oblique angles,
+// from the floor through the underside and overhang of its cap.
+const counterReturn=world.getObjectByName('C43_Wall_Balcony_Pier_Right');
+for(const x of [1.392,1.405,1.425,1.445])for(const y of [.006,.05,.4,.98,1.01]){
+  for(const dx of [-.12,0,.12]){
+    const origin=new THREE.Vector3(x+dx,y,.5),target=new THREE.Vector3(x,y,-.02);
+    const ray=new THREE.Raycaster(origin,target.sub(origin).normalize(),0,.6);
+    assert.ok(ray.intersectObject(counterReturn).length,'Wall closes the right counter junction');
+  }
+}
 const added=pack.nodes.filter(n=>n.name.startsWith('C43_B35_'));
 assert.ok(added.length>=50);
 for(const n of added){
