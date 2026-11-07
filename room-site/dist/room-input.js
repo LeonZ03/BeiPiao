@@ -1,5 +1,5 @@
 // Arrows provide height controls; touch has separate held keys.
-const movementCodes=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight']);
+const movementCodes=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight']);
 export function movementKey(event){
   if(event.code==='ArrowUp')return 'MoveUp';
   if(event.code==='ArrowDown')return 'MoveDown';
@@ -9,6 +9,9 @@ export function releaseMovementKey(event){
   return movementKey(event);
 }
 export const touchMovementKeys=Object.freeze({forward:'KeyW',back:'KeyS',left:'KeyA',right:'KeyD',up:'TouchMoveUp',down:'TouchMoveDown'});
+export function walkSpeedMultiplier(keys){
+  return keys.has('ShiftLeft')||keys.has('ShiftRight')?2:1;
+}
 export function verticalMovement(keys){
   return Number(keys.has('MoveUp')||keys.has('TouchMoveUp'))-Number(keys.has('MoveDown')||keys.has('TouchMoveDown'));
 }

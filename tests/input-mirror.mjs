@@ -1,15 +1,20 @@
 import assert from 'node:assert/strict';
 import * as THREE from '../room-site/dist/vendor/three.module.js';
-import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement,wheelHeightDelta,bindWalkWheel} from '../room-site/dist/room-input.js';
+import {movementKey,releaseMovementKey,touchMovementKeys,walkSpeedMultiplier,verticalMovement,wheelHeightDelta,bindWalkWheel} from '../room-site/dist/room-input.js';
 import {installDoorMirror} from '../room-site/dist/wardrobe.js';
 
 const held=new Set();
 const down=e=>{const key=movementKey(e);if(key)held.add(key);};
 const up=e=>held.delete(releaseMovementKey(e));
-for(const event of [{key:'Fn',code:''},{code:'Fn'},{code:'FnLock'},{code:'ShiftLeft'},{code:'ShiftRight'},{code:'ControlLeft'},{code:'KeyC'}]){
+for(const event of [{key:'Fn',code:''},{code:'Fn'},{code:'FnLock'},{code:'ControlLeft'},{code:'KeyC'}]){
   down(event);assert.equal(held.size,0,'Removed height bindings never latch movement');
 }
-assert.equal(verticalMovement(new Set(['ShiftLeft','ShiftRight','Fn'])),0);
+assert.equal(walkSpeedMultiplier(held),1);
+down({code:'ShiftLeft'});assert.equal(walkSpeedMultiplier(held),2);
+down({code:'ShiftRight'});up({code:'ShiftLeft'});
+assert.equal(walkSpeedMultiplier(held),2,'Either Shift key can keep sprint active');
+assert.equal(verticalMovement(held),0,'Shift never changes height');
+up({code:'ShiftRight'});assert.equal(walkSpeedMultiplier(held),1,'Releasing Shift restores walking speed');
 down({code:'ArrowUp'});assert.equal(verticalMovement(held),1,'Up arrow raises the view');
 assert.ok(held.has('MoveUp'));assert.ok(!held.has('ArrowUp'),'Height arrow never enters forward movement');
 up({code:'ArrowUp'});down({code:'ArrowDown'});assert.equal(verticalMovement(held),-1,'Down arrow lowers the view');
@@ -60,4 +65,4 @@ world.userData.geometryRevision++;mirror.onBeforeRender(renderer,scene,camera);a
 world.userData.reflectionPass=true;world.userData.geometryRevision++;mirror.onBeforeRender(renderer,scene,camera);assert.equal(mirror.calls,3,'Nested reflection cannot recurse');
 world.userData.reflectionPass=false;open=false;camera.position.x+=.1;camera.updateMatrixWorld();mirror.onBeforeRender(renderer,scene,camera);assert.equal(mirror.calls,3);
 assert.equal(renderer.shadowMap.needsUpdate,true,'Reflection preserves the caller shadow update flag');
-console.log('Input and mirror: walk wheel / overview zoom isolation, arrows/touch, removed Shift/Fn, door binding, visibility, refresh and recursion PASS');
+console.log('Input and mirror: Shift sprint, walk wheel / overview zoom isolation, arrows/touch, door binding, visibility, refresh and recursion PASS');

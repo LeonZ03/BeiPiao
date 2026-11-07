@@ -1,5 +1,5 @@
 import {createCourtyardBreeze} from './courtyard43-breeze.js?v=join43';
-import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement,bindWalkWheel} from './room-input.js?v=switch31';
+import {movementKey,releaseMovementKey,touchMovementKeys,walkSpeedMultiplier,verticalMovement,bindWalkWheel} from './room-input.js?v=sprint1';
 import {Reflector} from './vendor/Reflector.js';
 import {installDoorMirror} from './wardrobe.js?v=wheel30';
 import {COURTYARD_LOOK} from './courtyard43-look.js?v=balcony36';
@@ -151,7 +151,19 @@ try{
   function resize(){const width=$('app').clientWidth,height=$('app').clientHeight;if(!width||!height)return;camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);finish.resize();$('app').classList.toggle('touch-device',matchMedia('(pointer: coarse)').matches||innerWidth<=900);invalidate(true);}
   function toggleImmersive(){immersive=!immersive;$('app').classList.toggle('immersive',immersive);$('immersiveBtn').textContent=immersive?'退出沉浸':'沉浸看房';$('immersiveBtn').setAttribute('aria-pressed',String(immersive));invalidate();}
   function tick(now){frame=0;if(disposed||!session.active||document.hidden){snow.setEnabled(false);dust.setEnabled(false);return;}const dt=Math.min(Math.max((now-last)/1000,.001),.05);last=now;let keep=false;
-    if(mode==='walk'){const f=Number(keys.has('KeyW'))-Number(keys.has('KeyS')),s=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft')),v=verticalMovement(keys);if(f||s||v){const step=dt/(Math.hypot(f,s)||1);dirty=move((-Math.sin(yaw)*f+Math.cos(yaw)*s)*step,v*dt*.8,(-Math.cos(yaw)*f-Math.sin(yaw)*s)*step)||dirty;keep=true;}camera.rotation.set(pitch,yaw,0,'YXZ');}
+    if(mode==='walk'){
+      const forward=Number(keys.has('KeyW'))-Number(keys.has('KeyS'));
+      const side=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));
+      const vertical=verticalMovement(keys);
+      if(forward||side||vertical){
+        const step=dt*walkSpeedMultiplier(keys)/(Math.hypot(forward,side)||1);
+        const dx=(-Math.sin(yaw)*forward+Math.cos(yaw)*side)*step;
+        const dz=(-Math.cos(yaw)*forward-Math.sin(yaw)*side)*step;
+        dirty=move(dx,vertical*dt*.8,dz)||dirty;
+        keep=true;
+      }
+      camera.rotation.set(pitch,yaw,0,'YXZ');
+    }
     else if(orbit.update()){dirty=true;keep=true;}
     keep=updateInteractions(dt)||keep;if(renderProbe.update(now,mode==='walk')){dirty=true;keep=true;}
     const breezeChanged=breeze.update(dt,{active:entered&&mode==='walk'&&!document.hidden,openness:curtainAmount()});if(breezeChanged)dirty=true;keep=breeze.active||keep;

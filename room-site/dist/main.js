@@ -1,4 +1,4 @@
-import {movementKey,releaseMovementKey,touchMovementKeys,verticalMovement,bindWalkWheel} from './room-input.js?v=switch31';
+import {movementKey,releaseMovementKey,touchMovementKeys,walkSpeedMultiplier,verticalMovement,bindWalkWheel} from './room-input.js?v=sprint1';
 import {createLaptop} from './laptop.js?v=props44a';
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
@@ -129,7 +129,7 @@ function tick(now){
   if(mode==='walk'){
     const forward=Number(keys.has('KeyW'))-Number(keys.has('KeyS'));
     const side=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0);
-    const norm=Math.hypot(forward,side)||1,speed=dt/norm;
+    const norm=Math.hypot(forward,side)||1,speed=dt*walkSpeedMultiplier(keys)/norm;
     const vertical=verticalMovement(keys);
     moveVertical(vertical*dt*.8);
     move((-Math.sin(yaw)*forward+Math.cos(yaw)*side)*speed,(-Math.cos(yaw)*forward-Math.sin(yaw)*side)*speed);
