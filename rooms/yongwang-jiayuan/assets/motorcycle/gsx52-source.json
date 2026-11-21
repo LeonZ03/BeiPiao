@@ -1,0 +1,11 @@
+{
+  "sourceSha256": "6001e55c8997dac41e893c2bde570d1caf472b50e3e7d1c50f6cc68e660636a5",
+  "sourceFile": "GSX250R.blend",
+  "sourceParts": 1128,
+  "evaluatedTriangles": 11572478,
+  "sourceRemeshPreserved": true,
+  "triangles": 319999,
+  "materials": 33,
+  "atlasSize": 2048,
+  "revision": "gsx52"
+}
